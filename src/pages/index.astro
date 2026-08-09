@@ -535,12 +535,25 @@ import Layout from '../layouts/Layout.astro';
       
       // Max 100 dots per city
       const cityCount = {};
+      const usedCoords = {};
       allPrices.forEach(p => {
         if (!p.lat || !p.lng) return;
         if (selectedType !== 'all' && (p.type || 'apartment') !== selectedType) return;
         const key = (p.city || '') + '|' + (p.country || '');
         cityCount[key] = (cityCount[key] || 0) + 1;
         if (cityCount[key] > 100) return;
+        
+        // Jitter: spread overlapping dots (same district coords) slightly
+        let lat = p.lat, lng = p.lng;
+        const cKey = lat.toFixed(4) + ',' + lng.toFixed(4);
+        const idx = usedCoords[cKey] || 0;
+        usedCoords[cKey] = idx + 1;
+        if (idx > 0) {
+          const angle = (idx * 137.508) * Math.PI / 180; // golden angle
+          const dist = 0.004 + (idx % 5) * 0.002; // ~300-800m
+          lat = lat + Math.cos(angle) * dist;
+          lng = lng + Math.sin(angle) * dist;
+        }
         
         const color = getColor(p.price_per_m2 || p.price_total, p.currency || 'DKK');
         const priceText = formatPrice(p.price_total, p.currency);
@@ -561,7 +574,7 @@ import Layout from '../layouts/Layout.astro';
         pill.textContent = priceText;
         pill.onclick = () => {
           openPanel({
-            priceId: p.id, lat: p.lat, lng: p.lng,
+            priceId: p.id, lat: lat, lng: lng,
             priceTotal: p.price_total, pricePerM2: p.price_per_m2,
             currency: p.currency || 'DKK', city: p.city, country: p.country,
             sqm: p.sqm, rooms: p.rooms, type: p.type,
@@ -571,7 +584,7 @@ import Layout from '../layouts/Layout.astro';
         container.appendChild(pill);
         
         const entity = rentDataSource.entities.add({
-          position: Cesium.Cartesian3.fromDegrees(p.lng, p.lat),
+          position: Cesium.Cartesian3.fromDegrees(lng, lat),
           // Dot always visible (zoomed out = small, zoomed in = large)
           point: {
             pixelSize: 12,
@@ -584,7 +597,7 @@ import Layout from '../layouts/Layout.astro';
           },
           properties: {
             priceId: p.id,
-            lat: p.lat, lng: p.lng,
+            lat: lat, lng: lng,
             priceTotal: p.price_total, pricePerM2: p.price_per_m2,
             currency: p.currency || 'EUR',
             city: p.city, country: p.country,
