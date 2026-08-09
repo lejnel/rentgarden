@@ -609,7 +609,7 @@ import Layout from '../layouts/Layout.astro';
         // Set dark atmosphere feel — works great with satellite
         viewer.scene.backgroundColor = Cesium.Color.fromCssColorString('#000011');
         viewer.scene.globe.baseColor = Cesium.Color.fromCssColorString('#000022');
-        viewer.scene.globe.enableLighting = true;
+        viewer.scene.globe.enableLighting = false;
         viewer.scene.globe.showGroundAtmosphere = false;
         
         // Use satellite imagery
