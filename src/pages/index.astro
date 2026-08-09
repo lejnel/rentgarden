@@ -32,6 +32,21 @@ import Layout from '../layouts/Layout.astro';
       .year-pill:hover { border-color:rgba(255,255,255,0.4); color:#fff; }
       .year-pill.active { background:var(--accent); border-color:var(--accent); color:#fff; }
 
+      /* ---- Type pills (top left) ---- */
+      .type-pills {
+        position:fixed; top:20px; left:20px; z-index:1500;
+        display:flex; gap:6px; flex-wrap:wrap;
+        max-width: 220px;
+      }
+      .type-pill {
+        padding:5px 14px; border-radius:20px; border:1px solid rgba(255,255,255,0.2);
+        background:rgba(15,23,42,0.85); color:rgba(255,255,255,0.7); cursor:pointer;
+        font-size:12px; font-weight:500; backdrop-filter:blur(8px);
+        transition:all 0.2s; font-family: inherit;
+      }
+      .type-pill:hover { border-color:rgba(255,255,255,0.4); color:#fff; }
+      .type-pill.active { background:var(--accent); border-color:var(--accent); color:#fff; }
+
       /* ---- Legend ---- */
       .legend {
         position: fixed; bottom: 24px; left: 24px; z-index: 1000;
@@ -213,6 +228,9 @@ import Layout from '../layouts/Layout.astro';
   <!-- Year pills -->
   <div class="year-pills" id="yearPills"></div>
 
+  <!-- Type pills (top left) -->
+  <div class="type-pills" id="typePills"></div>
+
   <!-- Legend -->
   <div class="legend">
     <div class="legend-title">Rent per m² / month</div>
@@ -326,6 +344,28 @@ import Layout from '../layouts/Layout.astro';
     let pillMap = new WeakMap();
     const currentYear = new Date().getFullYear();
     let selectedYear = 0; // 0 = active (last 12 months)
+    let selectedType = 'all';
+    
+    function renderTypePills() {
+      const container = document.getElementById('typePills');
+      const types = [
+        { value: 'all', label: '🌍 All' },
+        { value: 'apartment', label: '🏢 Apartment' },
+        { value: 'house', label: '🏠 House' },
+        { value: 'room', label: '🚪 Room' },
+        { value: 'studio', label: '🛋️ Studio' },
+      ];
+      container.innerHTML = types.map(t =>
+        `<button class="type-pill${selectedType === t.value ? ' active' : ''}" onclick="switchType('${t.value}')">${t.label}</button>`
+      ).join('');
+    }
+    
+    window.switchType = function(type) {
+      if (type === selectedType) return;
+      selectedType = type;
+      renderTypePills();
+      addPriceDots(Cesium, viewer);
+    };
     
     function renderYearPills() {
       const container = document.getElementById('yearPills');
@@ -478,6 +518,8 @@ import Layout from '../layouts/Layout.astro';
       
       allPrices.forEach(p => {
         if (!p.lat || !p.lng) return;
+        // Type filter
+        if (selectedType !== 'all' && (p.type || 'apartment') !== selectedType) return;
         const convertedPerM2 = convertPrice(p.price_per_m2 || p.price_total, p.currency || 'DKK', displayCurrency);
         const color = getColor(p.price_per_m2 || p.price_total, p.currency || 'DKK');
         const pixelSize = 12;
@@ -625,6 +667,9 @@ import Layout from '../layouts/Layout.astro';
         
         // Render year pills
         renderYearPills();
+        
+        // Render type pills
+        renderTypePills();
         
         // Add dots
         addPriceDots(Cesium, viewer);
