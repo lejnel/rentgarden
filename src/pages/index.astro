@@ -143,6 +143,47 @@ import Layout from '../layouts/Layout.astro';
         max-height:90vh; overflow-y:auto;
       }
       
+      /* ---- Mobile optimizations ---- */
+      @media (max-width: 768px) {
+        /* Year pills move below currency selector to avoid overlap */
+        .year-pills {
+          top: 68px; left: 12px; right: 12px; transform: none;
+          justify-content: flex-start;
+        }
+        /* Type pills scroll horizontally instead of wrapping 3 rows */
+        .type-pills {
+          top: 112px; left: 12px; right: 12px; max-width: none;
+          flex-wrap: nowrap; overflow-x: auto;
+          -webkit-overflow-scrolling: touch;
+          padding-bottom: 4px;
+          scrollbar-width: none;
+        }
+        .type-pills::-webkit-scrollbar { display: none; }
+        /* Admin link hidden on mobile (footer link exists) */
+        .admin-link { display: none; }
+        /* Legend becomes a compact horizontal strip at the bottom */
+        .legend {
+          bottom: 16px; left: 12px; right: auto;
+          padding: 8px 12px; border-radius: 10px;
+          display: flex; align-items: center; gap: 10px;
+        }
+        .legend-title { display: none; }
+        .legend-row { margin-top: 0; gap: 4px; font-size: 11px; }
+        /* Info panel: keep it from covering the whole screen */
+        .info-panel {
+          width: 100vw; max-height: 65vh; overflow-y: auto;
+          border-radius: 20px 20px 0 0; padding: 22px 16px 16px;
+        }
+        /* FAB slightly smaller and clear of the legend */
+        .fab {
+          bottom: 16px; right: 16px; width: 52px; height: 52px; font-size: 24px;
+        }
+        /* Popup card more compact on mobile */
+        .popup-card { padding: 16px; }
+        /* Currency selector stays top-left but smaller */
+        .currency-selector select { padding: 7px 10px; font-size: 12px; }
+      }
+      
       /* ---- HTML Pills ---- */
       .html-pill {
         position: absolute;
