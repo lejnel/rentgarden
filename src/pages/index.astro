@@ -912,6 +912,12 @@ import Layout from '../layouts/Layout.astro';
         
         // Rebuild pills when camera stops moving (viewport-based lazy loading)
         viewer.camera.moveEnd.addEventListener(function() {
+          const camH = viewer.camera.positionCartographic.height;
+          // Clustering only when far away (>80km); close up: clusters dissolve,
+          // individual dots are hidden by distanceDisplayCondition, pills take over
+          if (rentDataSource) {
+            rentDataSource.clustering.enabled = camH > 80000;
+          }
           rebuildPills(viewer);
         });
         
