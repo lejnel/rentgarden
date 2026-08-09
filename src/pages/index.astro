@@ -32,19 +32,19 @@ import Layout from '../layouts/Layout.astro';
       .year-pill:hover { border-color:rgba(255,255,255,0.4); color:#fff; }
       .year-pill.active { background:var(--accent); border-color:var(--accent); color:#fff; }
 
-      /* ---- Type pills (top left) ---- */
+      /* ---- Type pills (under currency selector) ---- */
       .type-pills {
-        position:fixed; top:20px; left:20px; z-index:1500;
+        position:fixed; top:64px; left:20px; z-index:1500;
         display:flex; gap:6px; flex-wrap:wrap;
-        max-width: 220px;
+        max-width: 260px;
       }
       .type-pill {
-        padding:5px 14px; border-radius:20px; border:1px solid rgba(255,255,255,0.2);
-        background:rgba(15,23,42,0.85); color:rgba(255,255,255,0.7); cursor:pointer;
-        font-size:12px; font-weight:500; backdrop-filter:blur(8px);
+        padding:8px 12px; border-radius:10px; border:1px solid rgba(255,255,255,0.12);
+        background: rgba(10,14,23,0.9); color:#e2e8f0; cursor:pointer;
+        font-size:13px; font-weight:500; backdrop-filter:blur(12px);
         transition:all 0.2s; font-family: inherit;
       }
-      .type-pill:hover { border-color:rgba(255,255,255,0.4); color:#fff; }
+      .type-pill:hover { border-color:rgba(255,255,255,0.3); color:#fff; }
       .type-pill.active { background:var(--accent); border-color:var(--accent); color:#fff; }
 
       /* ---- Legend ---- */
@@ -355,8 +355,11 @@ import Layout from '../layouts/Layout.astro';
         { value: 'room', label: '🚪 Room' },
         { value: 'studio', label: '🛋️ Studio' },
       ];
+      const baseStyle = 'padding:8px 12px;border-radius:10px;border:1px solid rgba(255,255,255,0.12);' +
+        'background:rgba(10,14,23,0.9);color:#e2e8f0;cursor:pointer;font-size:13px;font-weight:500;' +
+        'backdrop-filter:blur(12px);transition:all 0.2s;font-family:inherit;';
       container.innerHTML = types.map(t =>
-        `<button class="type-pill${selectedType === t.value ? ' active' : ''}" onclick="switchType('${t.value}')">${t.label}</button>`
+        `<button class="type-pill" style="${baseStyle}${selectedType === t.value ? 'background:#6366f1;border-color:#6366f1;color:#fff;' : ''}" onclick="switchType('${t.value}')">${t.label}</button>`
       ).join('');
     }
     
