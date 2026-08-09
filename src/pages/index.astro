@@ -655,14 +655,63 @@ import Layout from '../layouts/Layout.astro';
                latR >= rect.south - h && latR <= rect.north + h;
       });
       
-      // Sort by distance to viewport center (closest first), then cap at MAX_PILLS
+      // Spread selection across the whole viewport using a grid:
+      // divide view into GRID×GRID cells, take up to MAX_PER_CELL from each,
+      // nearest-to-center first per cell. This avoids all pills clustering
+      // in one spot while still capping the total at MAX_PILLS.
+      const GRID = 10;
+      const MAX_PER_CELL = 2;
+      
+      // Assign each group a grid cell index
+      const cellOf = (lat, lng) => {
+        const latR = lat * Math.PI / 180;
+        const lngR = lng * Math.PI / 180;
+        const cx = Math.min(GRID - 1, Math.max(0, Math.floor((lngR - (rect.west - w)) / ((rect.east + w) - (rect.west - w)) * GRID)));
+        const cy = Math.min(GRID - 1, Math.max(0, Math.floor(((rect.north + h) - latR) / ((rect.north + h) - (rect.south - h)) * GRID)));
+        return cy * GRID + cx;
+      };
+      
+      // Sort by distance to viewport center (closest first)
       inView.sort((a, b) => {
         const da = Math.pow(a.lat - cLat * 180 / Math.PI, 2) + Math.pow(a.lng - cLng * 180 / Math.PI, 2);
         const db = Math.pow(b.lat - cLat * 180 / Math.PI, 2) + Math.pow(b.lng - cLng * 180 / Math.PI, 2);
         return da - db;
       });
       
-      inView.slice(0, MAX_PILLS).forEach(({ group, lat, lng }) => {
+      // Round-robin over cells: take MAX_PER_CELL per cell until MAX_PILLS reached
+      const selected = [];
+      const perCell = {};
+      const byCell = {};
+      inView.forEach(g => {
+        const cell = cellOf(g.lat, g.lng);
+        if (!byCell[cell]) byCell[cell] = [];
+        byCell[cell].push(g);
+      });
+      
+      // First pass: spread (up to MAX_PER_CELL from each cell, cells with content cycled)
+      const cellKeys = Object.keys(byCell).sort((a, b) => {
+        // Empty-ish priority: visit cells nearest center first but ensure spread
+        return byCell[a].length - byCell[b].length;
+      });
+      let ci = 0;
+      while (selected.length < MAX_PILLS && cellKeys.length > 0) {
+        const cell = cellKeys[ci % cellKeys.length];
+        const arr = byCell[cell];
+        if (arr.length > 0 && (perCell[cell] || 0) < MAX_PER_CELL) {
+          selected.push(arr.shift());
+          perCell[cell] = (perCell[cell] || 0) + 1;
+        }
+        ci++;
+        if (ci > cellKeys.length * 20) break; // safety
+      }
+      
+      // Second pass: if still room, take remaining closest ones
+      inView.forEach(g => {
+        if (selected.length >= MAX_PILLS) return;
+        if (!selected.includes(g)) selected.push(g);
+      });
+      
+      selected.forEach(({ group, lat, lng }) => {
         const first = group[0];
         const color = getColor(first.price_per_m2 || first.price_total, first.currency || 'DKK');
         
