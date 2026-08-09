@@ -1,0 +1,832 @@
+---
+// src/pages/index.astro — RentGarden main globe page
+import Layout from '../layouts/Layout.astro';
+---
+
+<Layout>
+  <slot name="head">
+    <link rel="stylesheet" href="https://cesium.com/downloads/cesiumjs/releases/1.125/Build/Cesium/Widgets/widgets.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+    <style>
+      #cesiumContainer {
+        position: fixed; inset: 0;
+      }
+      
+      /* Hide Cesium credit/branding — keep attribution but minimal */
+      .cesium-viewer-bottom { display: none !important; }
+      .cesium-viewer-toolbar { display: none !important; }
+      .cesium-viewer-fullscreenContainer { display: none !important; }
+      .cesium-viewer-geocoderContainer { display: none !important; }
+      
+      /* ---- Year pills ---- */
+      .year-pills {
+        position:fixed; top:20px; left:50%; transform:translateX(-50%); z-index:1500;
+        display:flex; gap:8px; flex-wrap:wrap; justify-content:center;
+      }
+      .year-pill {
+        padding:6px 16px; border-radius:20px; border:1px solid rgba(255,255,255,0.2);
+        background:rgba(15,23,42,0.85); color:rgba(255,255,255,0.7); cursor:pointer;
+        font-size:13px; font-weight:500; backdrop-filter:blur(8px);
+        transition:all 0.2s;
+      }
+      .year-pill:hover { border-color:rgba(255,255,255,0.4); color:#fff; }
+      .year-pill.active { background:var(--accent); border-color:var(--accent); color:#fff; }
+
+      /* ---- Legend ---- */
+      .legend {
+        position: fixed; bottom: 24px; left: 24px; z-index: 1000;
+        background: rgba(10,14,23,0.9); backdrop-filter: blur(12px);
+        border: 1px solid rgba(255,255,255,0.1); border-radius: 14px;
+        padding: 14px 18px; font-size: 12px; color: #8899b4;
+        font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+      }
+      .legend-title { font-weight:600; margin-bottom:6px; color:#e2e8f0; font-size:13px; }
+      .legend-row { display:flex; align-items:center; gap:8px; margin-top:4px; }
+      .legend-dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
+      
+      /* ---- Search ---- */
+      .search-bar {
+        position: fixed; top: 20px; left: 50%; transform: translateX(-50%); z-index: 1000;
+        display: flex; align-items: center; gap: 8px;
+      }
+      .search-input {
+        padding: 12px 20px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.15);
+        background: rgba(10,14,23,0.9); backdrop-filter: blur(12px);
+        color: #e2e8f0; font-size: 14px; width: 320px; outline: none;
+        font-family: inherit; transition: border-color 0.2s;
+      }
+      .search-input:focus { border-color: rgba(99,102,241,0.6); }
+      .search-input::placeholder { color: #64748b; }
+      
+      /* ---- Currency Selector ---- */
+      .currency-selector {
+        position: fixed; top: 20px; left: 20px; z-index: 1000;
+      }
+      .currency-selector select {
+        padding: 8px 12px; border-radius: 10px;
+        border: 1px solid rgba(255,255,255,0.12);
+        background: rgba(10,14,23,0.9); backdrop-filter: blur(12px);
+        color: #e2e8f0; font-size: 13px; font-family: inherit;
+        cursor: pointer; outline: none;
+      }
+      
+      /* ---- Info Panel ---- */
+      .info-panel {
+        position: fixed; bottom: -500px; left: 50%; transform: translateX(-50%);
+        width: min(90vw, 480px); z-index: 1000;
+        background: rgba(13,18,30,0.95); backdrop-filter: blur(20px);
+        border: 1px solid rgba(255,255,255,0.1); border-radius: 20px 20px 0 0;
+        padding: 28px 24px 24px;
+        transition: bottom 0.4s cubic-bezier(0.16,1,0.3,1);
+        font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+        color: #e2e8f0;
+      }
+      .info-panel.open { bottom: 0; }
+      .panel-handle { width:40px; height:4px; background:rgba(255,255,255,0.2); border-radius:4px; margin:-14px auto 16px; cursor:pointer; }
+      .panel-city { font-size:22px; font-weight:700; }
+      .panel-country { font-size:13px; color:#8899b4; margin-top:2px; }
+      .panel-stats { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:16px; }
+      .stat-card { background:rgba(255,255,255,0.04); border-radius:10px; padding:12px; text-align:center; }
+      .stat-value { font-size:18px; font-weight:700; }
+      .stat-label { font-size:11px; color:#8899b4; margin-top:2px; }
+      .panel-listings { margin-top:14px; max-height:200px; overflow-y:auto; }
+      .panel-section-title { font-size:11px; font-weight:600; color:#64748b; text-transform:uppercase; letter-spacing:1px; margin-bottom:8px; }
+      .listing-row {
+        display:flex; align-items:center; gap:10px; padding:10px; border-radius:8px;
+        background:rgba(255,255,255,0.02); margin-bottom:4px; cursor:pointer;
+        transition:background 0.15s; font-size:13px;
+      }
+      .listing-row:hover { background:rgba(255,255,255,0.05); }
+      .listing-price { font-weight:700; white-space:nowrap; }
+      .listing-source { font-size:10px; color:#64748b; }
+      .listing-arrow { color:#6366f1; margin-left:auto; }
+      .panel-footer { margin-top:12px; text-align:center; font-size:11px; color:#64748b; font-style:italic; }
+      
+      /* ---- FAB ---- */
+      .fab {
+        position:fixed; bottom:28px; right:28px; z-index:2000;
+        width:56px; height:56px; border-radius:50%; border:none; cursor:pointer;
+        background:linear-gradient(135deg, #4f46e5, #7c3aed);
+        color:white; font-size:26px; box-shadow:0 4px 24px rgba(99,102,241,0.4);
+        transition:all 0.2s; display:flex; align-items:center; justify-content:center;
+        font-family:inherit;
+      }
+      .fab:hover { transform:scale(1.08); box-shadow:0 6px 32px rgba(99,102,241,0.6); }
+      
+      /* ---- Popup ---- */
+      .popup-overlay {
+        position:fixed; inset:0; z-index:3000; background:rgba(0,0,0,0.7);
+        display:flex; align-items:center; justify-content:center;
+      }
+      .popup-overlay.hidden { display:none; }
+      .popup-card {
+        background:#131a2b; border:1px solid rgba(255,255,255,0.1);
+        border-radius:16px; padding:24px; width:420px; max-width:95vw;
+        max-height:90vh; overflow-y:auto;
+      }
+      
+      /* ---- HTML Pills ---- */
+      .html-pill {
+        position: absolute;
+        padding: 5px 14px;
+        border-radius: 20px;
+        border: 2.5px solid white;
+        color: white;
+        font: bold 14px -apple-system, BlinkMacSystemFont, sans-serif;
+        white-space: nowrap;
+        pointer-events: auto;
+        cursor: pointer;
+        transform: translate(-50%, -50%);
+        text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+        box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+        transition: opacity 0.2s;
+      }
+      .html-pill:hover {
+        filter: brightness(1.15);
+        box-shadow: 0 4px 16px rgba(0,0,0,0.5);
+        z-index: 10;
+      }
+      
+      /* ---- Tooltip ---- */
+      .hover-tooltip {
+        position:fixed; pointer-events:none; z-index:1500;
+        background:rgba(13,18,30,0.95); border:1px solid rgba(255,255,255,0.15);
+        border-radius:8px; padding:6px 10px; font-size:12px; color:#e2e8f0;
+        font-family:-apple-system,BlinkMacSystemFont,sans-serif;
+        box-shadow:0 4px 16px rgba(0,0,0,0.5);
+        opacity:0; transition:opacity 0.15s;
+      }
+      .hover-tooltip.visible { opacity:1; }
+      
+      /* ---- Admin link ---- */
+      .admin-link {
+        position:fixed; top:20px; right:20px; z-index:1000;
+        color:#64748b; font-size:12px; text-decoration:none;
+        font-family:-apple-system,BlinkMacSystemFont,sans-serif;
+        padding:6px 12px; border-radius:8px;
+        background:rgba(10,14,23,0.7); border:1px solid rgba(255,255,255,0.08);
+      }
+      .admin-link:hover { color:#e2e8f0; border-color:rgba(255,255,255,0.2); }
+      
+      /* Loading */
+      .loading-overlay {
+        position:fixed; inset:0; z-index:5000; background:#0a0e17;
+        display:flex; align-items:center; justify-content:center;
+        transition:opacity 0.5s; pointer-events:none;
+        font-family:-apple-system,BlinkMacSystemFont,sans-serif;
+      }
+      .loading-overlay.hidden { opacity:0; pointer-events:none; }
+      .loading-text { color:#e2e8f0; font-size:18px; font-weight:500; }
+      .loading-dots::after {
+        content:''; animation:dots 1.5s steps(4,end) infinite;
+      }
+      @keyframes dots {
+        0% { content:''; } 25% { content:'.'; } 50% { content:'..'; } 75% { content:'...'; }
+      }
+    </style>
+  </slot>
+
+  <div id="cesiumContainer"></div>
+  
+  <!-- Loading -->
+  <div class="loading-overlay" id="loadingOverlay">
+    <div class="loading-text">RentGarden 🌍<span class="loading-dots"></span></div>
+  </div>
+
+  <!-- Currency Selector -->
+  <div class="currency-selector">
+    <select id="currencySelect" onchange="changeCurrency()">
+      <option value="USD" selected>🇺🇸 USD</option>
+      <option value="EUR">🇪🇺 EUR</option>
+      <option value="DKK">🇩🇰 DKK</option>
+      <option value="GBP">🇬🇧 GBP</option>
+      <option value="SEK">🇸🇪 SEK</option>
+      <option value="NOK">🇳🇴 NOK</option>
+    </select>
+  </div>
+
+  <!-- HTML Pill Container (overlays on globe) -->
+  <div id="pillContainer" style="position:fixed;inset:0;pointer-events:none;z-index:100;"></div>
+
+  <!-- Clean globe — no search, just explore -->
+  
+  <!-- Year pills -->
+  <div class="year-pills" id="yearPills"></div>
+
+  <!-- Legend -->
+  <div class="legend">
+    <div class="legend-title">Rent per m² / month</div>
+    <div class="legend-row"><div class="legend-dot" style="background:#22c55e"></div> <span id="legLow">0–15 $</span></div>
+    <div class="legend-row"><div class="legend-dot" style="background:#eab308"></div> <span id="legMid">15–22 $</span></div>
+    <div class="legend-row"><div class="legend-dot" style="background:#f97316"></div> <span id="legHigh">22–30 $</span></div>
+    <div class="legend-row"><div class="legend-dot" style="background:#ef4444"></div> <span id="legPremium">30+ $</span></div>
+  </div>
+
+  <!-- Info Panel -->
+  <div class="info-panel" id="infoPanel">
+    <div class="panel-handle" onclick="closePanel()"></div>
+    <div class="panel-city" id="panelCity">Select a city</div>
+    <div class="panel-country" id="panelCountry"></div>
+    <div class="panel-stats">
+      <div class="stat-card"><div class="stat-value" id="statAvg">—</div><div class="stat-label">Price / m²</div></div>
+      <div class="stat-card"><div class="stat-value" id="statCount">—</div><div class="stat-label">Monthly rent</div></div>
+    </div>
+    <div class="panel-listings" id="panelListings">
+      <div class="panel-section-title">Recent listings</div>
+    </div>
+    <div class="panel-footer">
+      📌 Data updated periodically · <a href="/admin" style="color:#6366f1">Add a price</a>
+    </div>
+  </div>
+
+  <!-- FAB — opens add-price popup -->
+  <button class="fab" id="fabAdd" title="Add a price" onclick="openAddPopup()">+</button>
+
+  <!-- Admin link -->
+  <a href="/admin" class="admin-link">⚙️ Admin</a>
+
+  <!-- Add Price Popup -->
+  <div class="popup-overlay hidden" id="popupOverlay">
+    <div class="popup-card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+        <h2 style="font-size:18px;font-weight:700;color:#e2e8f0;margin:0;">➕ Add Rent Price</h2>
+        <button onclick="closeAddPopup()" style="background:none;border:none;color:#64748b;font-size:22px;cursor:pointer;line-height:1;">&times;</button>
+      </div>
+      <form id="popupForm" onsubmit="submitPopupPrice(event)">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+          <div style="grid-column:1/-1;">
+            <label style="font-size:11px;color:#8899b4;text-transform:uppercase;">Listing URL *</label>
+            <input type="url" id="popUrl" required placeholder="https://..." style="width:100%;padding:8px;border-radius:6px;border:1px solid rgba(255,255,255,0.1);background:rgba(0,0,0,0.3);color:#e2e8f0;font-size:13px;font-family:inherit;outline:none;">
+          </div>
+          <div>
+            <label style="font-size:11px;color:#8899b4;text-transform:uppercase;">Monthly Rent *</label>
+            <input type="number" id="popPrice" required placeholder="6950" style="width:100%;padding:8px;border-radius:6px;border:1px solid rgba(255,255,255,0.1);background:rgba(0,0,0,0.3);color:#e2e8f0;font-size:13px;font-family:inherit;outline:none;">
+          </div>
+          <div>
+            <label style="font-size:11px;color:#8899b4;text-transform:uppercase;">Currency</label>
+            <select id="popCurrency" style="width:100%;padding:8px;border-radius:6px;border:1px solid rgba(255,255,255,0.1);background:rgba(0,0,0,0.3);color:#e2e8f0;font-size:13px;font-family:inherit;outline:none;">
+              <option value="DKK">DKK</option><option value="EUR" selected>EUR</option>
+              <option value="USD">USD</option><option value="GBP">GBP</option>
+              <option value="INR">INR</option><option value="CNY">CNY</option>
+              <option value="SEK">SEK</option><option value="NOK">NOK</option>
+            </select>
+          </div>
+          <div>
+            <label style="font-size:11px;color:#8899b4;text-transform:uppercase;">Email (optional)</label>
+            <input type="email" id="popEmail" placeholder="you@example.com" style="width:100%;padding:8px;border-radius:6px;border:1px solid rgba(255,255,255,0.1);background:rgba(0,0,0,0.3);color:#e2e8f0;font-size:13px;font-family:inherit;outline:none;">
+          </div>
+        </div>
+        
+        <!-- Mini map -->
+        <div style="margin-top:10px;">
+          <div style="display:flex;gap:6px;margin-bottom:6px;">
+            <input type="text" id="popGeoSearch" placeholder="Search city..." style="flex:1;padding:6px 10px;border-radius:4px;border:1px solid rgba(255,255,255,0.1);background:rgba(0,0,0,0.3);color:#e2e8f0;font-size:12px;font-family:inherit;outline:none;">
+            <button type="button" onclick="popupSearchCity()" style="padding:6px 10px;border-radius:4px;border:none;background:#6366f1;color:white;font-size:12px;cursor:pointer;font-family:inherit;">Find</button>
+          </div>
+          <div id="popupMap" style="height:180px;border-radius:8px;overflow:hidden;border:1px solid rgba(255,255,255,0.1);background:#1a2030;"></div>
+          <div style="font-size:10px;color:#64748b;margin-top:4px;" id="popCoordLabel">Click map to set location</div>
+        </div>
+        
+        <input type="hidden" id="popLat" value="55.6761">
+        <input type="hidden" id="popLng" value="12.5683">
+        <input type="hidden" id="popCityHidden" value="Copenhagen">
+        
+        <div id="popStatus" style="font-size:12px;margin-top:8px;display:none;"></div>
+        <button type="submit" style="width:100%;margin-top:10px;padding:10px;border-radius:8px;border:none;background:linear-gradient(135deg,#6366f1,#7c3aed);color:white;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;">Add Price</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Tooltip -->
+  <div class="hover-tooltip" id="tooltip"></div>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script type="module">
+    // We'll load Cesium from CDN for simplicity
+    // Using the ES module build via importmap or direct script
+    
+    const CESIUM_VERSION = '1.125';
+    
+    // Load Cesium CSS already done via link tag
+    // Load Cesium JS
+    async function loadCesium() {
+      return new Promise((resolve, reject) => {
+        const script = document.createElement('script');
+        script.src = `https://cesium.com/downloads/cesiumjs/releases/${CESIUM_VERSION}/Build/Cesium/Cesium.js`;
+        script.onload = () => resolve(window.Cesium);
+        script.onerror = reject;
+        document.head.appendChild(script);
+      });
+    }
+
+    let viewer;
+    let allCities = [];
+    let allPrices = [];
+    let displayCurrency = 'USD';
+    let pillMap = new WeakMap();
+    const currentYear = new Date().getFullYear();
+    let selectedYear = 0; // 0 = active (last 12 months)
+    
+    function renderYearPills() {
+      const container = document.getElementById('yearPills');
+      const startYear = 2026;
+      let html = `<button class="year-pill${selectedYear === 0 ? ' active' : ''}" onclick="switchYear(0)">Active</button>`;
+      for (let y = currentYear; y >= startYear; y--) {
+        html += `<button class="year-pill${y === selectedYear ? ' active' : ''}" onclick="switchYear(${y})">${y}</button>`;
+      }
+      container.innerHTML = html;
+    }
+    
+    window.switchYear = function(year) {
+      if (year === selectedYear) return;
+      selectedYear = year;
+      renderYearPills();
+      loadData().then(() => {
+        addPriceDots(Cesium, viewer);
+      });
+    };
+    
+    // Exchange rates to USD (approximate)
+    const ratesToUSD = {
+      DKK: 0.147, EUR: 1.10, USD: 1, GBP: 1.27, SEK: 0.096, NOK: 0.094, INR: 0.012, CNY: 0.14
+    };
+    
+    function convertPrice(price, fromCurrency, toCurrency) {
+      if (fromCurrency === toCurrency) return price;
+      const inUSD = price * (ratesToUSD[fromCurrency] || 1);
+      return Math.round(inUSD / (ratesToUSD[toCurrency] || 1));
+    }
+    
+    function changeCurrency() {
+      displayCurrency = document.getElementById('currencySelect').value;
+      const sym = ({DKK:'kr',EUR:'€',USD:'$',GBP:'£',SEK:'kr',NOK:'kr'})[displayCurrency] || displayCurrency;
+      const t1 = Math.round(convertPrice(15, 'USD', displayCurrency));
+      const t2 = Math.round(convertPrice(22, 'USD', displayCurrency));
+      const t3 = Math.round(convertPrice(30, 'USD', displayCurrency));
+      document.getElementById('legLow').textContent = `0–${t1} ${sym}`;
+      document.getElementById('legMid').textContent = `${t1}–${t2} ${sym}`;
+      document.getElementById('legHigh').textContent = `${t2}–${t3} ${sym}`;
+      document.getElementById('legPremium').textContent = `${t3}+ ${sym}`;
+      // Redraw all dots with new currency
+      if (viewer) {
+        addPriceDots(Cesium, viewer);
+        // If panel is open, refresh it
+        const panel = document.getElementById('infoPanel');
+        if (panel.classList.contains('open') && currentPanelPrice) {
+          openPanel(currentPanelPrice);
+        }
+      }
+    }
+
+    // Color function based on price/m²/month — compare in USD always
+    function getColor(pricePerM2, fromCurrency) {
+      // Convert to USD for comparison
+      const inUSD = convertPrice(pricePerM2, fromCurrency || 'DKK', 'USD');
+      if (!inUSD || inUSD <= 15) return Cesium.Color.fromCssColorString('#22c55e');
+      if (inUSD <= 22) return Cesium.Color.fromCssColorString('#eab308');
+      if (inUSD <= 30) return Cesium.Color.fromCssColorString('#f97316');
+      return Cesium.Color.fromCssColorString('#ef4444');
+    }
+
+    // Get pixel size based on count
+    function getSize(count) {
+      if (count < 10) return 6;
+      if (count < 50) return 8;
+      if (count < 200) return 10;
+      if (count < 500) return 13;
+      return 16;
+    }
+
+    function formatPrice(price, currency) {
+      if (!price) return '—';
+      const symbols = { DKK: 'kr', EUR: '€', USD: '$', GBP: '£', SEK: 'kr', NOK: 'kr', INR: '₹', CNY: '¥' };
+      const converted = convertPrice(price, currency || 'DKK', displayCurrency);
+      const sym = symbols[displayCurrency] || displayCurrency;
+      return new Intl.NumberFormat('en', { maximumFractionDigits: 0 }).format(converted) + ' ' + sym;
+    }
+
+    async function loadData() {
+      try {
+        const apiUrl = selectedYear > 0 
+          ? `https://rentgarden-api.lejnel.workers.dev?year=${selectedYear}`
+          : 'https://rentgarden-api.lejnel.workers.dev';
+        const resp = await fetch(apiUrl);
+        if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+        const data = await resp.json();
+        allCities = data.cities || [];
+        allPrices = data.prices || [];
+        return data;
+      } catch (err) {
+        console.warn('API not available:', err.message);
+        allCities = [];
+        allPrices = [];
+        return { cities: [], prices: [] };
+      }
+    }
+
+    function createPillCanvas(text, bgColor) {
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      const font = 'bold 16px -apple-system, BlinkMacSystemFont, sans-serif';
+      ctx.font = font;
+      const metrics = ctx.measureText(text);
+      const padX = 16;
+      const padY = 10;
+      const w = Math.ceil(metrics.width + padX * 2);
+      const h = Math.ceil(24 + padY * 2);
+      const r = h / 2;
+      
+      canvas.width = w;
+      canvas.height = h;
+      ctx.font = font;
+      
+      // Pill shape with rounded ends
+      ctx.beginPath();
+      ctx.moveTo(r, 0);
+      ctx.lineTo(w - r, 0);
+      ctx.arcTo(w, 0, w, r, r);
+      ctx.arcTo(w, h, w - r, h, r);
+      ctx.lineTo(r, h);
+      ctx.arcTo(0, h, 0, h - r, r);
+      ctx.arcTo(0, 0, r, 0, r);
+      ctx.closePath();
+      
+      // Fill with color
+      ctx.fillStyle = bgColor.toCssColorString();
+      ctx.fill();
+      
+      // White border
+      ctx.strokeStyle = '#ffffff';
+      ctx.lineWidth = 2.5;
+      ctx.stroke();
+      
+      // Text
+      ctx.fillStyle = '#ffffff';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(text, w / 2, h / 2);
+      
+      return canvas;
+    }
+
+    function addPriceDots(Cesium, viewer) {
+      viewer.entities.removeAll();
+      // Clear old HTML pills
+      const container = document.getElementById('pillContainer');
+      container.innerHTML = '';
+      pillMap = new WeakMap();
+      
+      allPrices.forEach(p => {
+        if (!p.lat || !p.lng) return;
+        const convertedPerM2 = convertPrice(p.price_per_m2 || p.price_total, p.currency || 'DKK', displayCurrency);
+        const color = getColor(p.price_per_m2 || p.price_total, p.currency || 'DKK');
+        const pixelSize = 12;
+        const priceText = formatPrice(p.price_total, p.currency);
+        
+        // Create HTML pill element with inline styles (Astro scopes CSS classes)
+        const pill = document.createElement('div');
+        pill.style.cssText = `
+          position:absolute; padding:4px 12px; border-radius:18px;
+          border:2px solid white; color:white;
+          font:bold 12px -apple-system,BlinkMacSystemFont,sans-serif;
+          white-space:nowrap; pointer-events:auto; cursor:pointer;
+          transform:translate(-50%,-50%); text-shadow:0 1px 2px rgba(0,0,0,0.3);
+          box-shadow:0 1px 4px rgba(0,0,0,0.3); transition:opacity 0.2s;
+          background:${color.toCssColorString()};
+        `;
+        pill.onmouseenter = function() { this.style.filter = 'brightness(1.15)'; this.style.boxShadow = '0 4px 16px rgba(0,0,0,0.5)'; };
+        pill.onmouseleave = function() { this.style.filter = ''; this.style.boxShadow = '0 2px 8px rgba(0,0,0,0.3)'; };
+        pill.textContent = priceText;
+        pill.onclick = () => {
+          openPanel({
+            priceId: p.id, lat: p.lat, lng: p.lng,
+            priceTotal: p.price_total, pricePerM2: p.price_per_m2,
+            currency: p.currency || 'DKK', city: p.city, country: p.country,
+            sqm: p.sqm, rooms: p.rooms, type: p.type,
+            sourceUrl: p.source_url, sourceSite: p.source_site, listingDate: p.listing_date,
+          });
+        };
+        container.appendChild(pill);
+        
+        const entity = viewer.entities.add({
+          position: Cesium.Cartesian3.fromDegrees(p.lng, p.lat),
+          // Dot visible when zoomed OUT (>80km)
+          point: {
+            pixelSize: pixelSize,
+            color: color,
+            outlineColor: Cesium.Color.WHITE,
+            outlineWidth: 1.5,
+            heightReference: Cesium.HeightReference.CLAMP_TO_GROUND,
+            distanceDisplayCondition: new Cesium.DistanceDisplayCondition(80000, Infinity),
+            scaleByDistance: new Cesium.NearFarScalar(50000, 2.0, 80000, 1.0),
+          },
+          properties: {
+            priceId: p.id,
+            lat: p.lat, lng: p.lng,
+            priceTotal: p.price_total, pricePerM2: p.price_per_m2,
+            currency: p.currency || 'EUR',
+            city: p.city, country: p.country,
+            sqm: p.sqm, rooms: p.rooms, type: p.type,
+            sourceUrl: p.source_url, sourceSite: p.source_site, listingDate: p.listing_date,
+          }
+        });
+        pillMap.set(entity, pill);
+      });
+    }
+
+    let currentPanelPrice = null;
+
+    async function openPanel(price) {
+      currentPanelPrice = price;
+      const panel = document.getElementById('infoPanel');
+      
+      // Reverse geocode to get street address
+      let address = price.city || 'Unknown';
+      try {
+        const r = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${price.lat || 0}&lon=${price.lng || 0}&format=json&zoom=18`);
+        const d = await r.json();
+        if (d && d.display_name) {
+          // Take first part of address (street level)
+          const parts = d.display_name.split(',');
+          address = parts.slice(0, 2).join(',').trim();
+        }
+      } catch(e) {}
+      
+      document.getElementById('panelCity').textContent = address;
+      document.getElementById('panelCountry').textContent = (price.country || '') + ' · ' + (price.type || 'apartment');
+      document.getElementById('statAvg').textContent = formatPrice(price.pricePerM2 || price.priceTotal, price.currency) + '/m²';
+      document.getElementById('statCount').textContent = formatPrice(price.priceTotal || price.pricePerM2, price.currency) + ' / month';
+      
+      const listingsEl = document.getElementById('panelListings');
+      listingsEl.innerHTML = '<div class="panel-section-title">Listing details</div>';
+      listingsEl.innerHTML += `
+        <div class="listing-row" style="cursor:pointer" onclick="window.open('${price.sourceUrl}', '_blank')">
+          <span>🏠</span>
+          <span style="flex:1">
+            ${price.rooms ? price.rooms + ' rooms' : 'Property'}${price.sqm ? ' · ' + price.sqm + 'm²' : ''}
+            <div class="listing-source">${price.listingDate || ''} · ${price.sourceSite || ''}</div>
+          </span>
+          <span class="listing-price">${formatPrice(price.priceTotal || price.pricePerM2, price.currency)}</span>
+          <span class="listing-arrow">→</span>
+        </div>
+      `;
+      
+      panel.classList.add('open');
+    }
+
+    function closePanel() {
+      document.getElementById('infoPanel').classList.remove('open');
+    }
+
+    async function init() {
+      try {
+        const Cesium = await loadCesium();
+        
+        // No Cesium ion token needed — ESRI satellite is free
+        
+        // Create viewer with satellite imagery (ESRI tiles via direct URL)
+        viewer = new Cesium.Viewer('cesiumContainer', {
+          imageryProvider: new Cesium.UrlTemplateImageryProvider({
+            url: 'https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+            credit: 'Esri, Maxar, Earthstar Geographics',
+            maximumLevel: 16,
+          }),
+          baseLayerPicker: false,
+          geocoder: false,
+          homeButton: false,
+          sceneModePicker: false,
+          navigationHelpButton: false,
+          animation: false,
+          timeline: false,
+          fullscreenButton: false,
+          vrButton: false,
+          infoBox: false,
+          selectionIndicator: false,
+          skyBox: false,
+          skyAtmosphere: false,
+        });
+        
+        // Set dark atmosphere feel — works great with satellite
+        viewer.scene.backgroundColor = Cesium.Color.fromCssColorString('#000011');
+        viewer.scene.globe.baseColor = Cesium.Color.fromCssColorString('#000022');
+        viewer.scene.globe.enableLighting = true;
+        viewer.scene.globe.showGroundAtmosphere = false;
+        
+        // Use satellite imagery
+        viewer.imageryLayers.removeAll();
+        viewer.imageryLayers.addImageryProvider(new Cesium.UrlTemplateImageryProvider({
+          url: 'https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+          credit: 'Esri, Maxar, Earthstar Geographics',
+          maximumLevel: 16,
+        }));
+        
+        // Load data
+        await loadData();
+        
+        // Render year pills
+        renderYearPills();
+        
+        // Add dots
+        addPriceDots(Cesium, viewer);
+        
+        // Click handler
+        const handler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
+        handler.setInputAction(function(click) {
+          const picked = viewer.scene.pick(click.position);
+          if (Cesium.defined(picked) && picked.id && picked.id.properties) {
+            // Skip — HTML pills handle their own clicks
+            
+            const props = picked.id.properties;
+            const price = {
+              priceId: props.priceId?.getValue?.(),
+              lat: props.lat?.getValue?.(), lng: props.lng?.getValue?.(),
+              priceTotal: props.priceTotal?.getValue?.(), pricePerM2: props.pricePerM2?.getValue?.(),
+              currency: props.currency?.getValue?.(), city: props.city?.getValue?.(),
+              country: props.country?.getValue?.(), sqm: props.sqm?.getValue?.(),
+              rooms: props.rooms?.getValue?.(), type: props.type?.getValue?.(),
+              sourceUrl: props.sourceUrl?.getValue?.(), sourceSite: props.sourceSite?.getValue?.(),
+              listingDate: props.listingDate?.getValue?.(),
+            };
+            openPanel(price);
+          } else {
+            closePanel();
+          }
+        }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
+        
+        // Hover tooltip
+        const tooltip = document.getElementById('tooltip');
+        handler.setInputAction(function(movement) {
+          const picked = viewer.scene.pick(movement.endPosition);
+          if (Cesium.defined(picked) && picked.id && picked.id.properties) {
+            const props = picked.id.properties;
+            tooltip.textContent = `${props.city?.getValue?.() || ''} · ${formatPrice(props.priceTotal?.getValue?.(), props.currency?.getValue?.())}`;
+            tooltip.style.left = (movement.endPosition.x + 16) + 'px';
+            tooltip.style.top = (movement.endPosition.y - 30) + 'px';
+            tooltip.classList.add('visible');
+          } else {
+            tooltip.classList.remove('visible');
+          }
+        }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
+        
+        // Update HTML pill positions on each frame
+        viewer.scene.preRender.addEventListener(function() {
+          const entities = viewer.entities.values;
+          const cameraHeight = viewer.camera.positionCartographic.height;
+          
+          entities.forEach(function(entity) {
+            if (!entity.position) return;
+            const pill = pillMap.get(entity);
+            if (!pill) return;
+            
+            if (cameraHeight > 80000) {
+              pill.style.opacity = '0';
+              pill.style.pointerEvents = 'none';
+              return;
+            }
+            
+            const pos = entity.position.getValue(viewer.clock.currentTime);
+            if (!pos) return;
+            
+            const canvasPos = viewer.scene.cartesianToCanvasCoordinates(pos);
+            if (canvasPos) {
+              pill.style.left = canvasPos.x + 'px';
+              pill.style.top = canvasPos.y + 'px';
+              const fade = Math.max(0, Math.min(1, (80000 - cameraHeight) / 30000));
+              pill.style.opacity = fade;
+              pill.style.pointerEvents = fade > 0.5 ? 'auto' : 'none';
+            } else {
+              pill.style.opacity = '0';
+            }
+          });
+        });
+        
+        // Initial camera: zoomed out view of Europe
+        viewer.camera.setView({
+          destination: Cesium.Cartesian3.fromDegrees(15, 48, 8000000),
+        });
+        
+        // Hide loading
+        document.getElementById('loadingOverlay').classList.add('hidden');
+        
+        // Make functions globally accessible
+        window.closePanel = closePanel;
+        window.changeCurrency = changeCurrency;
+        
+        // --- Popup functions ---
+        let popupMap, popupMarker;
+        
+        window.openAddPopup = function() {
+          document.getElementById('popupOverlay').classList.remove('hidden');
+          // Init mini map after popup is visible
+          setTimeout(initPopupMap, 100);
+        };
+        
+        function initPopupMap() {
+          if (popupMap) { popupMap.invalidateSize(); return; }
+          popupMap = L.map('popupMap', { center: [55.6761, 12.5683], zoom: 5, zoomControl: false, attributionControl: false });
+          L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(popupMap);
+          popupMarker = L.marker([55.6761, 12.5683], { draggable: true }).addTo(popupMap);
+          
+          popupMap.on('click', function(e) {
+            popupMarker.setLatLng(e.latlng);
+            updatePopupCoords(e.latlng.lat, e.latlng.lng);
+            reversePopupGeo(e.latlng.lat, e.latlng.lng);
+          });
+          popupMarker.on('dragend', function() {
+            var p = popupMarker.getLatLng();
+            updatePopupCoords(p.lat, p.lng);
+            reversePopupGeo(p.lat, p.lng);
+          });
+        }
+        
+        function updatePopupCoords(lat, lng) {
+          document.getElementById('popLat').value = lat.toFixed(6);
+          document.getElementById('popLng').value = lng.toFixed(6);
+          document.getElementById('popCoordLabel').textContent = lat.toFixed(4) + ', ' + lng.toFixed(4);
+        }
+        
+        async function reversePopupGeo(lat, lng) {
+          try {
+            var r = await fetch('https://nominatim.openstreetmap.org/reverse?lat=' + lat + '&lon=' + lng + '&format=json&zoom=10');
+            var d = await r.json();
+            if (d && d.address) {
+              var city = d.address.city || d.address.town || d.address.village || '';
+              if (city) document.getElementById('popCityHidden').value = city;
+              document.getElementById('popCoordLabel').textContent = (city || 'Unknown') + ' · ' + lat.toFixed(4) + ', ' + lng.toFixed(4);
+            }
+          } catch(e) {}
+        }
+        
+        window.popupSearchCity = async function() {
+          var q = document.getElementById('popGeoSearch').value.trim();
+          if (!q || !popupMap) return;
+          try {
+            var r = await fetch('https://nominatim.openstreetmap.org/search?q=' + encodeURIComponent(q) + '&format=json&limit=1');
+            var d = await r.json();
+            if (d.length > 0) {
+              var lat = parseFloat(d[0].lat), lng = parseFloat(d[0].lon);
+              popupMap.setView([lat, lng], 12);
+              popupMarker.setLatLng([lat, lng]);
+              updatePopupCoords(lat, lng);
+              document.getElementById('popCityHidden').value = d[0].display_name.split(',')[0].trim();
+              document.getElementById('popCoordLabel').textContent = d[0].display_name.split(',')[0].trim() + ' · ' + lat.toFixed(4) + ', ' + lng.toFixed(4);
+            }
+          } catch(e) {}
+        };
+        
+        window.closeAddPopup = function() {
+          document.getElementById('popupOverlay').classList.add('hidden');
+        };
+        
+        window.submitPopupPrice = async function(e) {
+          e.preventDefault();
+          var lat = parseFloat(document.getElementById('popLat').value);
+          var lng = parseFloat(document.getElementById('popLng').value);
+          var city = document.getElementById('popCityHidden').value;
+          
+          if (!city) { alert('Please pick a location on the map'); return; }
+          
+          var data = {
+            source_url: document.getElementById('popUrl').value,
+            price_total: parseFloat(document.getElementById('popPrice').value),
+            currency: document.getElementById('popCurrency').value,
+            city: city,
+            country: 'DK',
+            lat: lat,
+            lng: lng,
+            submitter_email: document.getElementById('popEmail').value || null,
+          };
+          
+          try {
+            var resp = await fetch('https://rentgarden-api.lejnel.workers.dev', {
+              method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(data),
+            });
+            var result = await resp.json();
+            var s = document.getElementById('popStatus');
+            s.style.display = 'block';
+            if (resp.ok) {
+              s.style.color = '#22c55e'; s.textContent = '✓ Added! Refresh to see it.';
+              document.getElementById('popupForm').reset();
+              setTimeout(function(){ closeAddPopup(); s.style.display = 'none'; }, 1500);
+            } else {
+              s.style.color = '#ef4444'; s.textContent = 'Error: ' + (result.error || 'Unknown');
+            }
+          } catch(err) {
+            var s = document.getElementById('popStatus');
+            s.style.display = 'block'; s.style.color = '#ef4444'; s.textContent = 'Error: ' + err.message;
+          }
+        };
+        
+        // Refresh data periodically (every 5 min)
+        setInterval(loadData, 300000);
+        
+      } catch (err) {
+        console.error('Failed to initialize:', err);
+        document.getElementById('loadingOverlay').innerHTML = 
+          '<div class="loading-text" style="color:#ef4444">Failed to load globe. Check console.</div>';
+      }
+    }
+
+    init();
+  </script>
+</Layout>

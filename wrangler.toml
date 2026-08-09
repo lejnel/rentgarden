@@ -1,0 +1,14 @@
+name = "rentgarden"
+pages_build_output_dir = "dist"
+compatibility_date = "2024-12-01"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "rentgarden-db"
+database_id = "f9aaf60c-f0aa-4bcc-aae8-0b0d27dd6d7c"
+
+[vars]
+CESIUM_TOKEN = ""
+
+[env.production]
+CESIUM_TOKEN = ""

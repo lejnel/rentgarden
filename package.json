@@ -1,0 +1,22 @@
+{
+  "name": "rentgarden",
+  "type": "module",
+  "version": "0.0.1",
+  "scripts": {
+    "dev": "astro dev",
+    "start": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview",
+    "deploy": "astro build && wrangler pages deploy dist",
+    "db:create": "wrangler d1 create rentradar-db",
+    "db:init": "wrangler d1 execute rentradar-db --file=./schema.sql"
+  },
+  "dependencies": {
+    "@astrojs/cloudflare": "^12.0.0",
+    "astro": "^5.0.0",
+    "cesium": "^1.125.0"
+  },
+  "devDependencies": {
+    "wrangler": "^4.0.0"
+  }
+}

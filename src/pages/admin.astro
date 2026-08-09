@@ -1,0 +1,600 @@
+---
+// src/pages/admin.astro — Admin page with interactive map picker
+import Layout from '../layouts/Layout.astro';
+---
+
+<Layout>
+  <slot name="head">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+      * { box-sizing: border-box; }
+      body {
+        overflow-y: auto !important;
+        background: #0f172a !important;
+      }
+      
+      .admin-container {
+        max-width: 700px; margin: 0 auto; padding: 40px 24px;
+        min-height: 100vh;
+      }
+      
+      h1 {
+        font-size: 28px; font-weight: 700; margin-bottom: 4px;
+        background: linear-gradient(135deg, #6366f1, #a78bfa);
+        -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      }
+      .subtitle { color: #64748b; font-size: 14px; margin-bottom: 32px; }
+      
+      .back-link {
+        display: inline-block; color: #6366f1; text-decoration: none;
+        font-size: 13px; margin-bottom: 24px;
+      }
+      .back-link:hover { text-decoration: underline; }
+      
+      .card {
+        background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08);
+        border-radius: 16px; padding: 24px; margin-bottom: 24px;
+      }
+      .card-title { font-size: 16px; font-weight: 600; margin-bottom: 16px; color: #e2e8f0; }
+      
+      .form-grid {
+        display: grid; grid-template-columns: 1fr 1fr; gap: 12px;
+      }
+      .form-group { display: flex; flex-direction: column; gap: 4px; }
+      .form-group.full { grid-column: 1 / -1; }
+      .form-group label {
+        font-size: 12px; font-weight: 500; color: #8899b4; text-transform: uppercase; letter-spacing: 0.5px;
+      }
+      .form-group input, .form-group select {
+        padding: 10px 14px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1);
+        background: rgba(0,0,0,0.3); color: #e2e8f0; font-size: 14px;
+        font-family: inherit; outline: none; transition: border-color 0.15s;
+      }
+      .form-group input:focus, .form-group select:focus {
+        border-color: #6366f1;
+      }
+      
+      /* ---- Map ---- */
+      .map-wrapper {
+        margin: 16px 0;
+        border-radius: 12px;
+        overflow: hidden;
+        border: 1px solid rgba(255,255,255,0.1);
+      }
+      .map-label-row {
+        display: flex; align-items: center; justify-content: space-between;
+        margin-bottom: 6px;
+      }
+      .map-label-row span {
+        font-size: 12px; font-weight: 500; color: #8899b4;
+        text-transform: uppercase; letter-spacing: 0.5px;
+      }
+      .map-label-row .coords {
+        font-size: 11px; color: #64748b; text-transform: none;
+      }
+      #map {
+        height: 320px;
+        background: #1a2030;
+        cursor: crosshair;
+      }
+      #map .leaflet-control-zoom a {
+        background: rgba(15,23,42,0.9) !important;
+        color: #e2e8f0 !important;
+        border-color: rgba(255,255,255,0.1) !important;
+      }
+      #map .leaflet-control-attribution {
+        background: rgba(15,23,42,0.8) !important;
+        color: #64748b !important;
+        font-size: 9px !important;
+      }
+      #map .leaflet-control-attribution a { color: #8899b4 !important; }
+      
+      /* ---- Search + Map row ---- */
+      .search-map-row {
+        display: flex; gap: 8px; margin-bottom: 8px;
+      }
+      .search-map-row input {
+        flex: 1; padding: 8px 12px; border-radius: 6px;
+        border: 1px solid rgba(255,255,255,0.1);
+        background: rgba(0,0,0,0.3); color: #e2e8f0;
+        font-size: 13px; font-family: inherit; outline: none;
+      }
+      .search-map-row input:focus { border-color: #6366f1; }
+      .search-map-row button {
+        padding: 8px 14px; border-radius: 6px; border: none; cursor: pointer;
+        background: #6366f1; color: white; font-size: 13px; font-weight: 500;
+        font-family: inherit; white-space: nowrap;
+      }
+      .search-map-row button:hover { background: #4f46e5; }
+      
+      .btn {
+        padding: 12px 24px; border-radius: 10px; border: none; cursor: pointer;
+        font-size: 14px; font-weight: 600; font-family: inherit;
+        transition: all 0.15s;
+      }
+      .btn-primary {
+        background: linear-gradient(135deg, #6366f1, #7c3aed);
+        color: white; margin-top: 16px; width: 100%;
+      }
+      .btn-primary:hover { opacity: 0.9; }
+      .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+      .btn-danger {
+        background: transparent; border: 1px solid rgba(239,68,68,0.3);
+        color: #ef4444; padding: 6px 12px; font-size: 12px; border-radius: 6px; cursor: pointer;
+        font-family: inherit;
+      }
+      .btn-danger:hover { background: rgba(239,68,68,0.1); }
+      
+      .status-msg {
+        padding: 10px 16px; border-radius: 8px; font-size: 13px; margin-top: 12px;
+        display: none;
+      }
+      .status-msg.success { display:block; background:rgba(34,197,94,0.1); color:#22c55e; border:1px solid rgba(34,197,94,0.2); }
+      .status-msg.error { display:block; background:rgba(239,68,68,0.1); color:#ef4444; border:1px solid rgba(239,68,68,0.2); }
+      
+      .price-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+      .price-table th {
+        text-align: left; padding: 10px 12px; color: #64748b;
+        font-weight: 600; text-transform: uppercase; font-size: 11px;
+        letter-spacing: 0.5px; border-bottom: 1px solid rgba(255,255,255,0.06);
+      }
+      .price-table td {
+        padding: 10px 12px; border-bottom: 1px solid rgba(255,255,255,0.03);
+        color: #cbd5e1;
+      }
+      .price-table tr:hover td { background: rgba(255,255,255,0.02); }
+      .price-table a { color: #6366f1; text-decoration: none; }
+      .price-table a:hover { text-decoration: underline; }
+      
+      .empty-state { text-align:center; padding:32px; color:#64748b; font-size:14px; }
+      
+      /* ---- Login ---- */
+      .login-overlay {
+        position: fixed; inset: 0; z-index: 9999;
+        background: #0f172a;
+        display: flex; align-items: center; justify-content: center;
+        flex-direction: column;
+      }
+      .login-overlay.hidden { display: none !important; }
+      .login-card {
+        background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08);
+        border-radius: 16px; padding: 36px; width: 360px; text-align: center;
+      }
+      .login-card h2 {
+        font-size: 22px; font-weight: 700; margin-bottom: 4px;
+        background: linear-gradient(135deg, #6366f1, #a78bfa);
+        -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      }
+      .login-card p { color: #64748b; font-size: 13px; margin-bottom: 24px; }
+      .login-card input {
+        width: 100%; padding: 12px 16px; border-radius: 10px;
+        border: 1px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.3);
+        color: #e2e8f0; font-size: 14px; font-family: inherit; outline: none;
+        margin-bottom: 10px; transition: border-color 0.15s;
+      }
+      .login-card input:focus { border-color: #6366f1; }
+      .login-card .login-btn {
+        width: 100%; padding: 12px; border-radius: 10px; border: none;
+        cursor: pointer; font-size: 14px; font-weight: 600; font-family: inherit;
+        background: linear-gradient(135deg, #6366f1, #7c3aed); color: white;
+        margin-top: 6px;
+      }
+      .login-card .login-btn:hover { opacity: 0.9; }
+      .login-error { color: #ef4444; font-size: 12px; margin-top: 8px; display: none; }
+      .login-error.show { display: block; }
+      .logout-btn {
+        background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.2);
+        color: #ef4444; padding: 6px 14px; border-radius: 8px; font-size: 12px;
+        cursor: pointer; font-family: inherit;
+      }
+      .logout-btn:hover { background: rgba(239,68,68,0.2); }
+      
+      @media (max-width: 600px) {
+        .form-grid { grid-template-columns: 1fr; }
+        .admin-container { padding: 20px 16px; }
+        #map { height: 220px; }
+      }
+    </style>
+  </slot>
+
+  <!-- Login Overlay (only for admin table below, not for adding prices) -->
+  <div class="login-overlay hidden" id="loginOverlay">
+    <div class="login-card">
+      <h2>🔐 Admin</h2>
+      <p>Login to manage listings</p>
+      <input type="password" id="loginPassword" placeholder="Password" onkeydown="if(event.key==='Enter')login()">
+      <button class="login-btn" onclick="login()">Sign In</button>
+      <div class="login-error" id="loginError">Wrong password</div>
+    </div>
+  </div>
+
+  <div class="admin-container">
+    <a href="/" class="back-link">← Back to globe</a>
+    <h1>🏠 RentGarden</h1>
+    <p class="subtitle">Add a rental price — just paste a link and pick the spot on the map</p>
+
+    <!-- Add Price Form (always visible, no login needed) -->
+    <div class="card">
+      <div class="card-title">➕ Add New Price</div>
+      <form id="addForm" onsubmit="addPrice(event)">
+        <div class="form-grid">
+          <div class="form-group full">
+            <label>Listing URL *</label>
+            <input type="url" id="source_url" required placeholder="https://boligportal.dk/lejlighed/...">
+          </div>
+          <div class="form-group">
+            <label>Monthly Rent *</label>
+            <input type="number" id="price_total" required placeholder="6950" step="0.01">
+          </div>
+          <div class="form-group">
+            <label>Your Email (for moderation)</label>
+            <input type="email" id="submitter_email" placeholder="you@example.com">
+          </div>
+          <div class="form-group">
+            <label>Currency</label>
+            <select id="currency">
+              <option value="DKK">DKK</option>
+              <option value="EUR" selected>EUR</option>
+              <option value="USD">USD</option>
+              <option value="GBP">GBP</option>
+              <option value="SEK">SEK</option>
+              <option value="NOK">NOK</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Size (m²)</label>
+            <input type="number" id="sqm" placeholder="58">
+          </div>
+          <div class="form-group">
+            <label>Rooms</label>
+            <input type="number" id="rooms" placeholder="2">
+          </div>
+          <div class="form-group">
+            <label>Type</label>
+            <select id="type">
+              <option value="apartment">Apartment</option>
+              <option value="house">House</option>
+              <option value="room">Room</option>
+              <option value="studio">Studio</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Listing Date</label>
+            <input type="date" id="listing_date">
+          </div>
+        </div>
+
+        <!-- Map Picker -->
+        <div style="margin-top: 16px;">
+          <div class="map-label-row">
+            <span>📍 Pick location on map</span>
+            <span class="coords" id="coordDisplay">Click the map to set position</span>
+          </div>
+          <div class="search-map-row">
+            <input type="text" id="geoSearch" placeholder="Search city or address..." onkeydown="if(event.key==='Enter'){event.preventDefault();searchLocation()}">
+            <button type="button" onclick="searchLocation()">🔍 Find</button>
+          </div>
+          <div class="map-wrapper">
+            <div id="map"></div>
+          </div>
+        </div>
+
+        <!-- Hidden fields for lat/lng/city/country -->
+        <input type="hidden" id="lat">
+        <input type="hidden" id="lng">
+        <input type="hidden" id="city">
+        <input type="hidden" id="country" value="DK">
+
+        <button type="submit" class="btn btn-primary" id="submitBtn">Add Price</button>
+        <div class="status-msg" id="formStatus"></div>
+      </form>
+    </div>
+
+    <!-- Price List (admin only) -->
+    <div class="card" id="priceListCard" style="display:none">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+        <div class="card-title" style="margin-bottom:0">📋 Manage Listings</div>
+        <button class="logout-btn" onclick="logout()" style="position:static;">🚪 Logout</button>
+      </div>
+      <div style="margin-bottom:12px;">
+        <input type="text" id="priceFilter" placeholder="🔍 Filter by city, email, or price..." 
+          style="width:100%;padding:8px 12px;border-radius:6px;border:1px solid rgba(255,255,255,0.1);
+                 background:rgba(0,0,0,0.3);color:#e2e8f0;font-size:13px;font-family:inherit;outline:none;"
+          oninput="filterPrices()">
+      </div>
+      <div id="priceList">
+        <div class="empty-state">Loading...</div>
+      </div>
+    </div>
+    
+    <!-- Admin unlock button (visible when not logged in) -->
+    <div style="text-align:center;margin-top:16px;" id="adminUnlock">
+      <button class="btn" style="background:transparent;border:1px solid rgba(255,255,255,0.1);color:#64748b;padding:8px 20px;border-radius:8px;cursor:pointer;font-size:12px;font-family:inherit;" onclick="showLogin()">🔐 Manage listings</button>
+    </div>
+  </div>
+
+  <script is:inline src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script is:inline>
+    const API = 'https://rentgarden-api.lejnel.workers.dev';
+    const AUTH_KEY = 'rentgarden_auth';
+    
+    // --- AUTH ---
+    const VALID_PASSWORD = '9271Rasm';
+    
+    function showLogin() {
+      document.getElementById('loginOverlay').classList.remove('hidden');
+      document.getElementById('loginPassword').focus();
+    }
+    
+    function login() {
+      const password = document.getElementById('loginPassword').value;
+      if (password === VALID_PASSWORD) {
+        localStorage.setItem(AUTH_KEY, 'true');
+        document.getElementById('loginOverlay').classList.add('hidden');
+        document.getElementById('priceListCard').style.display = '';
+        document.getElementById('adminUnlock').style.display = 'none';
+        loadPrices();
+      } else {
+        document.getElementById('loginError').classList.add('show');
+      }
+    }
+    
+    function logout() {
+      localStorage.removeItem(AUTH_KEY);
+      document.getElementById('priceListCard').style.display = 'none';
+      document.getElementById('adminUnlock').style.display = '';
+    }
+    
+    function checkAuth() {
+      if (localStorage.getItem(AUTH_KEY) === 'true') {
+        document.getElementById('priceListCard').style.display = '';
+        document.getElementById('adminUnlock').style.display = 'none';
+        loadPrices();
+      }
+    }
+    
+    // --- MAP SETUP ---
+    let leafletMap, marker;
+    let currentLat = 55.6761, currentLng = 12.5683;
+    
+    // Init: always show form + map, load prices only if authed
+    document.getElementById('listing_date').value = new Date().toISOString().split('T')[0];
+    initMap();
+    checkAuth();
+    
+    function initMap() {
+      leafletMap = L.map('map', {
+        center: [currentLat, currentLng],
+        zoom: 5,
+        zoomControl: true,
+        attributionControl: true,
+      });
+      
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; OpenStreetMap',
+        maxZoom: 19,
+      }).addTo(leafletMap);
+      
+      // Force map to recalculate size (was hidden during page load)
+      setTimeout(() => leafletMap.invalidateSize(), 100);
+      
+      // Initial marker (Copenhagen)
+      marker = L.marker([currentLat, currentLng], { draggable: true }).addTo(leafletMap);
+      updateCoords(currentLat, currentLng);
+      
+      // Click on map to move marker
+      leafletMap.on('click', function(e) {
+        marker.setLatLng(e.latlng);
+        updateCoords(e.latlng.lat, e.latlng.lng);
+        reverseGeocode(e.latlng.lat, e.latlng.lng);
+      });
+      
+      // Drag marker
+      marker.on('dragend', function(e) {
+        const pos = marker.getLatLng();
+        updateCoords(pos.lat, pos.lng);
+        reverseGeocode(pos.lat, pos.lng);
+      });
+    }
+    
+    function updateCoords(lat, lng) {
+      currentLat = lat;
+      currentLng = lng;
+      document.getElementById('lat').value = lat.toFixed(6);
+      document.getElementById('lng').value = lng.toFixed(6);
+      document.getElementById('coordDisplay').textContent = `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
+    }
+    
+    async function reverseGeocode(lat, lng) {
+      try {
+        const resp = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json&zoom=10`);
+        const data = await resp.json();
+        if (data && data.address) {
+          const addr = data.address;
+          const city = addr.city || addr.town || addr.village || addr.municipality || addr.county || '';
+          const countryCode = (addr.country_code || 'dk').toUpperCase();
+          
+          if (city) {
+            document.getElementById('city').value = city;
+          }
+          document.getElementById('country').value = countryCode;
+          document.getElementById('coordDisplay').textContent = `${city || 'Unknown'} · ${lat.toFixed(4)}, ${lng.toFixed(4)}`;
+        }
+      } catch(e) {
+        // Silently fail — coords still set
+      }
+    }
+    
+    // Expose to global scope (Astro wraps scripts as modules)
+    window.login = login;
+    window.showLogin = showLogin;
+    window.logout = logout;
+    window.searchLocation = searchLocation;
+    window.addPrice = addPrice;
+    window.deletePrice = deletePrice;
+    window.filterPrices = filterPrices;
+    
+    async function searchLocation() {
+      const query = document.getElementById('geoSearch').value.trim();
+      if (!query) return;
+      
+      try {
+        const resp = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&limit=1`);
+        const data = await resp.json();
+        if (data.length > 0) {
+          const lat = parseFloat(data[0].lat);
+          const lng = parseFloat(data[0].lon);
+          leafletMap.setView([lat, lng], 12);
+          marker.setLatLng([lat, lng]);
+          updateCoords(lat, lng);
+          
+          const addr = data[0].display_name.split(',');
+          document.getElementById('city').value = addr[0].trim();
+          document.getElementById('coordDisplay').textContent = `${addr[0].trim()} · ${lat.toFixed(4)}, ${lng.toFixed(4)}`;
+        }
+      } catch(e) {
+        alert('Search failed: ' + e.message);
+      }
+    }
+    
+    // --- FORM ---
+    async function addPrice(e) {
+      e.preventDefault();
+      
+      const lat = parseFloat(document.getElementById('lat').value);
+      const lng = parseFloat(document.getElementById('lng').value);
+      
+      if (!lat || !lng) {
+        document.getElementById('formStatus').className = 'status-msg error';
+        document.getElementById('formStatus').textContent = '✗ Please pick a location on the map first!';
+        return;
+      }
+      
+      const btn = document.getElementById('submitBtn');
+      const status = document.getElementById('formStatus');
+      btn.disabled = true;
+      btn.textContent = 'Saving...';
+      
+      const data = {
+        source_url: document.getElementById('source_url').value,
+        price_total: parseFloat(document.getElementById('price_total').value),
+        currency: document.getElementById('currency').value,
+        submitter_email: document.getElementById('submitter_email').value || null,
+        city: document.getElementById('city').value || 'Unknown',
+        country: document.getElementById('country').value || 'DK',
+        lat: lat,
+        lng: lng,
+        sqm: parseInt(document.getElementById('sqm').value) || null,
+        rooms: parseInt(document.getElementById('rooms').value) || null,
+        type: document.getElementById('type').value,
+        listing_date: document.getElementById('listing_date').value || null,
+      };
+
+      try {
+        const resp = await fetch(API, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data),
+        });
+        const result = await resp.json();
+        
+        if (resp.ok) {
+          status.className = 'status-msg success';
+          status.textContent = '✓ Price added! Refresh the globe to see it.';
+          document.getElementById('addForm').reset();
+          document.getElementById('listing_date').value = new Date().toISOString().split('T')[0];
+          document.getElementById('coordDisplay').textContent = 'Click the map to set position';
+          marker.setLatLng([55.6761, 12.5683]);
+          leafletMap.setView([55.6761, 12.5683], 5);
+          updateCoords(55.6761, 12.5683);
+          loadPrices();
+        } else {
+          status.className = 'status-msg error';
+          status.textContent = '✗ Error: ' + (result.error || 'Unknown error');
+        }
+      } catch (err) {
+        status.className = 'status-msg error';
+        status.textContent = '✗ Network error: ' + err.message;
+      }
+      
+      btn.disabled = false;
+      btn.textContent = 'Add Price';
+    }
+
+    async function deletePrice(id) {
+      if (!confirm('Delete this price entry?')) return;
+      try {
+        await fetch(`${API}/${id}`, { method: 'DELETE' });
+        loadPrices();
+      } catch (err) {
+        alert('Delete failed: ' + err.message);
+      }
+    }
+
+    let allPricesData = [];
+    
+    function filterPrices() {
+      const q = document.getElementById('priceFilter').value.toLowerCase();
+      const filtered = allPricesData.filter(p => 
+        !q || (p.city && p.city.toLowerCase().includes(q)) 
+        || (p.submitter_email && p.submitter_email.toLowerCase().includes(q))
+        || (p.price_total && String(p.price_total).includes(q))
+        || (p.source_url && p.source_url.toLowerCase().includes(q))
+      );
+      renderTable(filtered);
+    }
+
+    async function loadPrices() {
+      const container = document.getElementById('priceList');
+      try {
+        const resp = await fetch(API + '?limit=500');
+        
+        if (!resp.ok) {
+          container.innerHTML = `
+            <div class="empty-state">
+              <p>API not connected yet. Set up D1 binding in Cloudflare Dashboard.</p>
+              <p style="margin-top:8px;font-size:12px;">Settings → Functions → D1: DB → rentgarden-db</p>
+            </div>`;
+          return;
+        }
+        
+        const data = await resp.json();
+        const prices = data.prices || [];
+        allPricesData = prices;
+        
+        if (prices.length === 0) {
+          container.innerHTML = '<div class="empty-state">No prices yet. Add your first one above! 🏠</div>';
+          return;
+        }
+        
+        renderTable(prices);
+      } catch (err) {
+        container.innerHTML = `<div class="empty-state">Error loading: ${err.message}</div>`;
+      }
+    }
+    
+    function renderTable(prices) {
+      const container = document.getElementById('priceList');
+      container.innerHTML = `
+          <table class="price-table">
+            <thead>
+              <tr><th>City</th><th>Price</th><th>Email</th><th>Link</th><th></th></tr>
+            </thead>
+            <tbody>
+              ${prices.map(p => `
+                <tr>
+                  <td><strong>${p.city}</strong> <span style="color:#64748b;font-size:11px">${p.country}</span></td>
+                  <td>${p.price_total} ${p.currency}${p.price_per_m2 ? ' <span style="color:#8899b4;font-size:11px">('+p.price_per_m2+'/m²)</span>' : ''}</td>
+                  <td><span style="font-size:11px;color:#8899b4">${p.submitter_email || '—'}</span></td>
+                  <td><a href="${p.source_url}" target="_blank">→ link</a></td>
+                  <td><button class="btn-danger" onclick="deletePrice(${p.id})">✕</button></td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+          <div style="text-align:center;padding:8px;color:#64748b;font-size:11px">${prices.length} listings</div>
+        `;
+    }
+
+    </script>
+</Layout>
