@@ -769,12 +769,21 @@ import Layout from '../layouts/Layout.astro';
           const priceText = formatPrice(p.price_total, p.currency);
           pill.textContent = priceText;
           pill.onclick = () => {
+            // Zoom in toward the listing first, then show the panel
+            const plng = lng, plat = lat;
+            const pr = p;
+            if (typeof viewer !== 'undefined' && viewer) {
+              viewer.camera.flyTo({
+                destination: Cesium.Cartesian3.fromDegrees(plng, plat, Math.max(30000, viewer.camera.positionCartographic.height * 0.5)),
+                duration: 1.0,
+              });
+            }
             openPanel({
-              priceId: p.id, lat: lat, lng: lng,
-              priceTotal: p.price_total, pricePerM2: p.price_per_m2,
-              currency: p.currency || 'DKK', city: p.city, country: p.country,
-              sqm: p.sqm, rooms: p.rooms, type: p.type,
-              sourceUrl: p.source_url, sourceSite: p.source_site, listingDate: p.listing_date,
+              priceId: pr.id, lat: plat, lng: plng,
+              priceTotal: pr.price_total, pricePerM2: pr.price_per_m2,
+              currency: pr.currency || 'DKK', city: pr.city, country: pr.country,
+              sqm: pr.sqm, rooms: pr.rooms, type: pr.type,
+              sourceUrl: pr.source_url, sourceSite: pr.source_site, listingDate: pr.listing_date,
             });
           };
         } else {
@@ -1080,6 +1089,13 @@ import Layout from '../layouts/Layout.astro';
                   sourceUrl: props.sourceUrl?.getValue?.(), sourceSite: props.sourceSite?.getValue?.(),
                   listingDate: props.listingDate?.getValue?.(),
                 };
+                // Zoom in toward the listing first, then show the panel
+                if (price.lat !== undefined && price.lng !== undefined) {
+                  viewer.camera.flyTo({
+                    destination: Cesium.Cartesian3.fromDegrees(price.lng, price.lat, Math.max(30000, viewer.camera.positionCartographic.height * 0.5)),
+                    duration: 1.0,
+                  });
+                }
                 openPanel(price);
               }
             }
