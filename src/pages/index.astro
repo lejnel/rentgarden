@@ -533,7 +533,7 @@ import Layout from '../layouts/Layout.astro';
       rentDataSource.clustering.pixelRange = 45;
       rentDataSource.clustering.minimumClusterSize = 2;
       
-      // Max 100 dots per city
+      // Max 25 dots per city (no place has more than 25 distinct apartments at one location)
       const cityCount = {};
       const usedCoords = {};
       allPrices.forEach(p => {
@@ -541,7 +541,7 @@ import Layout from '../layouts/Layout.astro';
         if (selectedType !== 'all' && (p.type || 'apartment') !== selectedType) return;
         const key = (p.city || '') + '|' + (p.country || '');
         cityCount[key] = (cityCount[key] || 0) + 1;
-        if (cityCount[key] > 100) return;
+        if (cityCount[key] > 25) return;
         
         // Jitter: spread overlapping dots (same district coords) slightly
         let lat = p.lat, lng = p.lng;
