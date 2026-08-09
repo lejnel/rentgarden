@@ -524,40 +524,25 @@ import Layout from '../layouts/Layout.astro';
     }
 
     let rentDataSource = null;
+    let entityByPriceId = {};
+    let allGroupData = [];
+    const MAX_PILLS = 100;
     const clusterCircle = 'data:image/svg+xml;base64,' + btoa('<svg xmlns="http://www.w3.org/2000/svg" width="60" height="60"><circle cx="30" cy="30" r="26" fill="rgba(99,102,241,0.92)" stroke="white" stroke-width="3"/></svg>');
-
-    function addPriceDots(Cesium, viewer) {
-      // Remove old datasource (clustered) 
-      if (rentDataSource) viewer.dataSources.remove(rentDataSource);
-      // Clear old HTML pills
-      const container = document.getElementById('pillContainer');
-      container.innerHTML = '';
-      pillMap = new WeakMap();
-      
-      // CustomDataSource = Cesium's built-in clustering
-      rentDataSource = new Cesium.CustomDataSource('rentmap');
-      rentDataSource.clustering.enabled = true;
-      rentDataSource.clustering.pixelRange = 45;
-      rentDataSource.clustering.minimumClusterSize = 2;
-      
+    
+    // Build groups with deterministic jitter (shared by entities + pills)
+    function buildGroups() {
       const usedCoords = {};
       const groups = {};
-      
       allPrices.forEach(p => {
         if (!p.lat || !p.lng) return;
         if (selectedType !== 'all' && (p.type || 'apartment') !== selectedType) return;
-        
         const key = p.lat.toFixed(4) + ',' + p.lng.toFixed(4);
-        if (!groups[key]) {
-          groups[key] = [];
-        }
+        if (!groups[key]) groups[key] = [];
         groups[key].push(p);
       });
-      
+      const jittered = [];
       Object.values(groups).forEach(group => {
         const first = group[0];
-        
-        // Jitter: spread overlapping dots (same district coords) slightly
         let lat = first.lat, lng = first.lng;
         const cKey = lat.toFixed(4) + ',' + lng.toFixed(4);
         const idx = usedCoords[cKey] || 0;
@@ -568,7 +553,117 @@ import Layout from '../layouts/Layout.astro';
           lat = lat + Math.cos(angle) * dist;
           lng = lng + Math.sin(angle) * dist;
         }
+        jittered.push({ group, lat, lng });
+      });
+      return jittered;
+    }
+
+    function addPriceDots(Cesium, viewer) {
+      // Remove old datasource (clustered) 
+      if (rentDataSource) viewer.dataSources.remove(rentDataSource);
+      // Clear old HTML pills
+      const container = document.getElementById('pillContainer');
+      container.innerHTML = '';
+      pillMap = new WeakMap();
+      entityByPriceId = {};
+      
+      // CustomDataSource = Cesium's built-in clustering
+      rentDataSource = new Cesium.CustomDataSource('rentmap');
+      rentDataSource.clustering.enabled = true;
+      rentDataSource.clustering.pixelRange = 45;
+      rentDataSource.clustering.minimumClusterSize = 2;
+      
+      allGroupData = buildGroups();
+      
+      allGroupData.forEach(({ group, lat, lng }) => {
+        const first = group[0];
+        const color = getColor(first.price_per_m2 || first.price_total, first.currency || 'DKK');
         
+        const entity = rentDataSource.entities.add({
+          position: Cesium.Cartesian3.fromDegrees(lng, lat),
+          // Dot visible when zoomed OUT (far away); pills take over when close
+          point: {
+            pixelSize: 12,
+            color: color,
+            outlineColor: Cesium.Color.WHITE,
+            outlineWidth: 1.5,
+            heightReference: Cesium.HeightReference.CLAMP_TO_GROUND,
+            distanceDisplayCondition: new Cesium.DistanceDisplayCondition(80000, Infinity),
+            scaleByDistance: new Cesium.NearFarScalar(50000, 3.0, 8000000, 1.0),
+          },
+          properties: {
+            isGroup: group.length > 1,
+            group: group,
+            priceId: first.id,
+            lat: lat, lng: lng,
+            priceTotal: first.price_total, pricePerM2: first.price_per_m2,
+            currency: first.currency || 'DKK',
+            city: first.city, country: first.country,
+            sqm: first.sqm, rooms: first.rooms, type: first.type,
+            sourceUrl: first.source_url, sourceSite: first.source_site, listingDate: first.listing_date,
+          }
+        });
+        entityByPriceId[first.id] = entity;
+      });
+      
+      viewer.dataSources.add(rentDataSource);
+      
+      // Style clusters: show count as label on a circle billboard
+      rentDataSource.clustering.clusterEvent.addEventListener((clusteredEntities, cluster) => {
+        cluster.label.show = true;
+        cluster.label.text = clusteredEntities.length.toString();
+        cluster.label.font = 'bold 16px sans-serif';
+        cluster.label.fillColor = Cesium.Color.WHITE;
+        cluster.label.style = Cesium.LabelStyle.FILL_AND_OUTLINE;
+        cluster.label.outlineColor = Cesium.Color.BLACK;
+        cluster.label.outlineWidth = 3;
+        cluster.label.verticalOrigin = Cesium.VerticalOrigin.CENTER;
+        cluster.label.horizontalOrigin = Cesium.HorizontalOrigin.CENTER;
+        cluster.label.distanceDisplayCondition = new Cesium.DistanceDisplayCondition(50000, Infinity);
+        cluster.billboard.show = true;
+        cluster.billboard.image = clusterCircle;
+        cluster.billboard.width = 52;
+        cluster.billboard.height = 52;
+        cluster.billboard.disableDepthTestDistance = Number.POSITIVE_INFINITY;
+        cluster.billboard.distanceDisplayCondition = new Cesium.DistanceDisplayCondition(50000, Infinity);
+      });
+      
+      // Build pills only for what's visible in the current viewport
+      rebuildPills(viewer);
+    }
+    
+    // Create HTML pills ONLY for listings inside the current viewport (max MAX_PILLS)
+    function rebuildPills(viewer) {
+      const container = document.getElementById('pillContainer');
+      container.innerHTML = '';
+      pillMap = new WeakMap();
+      
+      const rect = viewer.camera.computeViewRectangle();
+      if (!rect) return;
+      
+      // Widen rect by 15% so pills pop in slightly before entering the screen
+      const w = (rect.east - rect.west) * 0.15;
+      const h = (rect.north - rect.south) * 0.15;
+      const cLat = (rect.north + rect.south) / 2;
+      const cLng = (rect.east + rect.west) / 2;
+      
+      // Keep only groups inside the visible rectangle (rect is in RADIANS)
+      const inView = allGroupData.filter(({ lat, lng }) => {
+        const latR = lat * Math.PI / 180;
+        const lngR = lng * Math.PI / 180;
+        return lngR >= rect.west - w && lngR <= rect.east + w &&
+               latR >= rect.south - h && latR <= rect.north + h;
+      });
+      
+      // Sort by distance to viewport center (closest first), then cap at MAX_PILLS
+      inView.sort((a, b) => {
+        const da = Math.pow(a.lat - cLat * 180 / Math.PI, 2) + Math.pow(a.lng - cLng * 180 / Math.PI, 2);
+        const db = Math.pow(b.lat - cLat * 180 / Math.PI, 2) + Math.pow(b.lng - cLng * 180 / Math.PI, 2);
+        return da - db;
+      });
+      
+      inView.slice(0, MAX_PILLS).forEach(({ group, lat, lng }) => {
+        const first = group[0];
         const color = getColor(first.price_per_m2 || first.price_total, first.currency || 'DKK');
         
         // Create HTML pill element with inline styles (Astro scopes CSS classes)
@@ -609,53 +704,8 @@ import Layout from '../layouts/Layout.astro';
         pill._lng = lng;
         container.appendChild(pill);
         
-        const entity = rentDataSource.entities.add({
-          position: Cesium.Cartesian3.fromDegrees(lng, lat),
-          // Dot visible when zoomed OUT (far away); pills take over when close
-          point: {
-            pixelSize: 12,
-            color: color,
-            outlineColor: Cesium.Color.WHITE,
-            outlineWidth: 1.5,
-            heightReference: Cesium.HeightReference.CLAMP_TO_GROUND,
-            distanceDisplayCondition: new Cesium.DistanceDisplayCondition(80000, Infinity),
-            scaleByDistance: new Cesium.NearFarScalar(50000, 3.0, 8000000, 1.0),
-          },
-          properties: {
-            isGroup: group.length > 1,
-            group: group,
-            priceId: first.id,
-            lat: lat, lng: lng,
-            priceTotal: first.price_total, pricePerM2: first.price_per_m2,
-            currency: first.currency || 'DKK',
-            city: first.city, country: first.country,
-            sqm: first.sqm, rooms: first.rooms, type: first.type,
-            sourceUrl: first.source_url, sourceSite: first.source_site, listingDate: first.listing_date,
-          }
-        });
-        pillMap.set(entity, pill);
-      });
-      
-      viewer.dataSources.add(rentDataSource);
-      
-      // Style clusters: show count as label on a circle billboard
-      rentDataSource.clustering.clusterEvent.addEventListener((clusteredEntities, cluster) => {
-        cluster.label.show = true;
-        cluster.label.text = clusteredEntities.length.toString();
-        cluster.label.font = 'bold 16px sans-serif';
-        cluster.label.fillColor = Cesium.Color.WHITE;
-        cluster.label.style = Cesium.LabelStyle.FILL_AND_OUTLINE;
-        cluster.label.outlineColor = Cesium.Color.BLACK;
-        cluster.label.outlineWidth = 3;
-        cluster.label.verticalOrigin = Cesium.VerticalOrigin.CENTER;
-        cluster.label.horizontalOrigin = Cesium.HorizontalOrigin.CENTER;
-        cluster.label.distanceDisplayCondition = new Cesium.DistanceDisplayCondition(50000, Infinity);
-        cluster.billboard.show = true;
-        cluster.billboard.image = clusterCircle;
-        cluster.billboard.width = 52;
-        cluster.billboard.height = 52;
-        cluster.billboard.disableDepthTestDistance = Number.POSITIVE_INFINITY;
-        cluster.billboard.distanceDisplayCondition = new Cesium.DistanceDisplayCondition(50000, Infinity);
+        const entity = entityByPriceId[first.id];
+        if (entity) pillMap.set(entity, pill);
       });
     }
 
@@ -810,6 +860,11 @@ import Layout from '../layouts/Layout.astro';
         
         // Add dots
         addPriceDots(Cesium, viewer);
+        
+        // Rebuild pills when camera stops moving (viewport-based lazy loading)
+        viewer.camera.moveEnd.addEventListener(function() {
+          rebuildPills(viewer);
+        });
         
         // Click handler
         const handler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
