@@ -373,9 +373,12 @@ import Layout from '../layouts/Layout.astro';
     function renderYearPills() {
       const container = document.getElementById('yearPills');
       const startYear = 2026;
-      let html = `<button class="year-pill${selectedYear === 0 ? ' active' : ''}" onclick="switchYear(0)">Active</button>`;
+      const baseStyle = 'padding:8px 12px;border-radius:10px;border:1px solid rgba(255,255,255,0.12);' +
+        'background:rgba(10,14,23,0.9);color:#e2e8f0;cursor:pointer;font-size:13px;font-weight:500;' +
+        'backdrop-filter:blur(12px);transition:all 0.2s;font-family:inherit;';
+      let html = `<button class="year-pill" style="${baseStyle}${selectedYear === 0 ? 'background:#6366f1;border-color:#6366f1;color:#fff;' : ''}" onclick="switchYear(0)">Active</button>`;
       for (let y = currentYear; y >= startYear; y--) {
-        html += `<button class="year-pill${y === selectedYear ? ' active' : ''}" onclick="switchYear(${y})">${y}</button>`;
+        html += `<button class="year-pill" style="${baseStyle}${y === selectedYear ? 'background:#6366f1;border-color:#6366f1;color:#fff;' : ''}" onclick="switchYear(${y})">${y}</button>`;
       }
       container.innerHTML = html;
     }
