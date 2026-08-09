@@ -679,6 +679,12 @@ import Layout from '../layouts/Layout.astro';
       container.innerHTML = '';
       pillMap = new WeakMap();
       
+      // Only build pills when close enough (<80km) — when far away the
+      // clusters are shown and pills would block their clicks (opacity 0
+      // but pointer-events:auto steals clicks from cluster billboards!)
+      const camH = viewer.camera.positionCartographic.height;
+      if (camH > 80000) return;
+      
       const rect = viewer.camera.computeViewRectangle();
       if (!rect) return;
       
@@ -813,30 +819,10 @@ import Layout from '../layouts/Layout.astro';
 
     let currentPanelPrice = null;
     let currentPanelGroup = null;
-    
-    // Keep the selected dot(s) visible at ANY zoom level — removes the
-    // distanceDisplayCondition so the dot doesn't vanish when zooming in
-    let highlightedEntity = null;
-    function highlightDot(priceId) {
-      if (highlightedEntity) {
-        try {
-          highlightedEntity.point.distanceDisplayCondition = new Cesium.DistanceDisplayCondition(80000, Infinity);
-        } catch(e) {}
-        highlightedEntity = null;
-      }
-      if (priceId === undefined || priceId === null) return;
-      const ent = entityByPriceId[priceId];
-      if (ent && ent.point) {
-        ent.point.distanceDisplayCondition = new Cesium.DistanceDisplayCondition(0, Infinity);
-        highlightedEntity = ent;
-      }
-    }
 
     async function openPanel(price) {
       currentPanelPrice = price;
       currentPanelGroup = null;
-      // Keep the selected dot visible when zooming in (remove distance limit)
-      highlightDot(price.priceId);
       const panel = document.getElementById('infoPanel');
       
       // Reverse geocode to get street address
@@ -876,8 +862,6 @@ import Layout from '../layouts/Layout.astro';
     function openGroupPanel(groupArray) {
       currentPanelPrice = null;
       currentPanelGroup = groupArray;
-      // Keep the group's dot visible when zooming in
-      if (groupArray.length > 0) highlightDot(groupArray[0].id || groupArray[0].priceId);
       const panel = document.getElementById('infoPanel');
       
       const first = groupArray[0];
@@ -929,7 +913,6 @@ import Layout from '../layouts/Layout.astro';
 
     function closePanel() {
       document.getElementById('infoPanel').classList.remove('open');
-      highlightDot(null); // reset selected dot visibility
     }
     
     // Swipe down on the info panel to close it (mobile)
