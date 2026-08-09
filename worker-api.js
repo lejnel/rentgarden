@@ -37,7 +37,7 @@ export default {
         const { results: prices } = await db.prepare(`
           SELECT *, CAST(substr(COALESCE(listing_date, submitted_at), 1, 4) AS INTEGER) as listing_year
           FROM prices WHERE verified = 1 ${whereClause}
-          ORDER BY submitted_at DESC LIMIT 500
+          ORDER BY submitted_at DESC LIMIT 5000
         `).bind(...params).all();
         
         const { results: cities } = await db.prepare(`
