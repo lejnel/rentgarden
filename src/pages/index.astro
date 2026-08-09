@@ -656,11 +656,10 @@ import Layout from '../layouts/Layout.astro';
       });
       
       // Spread selection across the whole viewport using a grid:
-      // divide view into GRID×GRID cells, take up to MAX_PER_CELL from each,
+      // divide view into GRID×GRID cells, take a fair budget from each,
       // nearest-to-center first per cell. This avoids all pills clustering
       // in one spot while still capping the total at MAX_PILLS.
       const GRID = 10;
-      const MAX_PER_CELL = 2;
       
       // Assign each group a grid cell index
       const cellOf = (lat, lng) => {
@@ -678,9 +677,7 @@ import Layout from '../layouts/Layout.astro';
         return da - db;
       });
       
-      // Round-robin over cells: take MAX_PER_CELL per cell until MAX_PILLS reached
-      const selected = [];
-      const perCell = {};
+      // Bucket groups by cell
       const byCell = {};
       inView.forEach(g => {
         const cell = cellOf(g.lat, g.lng);
@@ -688,28 +685,25 @@ import Layout from '../layouts/Layout.astro';
         byCell[cell].push(g);
       });
       
-      // First pass: spread (up to MAX_PER_CELL from each cell, cells with content cycled)
-      const cellKeys = Object.keys(byCell).sort((a, b) => {
-        // Empty-ish priority: visit cells nearest center first but ensure spread
-        return byCell[a].length - byCell[b].length;
-      });
+      const cellKeys = Object.keys(byCell);
+      // Fair budget per cell: spread the 100 pills evenly across all cells
+      // that have content (so one dense cluster can't eat the whole budget),
+      // but allow up to 10 per cell when few cells exist (zoomed into one city).
+      const perCellBudget = Math.max(1, Math.min(10, Math.ceil(MAX_PILLS / cellKeys.length)));
+      
+      // Round-robin over cells, nearest-first within each cell
+      const selected = [];
+      const perCell = {};
       let ci = 0;
-      while (selected.length < MAX_PILLS && cellKeys.length > 0) {
+      while (selected.length < MAX_PILLS && ci < cellKeys.length * perCellBudget * 2) {
         const cell = cellKeys[ci % cellKeys.length];
         const arr = byCell[cell];
-        if (arr.length > 0 && (perCell[cell] || 0) < MAX_PER_CELL) {
+        if (arr.length > 0 && (perCell[cell] || 0) < perCellBudget) {
           selected.push(arr.shift());
           perCell[cell] = (perCell[cell] || 0) + 1;
         }
         ci++;
-        if (ci > cellKeys.length * 20) break; // safety
       }
-      
-      // Second pass: if still room, take remaining closest ones
-      inView.forEach(g => {
-        if (selected.length >= MAX_PILLS) return;
-        if (!selected.includes(g)) selected.push(g);
-      });
       
       selected.forEach(({ group, lat, lng }) => {
         const first = group[0];
