@@ -103,8 +103,11 @@ import Layout from '../layouts/Layout.astro';
       .panel-stats { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:16px; }
       .stat-card { background:rgba(255,255,255,0.04); border-radius:10px; padding:12px; text-align:center; }
       .stat-value { font-size:18px; font-weight:700; }
-      .stat-label { font-size:11px; color:#8899b4; margin-top:2px; }
       .panel-listings { margin-top:14px; max-height:200px; overflow-y:auto; }
+      #panelListings {
+        max-height: 320px;
+        overflow-y: auto;
+      }
       .panel-section-title { font-size:11px; font-weight:600; color:#64748b; text-transform:uppercase; letter-spacing:1px; margin-bottom:8px; }
       .listing-row {
         display:flex; align-items:center; gap:10px; padding:10px; border-radius:8px;
@@ -419,8 +422,12 @@ import Layout from '../layouts/Layout.astro';
         addPriceDots(Cesium, viewer);
         // If panel is open, refresh it
         const panel = document.getElementById('infoPanel');
-        if (panel.classList.contains('open') && currentPanelPrice) {
-          openPanel(currentPanelPrice);
+        if (panel.classList.contains('open')) {
+          if (currentPanelPrice) {
+            openPanel(currentPanelPrice);
+          } else if (currentPanelGroup) {
+            openGroupPanel(currentPanelGroup);
+          }
         }
       }
     }
@@ -533,18 +540,25 @@ import Layout from '../layouts/Layout.astro';
       rentDataSource.clustering.pixelRange = 45;
       rentDataSource.clustering.minimumClusterSize = 2;
       
-      // Max 25 dots per city (no place has more than 25 distinct apartments at one location)
-      const cityCount = {};
       const usedCoords = {};
+      const groups = {};
+      
       allPrices.forEach(p => {
         if (!p.lat || !p.lng) return;
         if (selectedType !== 'all' && (p.type || 'apartment') !== selectedType) return;
-        const key = (p.city || '') + '|' + (p.country || '');
-        cityCount[key] = (cityCount[key] || 0) + 1;
-        if (cityCount[key] > 25) return;
+        
+        const key = p.lat.toFixed(4) + ',' + p.lng.toFixed(4);
+        if (!groups[key]) {
+          groups[key] = [];
+        }
+        groups[key].push(p);
+      });
+      
+      Object.values(groups).forEach(group => {
+        const first = group[0];
         
         // Jitter: spread overlapping dots (same district coords) slightly
-        let lat = p.lat, lng = p.lng;
+        let lat = first.lat, lng = first.lng;
         const cKey = lat.toFixed(4) + ',' + lng.toFixed(4);
         const idx = usedCoords[cKey] || 0;
         usedCoords[cKey] = idx + 1;
@@ -555,8 +569,7 @@ import Layout from '../layouts/Layout.astro';
           lng = lng + Math.sin(angle) * dist;
         }
         
-        const color = getColor(p.price_per_m2 || p.price_total, p.currency || 'DKK');
-        const priceText = formatPrice(p.price_total, p.currency);
+        const color = getColor(first.price_per_m2 || first.price_total, first.currency || 'DKK');
         
         // Create HTML pill element with inline styles (Astro scopes CSS classes)
         const pill = document.createElement('div');
@@ -571,18 +584,29 @@ import Layout from '../layouts/Layout.astro';
         `;
         pill.onmouseenter = function() { this.style.filter = 'brightness(1.15)'; this.style.boxShadow = '0 4px 16px rgba(0,0,0,0.5)'; };
         pill.onmouseleave = function() { this.style.filter = ''; this.style.boxShadow = '0 2px 8px rgba(0,0,0,0.3)'; };
-        pill.textContent = priceText;
+        
+        if (group.length === 1) {
+          const p = first;
+          const priceText = formatPrice(p.price_total, p.currency);
+          pill.textContent = priceText;
+          pill.onclick = () => {
+            openPanel({
+              priceId: p.id, lat: lat, lng: lng,
+              priceTotal: p.price_total, pricePerM2: p.price_per_m2,
+              currency: p.currency || 'DKK', city: p.city, country: p.country,
+              sqm: p.sqm, rooms: p.rooms, type: p.type,
+              sourceUrl: p.source_url, sourceSite: p.source_site, listingDate: p.listing_date,
+            });
+          };
+        } else {
+          pill.textContent = group.length + '×';
+          pill.onclick = () => {
+            openGroupPanel(group);
+          };
+        }
+        
         pill._lat = lat;
         pill._lng = lng;
-        pill.onclick = () => {
-          openPanel({
-            priceId: p.id, lat: lat, lng: lng,
-            priceTotal: p.price_total, pricePerM2: p.price_per_m2,
-            currency: p.currency || 'DKK', city: p.city, country: p.country,
-            sqm: p.sqm, rooms: p.rooms, type: p.type,
-            sourceUrl: p.source_url, sourceSite: p.source_site, listingDate: p.listing_date,
-          });
-        };
         container.appendChild(pill);
         
         const entity = rentDataSource.entities.add({
@@ -598,13 +622,15 @@ import Layout from '../layouts/Layout.astro';
             scaleByDistance: new Cesium.NearFarScalar(50000, 3.0, 8000000, 1.0),
           },
           properties: {
-            priceId: p.id,
+            isGroup: group.length > 1,
+            group: group,
+            priceId: first.id,
             lat: lat, lng: lng,
-            priceTotal: p.price_total, pricePerM2: p.price_per_m2,
-            currency: p.currency || 'EUR',
-            city: p.city, country: p.country,
-            sqm: p.sqm, rooms: p.rooms, type: p.type,
-            sourceUrl: p.source_url, sourceSite: p.source_site, listingDate: p.listing_date,
+            priceTotal: first.price_total, pricePerM2: first.price_per_m2,
+            currency: first.currency || 'DKK',
+            city: first.city, country: first.country,
+            sqm: first.sqm, rooms: first.rooms, type: first.type,
+            sourceUrl: first.source_url, sourceSite: first.source_site, listingDate: first.listing_date,
           }
         });
         pillMap.set(entity, pill);
@@ -623,18 +649,22 @@ import Layout from '../layouts/Layout.astro';
         cluster.label.outlineWidth = 3;
         cluster.label.verticalOrigin = Cesium.VerticalOrigin.CENTER;
         cluster.label.horizontalOrigin = Cesium.HorizontalOrigin.CENTER;
+        cluster.label.distanceDisplayCondition = new Cesium.DistanceDisplayCondition(50000, Infinity);
         cluster.billboard.show = true;
         cluster.billboard.image = clusterCircle;
         cluster.billboard.width = 52;
         cluster.billboard.height = 52;
         cluster.billboard.disableDepthTestDistance = Number.POSITIVE_INFINITY;
+        cluster.billboard.distanceDisplayCondition = new Cesium.DistanceDisplayCondition(50000, Infinity);
       });
     }
 
     let currentPanelPrice = null;
+    let currentPanelGroup = null;
 
     async function openPanel(price) {
       currentPanelPrice = price;
+      currentPanelGroup = null;
       const panel = document.getElementById('infoPanel');
       
       // Reverse geocode to get street address
@@ -667,6 +697,58 @@ import Layout from '../layouts/Layout.astro';
           <span class="listing-arrow">→</span>
         </div>
       `;
+      
+      panel.classList.add('open');
+    }
+
+    function openGroupPanel(groupArray) {
+      currentPanelPrice = null;
+      currentPanelGroup = groupArray;
+      const panel = document.getElementById('infoPanel');
+      
+      const first = groupArray[0];
+      const city = first.city || 'Unknown';
+      document.getElementById('panelCity').textContent = city + ' (' + groupArray.length + ' listings)';
+      document.getElementById('panelCountry').textContent = (first.country || '') + ' · ' + (first.type || 'apartment');
+      
+      let sumPerM2 = 0;
+      let countPerM2 = 0;
+      let sumTotal = 0;
+      let countTotal = 0;
+      
+      groupArray.forEach(p => {
+        if (p.price_per_m2) {
+          sumPerM2 += p.price_per_m2;
+          countPerM2++;
+        }
+        if (p.price_total) {
+          sumTotal += p.price_total;
+          countTotal++;
+        }
+      });
+      
+      const avgPerM2 = countPerM2 > 0 ? (sumPerM2 / countPerM2) : (countTotal > 0 ? (sumTotal / countTotal) : 0);
+      const avgTotal = countTotal > 0 ? (sumTotal / countTotal) : (countPerM2 > 0 ? (sumPerM2 / countPerM2) : 0);
+      
+      document.getElementById('statAvg').textContent = formatPrice(avgPerM2, first.currency) + '/m²';
+      document.getElementById('statCount').textContent = formatPrice(avgTotal, first.currency) + ' / month';
+      
+      const listingsEl = document.getElementById('panelListings');
+      listingsEl.innerHTML = '<div class="panel-section-title">Listing details</div>';
+      
+      groupArray.forEach(p => {
+        listingsEl.innerHTML += `
+          <div class="listing-row" style="cursor:pointer" onclick="window.open('${p.source_url || p.sourceUrl || ''}', '_blank')">
+            <span>🏠</span>
+            <span style="flex:1">
+              ${p.rooms ? p.rooms + ' rooms' : 'Property'}${p.sqm ? ' · ' + p.sqm + 'm²' : ''}
+              <div class="listing-source">${p.listing_date || p.listingDate || ''} · ${p.source_site || p.sourceSite || ''}</div>
+            </span>
+            <span class="listing-price">${formatPrice(p.price_total || p.price_per_m2 || p.priceTotal || p.pricePerM2, p.currency)}</span>
+            <span class="listing-arrow">→</span>
+          </div>
+        `;
+      });
       
       panel.classList.add('open');
     }
@@ -748,19 +830,22 @@ import Layout from '../layouts/Layout.astro';
             }
             if (picked.id.properties) {
               // Skip — HTML pills handle their own clicks
-            
               const props = picked.id.properties;
-              const price = {
-                priceId: props.priceId?.getValue?.(),
-                lat: props.lat?.getValue?.(), lng: props.lng?.getValue?.(),
-                priceTotal: props.priceTotal?.getValue?.(), pricePerM2: props.pricePerM2?.getValue?.(),
-                currency: props.currency?.getValue?.(), city: props.city?.getValue?.(),
-                country: props.country?.getValue?.(), sqm: props.sqm?.getValue?.(),
-                rooms: props.rooms?.getValue?.(), type: props.type?.getValue?.(),
-                sourceUrl: props.sourceUrl?.getValue?.(), sourceSite: props.sourceSite?.getValue?.(),
-                listingDate: props.listingDate?.getValue?.(),
-              };
-              openPanel(price);
+              if (props.isGroup?.getValue?.()) {
+                openGroupPanel(props.group.getValue());
+              } else {
+                const price = {
+                  priceId: props.priceId?.getValue?.(),
+                  lat: props.lat?.getValue?.(), lng: props.lng?.getValue?.(),
+                  priceTotal: props.priceTotal?.getValue?.(), pricePerM2: props.pricePerM2?.getValue?.(),
+                  currency: props.currency?.getValue?.(), city: props.city?.getValue?.(),
+                  country: props.country?.getValue?.(), sqm: props.sqm?.getValue?.(),
+                  rooms: props.rooms?.getValue?.(), type: props.type?.getValue?.(),
+                  sourceUrl: props.sourceUrl?.getValue?.(), sourceSite: props.sourceSite?.getValue?.(),
+                  listingDate: props.listingDate?.getValue?.(),
+                };
+                openPanel(price);
+              }
             }
           } else {
             closePanel();
@@ -773,7 +858,12 @@ import Layout from '../layouts/Layout.astro';
           const picked = viewer.scene.pick(movement.endPosition);
           if (Cesium.defined(picked) && picked.id && picked.id.properties) {
             const props = picked.id.properties;
-            tooltip.textContent = `${props.city?.getValue?.() || ''} · ${formatPrice(props.priceTotal?.getValue?.(), props.currency?.getValue?.())}`;
+            if (props.isGroup?.getValue?.()) {
+              const groupVal = props.group.getValue();
+              tooltip.textContent = `${props.city?.getValue?.() || ''} · ${groupVal.length} listings`;
+            } else {
+              tooltip.textContent = `${props.city?.getValue?.() || ''} · ${formatPrice(props.priceTotal?.getValue?.(), props.currency?.getValue?.())}`;
+            }
             tooltip.style.left = (movement.endPosition.x + 16) + 'px';
             tooltip.style.top = (movement.endPosition.y - 30) + 'px';
             tooltip.classList.add('visible');
