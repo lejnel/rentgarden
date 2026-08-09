@@ -1055,14 +1055,21 @@ import Layout from '../layouts/Layout.astro';
           if (Cesium.defined(picked) && picked.id) {
             // Cluster clicked? (has billboard/label, no price properties)
             if (picked.id.billboard && !picked.id.properties) {
-              const pos = picked.id.position.getValue(viewer.clock.currentTime);
-              const carto = Cesium.Cartographic.fromCartesian(pos);
-              const lat = Cesium.Math.toDegrees(carto.latitude);
-              const lng = Cesium.Math.toDegrees(carto.longitude);
-              viewer.camera.flyTo({
-                destination: Cesium.Cartesian3.fromDegrees(lng, lat, 60000),
-                duration: 1.2,
-              });
+              let pos = null;
+              try { pos = picked.id.position?.getValue?.(viewer.clock.currentTime); } catch(e) {}
+              // Fallback: pick the globe under the click
+              if (!pos) {
+                pos = viewer.camera.pickEllipsoid(click.position, viewer.scene.globe.ellipsoid);
+              }
+              if (pos) {
+                const carto = Cesium.Cartographic.fromCartesian(pos);
+                const lat = Cesium.Math.toDegrees(carto.latitude);
+                const lng = Cesium.Math.toDegrees(carto.longitude);
+                viewer.camera.flyTo({
+                  destination: Cesium.Cartesian3.fromDegrees(lng, lat, 60000),
+                  duration: 1.2,
+                });
+              }
               return;
             }
             if (picked.id.properties) {
