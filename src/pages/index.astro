@@ -890,6 +890,37 @@ import Layout from '../layouts/Layout.astro';
     function closePanel() {
       document.getElementById('infoPanel').classList.remove('open');
     }
+    
+    // Swipe down on the info panel to close it (mobile)
+    let panelTouchStart = null;
+    document.addEventListener('touchstart', function(e) {
+      const panel = document.getElementById('infoPanel');
+      if (panel.classList.contains('open') && panel.contains(e.target)) {
+        panelTouchStart = { y: e.touches[0].clientY, x: e.touches[0].clientX };
+      }
+    }, { passive: true });
+    document.addEventListener('touchmove', function(e) {
+      if (!panelTouchStart) return;
+      const dy = e.touches[0].clientY - panelTouchStart.y;
+      const dx = Math.abs(e.touches[0].clientX - panelTouchStart.x);
+      if (dy > 0 && dy > dx) {
+        const panel = document.getElementById('infoPanel');
+        // Drag the panel down with the finger
+        panel.style.transform = 'translateX(-50%) translateY(' + Math.min(dy, 200) + 'px)';
+        panel.style.transition = 'none';
+      }
+    }, { passive: true });
+    document.addEventListener('touchend', function() {
+      if (!panelTouchStart) return;
+      const panel = document.getElementById('infoPanel');
+      const transform = panel.style.transform;
+      panel.style.transition = '';
+      panel.style.transform = '';
+      panelTouchStart = null;
+      // If dragged more than 120px, close the panel
+      const dy = transform ? parseFloat(transform.match(/translateY\(([\d.]+)px\)/)?.[1] || '0') : 0;
+      if (dy > 120) closePanel();
+    }, { passive: true });
 
     async function init() {
       try {
@@ -925,6 +956,11 @@ import Layout from '../layouts/Layout.astro';
         viewer.scene.globe.enableLighting = false;
         viewer.scene.globe.showGroundAtmosphere = false;
         
+        // Faster zoom (pinch + scroll) — feels sluggish by default on mobile
+        const camCtrl = viewer.scene.screenSpaceCameraController;
+        camCtrl.zoomFactor = 3.0;        // default 1.5 — double zoom speed
+        camCtrl.minimumZoomDistance = 50; // allow zooming closer to buildings
+        
         // Use satellite imagery
         viewer.imageryLayers.removeAll();
         viewer.imageryLayers.addImageryProvider(new Cesium.UrlTemplateImageryProvider({
@@ -955,6 +991,38 @@ import Layout from '../layouts/Layout.astro';
           }
           rebuildPills(viewer);
         });
+        
+        // Double-tap to zoom in (mobile)
+        let lastTap = 0;
+        let tapTimer = null;
+        viewer.scene.canvas.addEventListener('touchend', function(e) {
+          const now = Date.now();
+          if (now - lastTap < 300) {
+            // Double tap detected — zoom in on the tapped location
+            e.preventDefault();
+            if (tapTimer) { clearTimeout(tapTimer); tapTimer = null; }
+            const touch = e.changedTouches[0];
+            const pos = new Cesium.Cartesian2(touch.clientX, touch.clientY);
+            const picked = viewer.camera.pickEllipsoid(pos, viewer.scene.globe.ellipsoid);
+            if (picked) {
+              const carto = Cesium.Cartographic.fromCartesian(picked);
+              const lat = Cesium.Math.toDegrees(carto.latitude);
+              const lng = Cesium.Math.toDegrees(carto.longitude);
+              const curH = viewer.camera.positionCartographic.height;
+              const targetH = Math.max(5000, curH * 0.4);
+              viewer.camera.flyTo({
+                destination: Cesium.Cartesian3.fromDegrees(lng, lat, targetH),
+                duration: 0.8,
+              });
+            }
+            lastTap = 0;
+          } else {
+            lastTap = now;
+            // If a second tap never comes, reset so the next tap can be a double tap
+            if (tapTimer) clearTimeout(tapTimer);
+            tapTimer = setTimeout(function() { lastTap = 0; }, 350);
+          }
+        }, { passive: false });
         
         // Click handler
         const handler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
