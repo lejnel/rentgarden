@@ -587,14 +587,14 @@ import Layout from '../layouts/Layout.astro';
         
         const entity = rentDataSource.entities.add({
           position: Cesium.Cartesian3.fromDegrees(lng, lat),
-          // Dot always visible (zoomed out = small, zoomed in = large)
+          // Dot visible when zoomed OUT (far away); pills take over when close
           point: {
             pixelSize: 12,
             color: color,
             outlineColor: Cesium.Color.WHITE,
             outlineWidth: 1.5,
             heightReference: Cesium.HeightReference.CLAMP_TO_GROUND,
-            distanceDisplayCondition: new Cesium.DistanceDisplayCondition(0, Infinity),
+            distanceDisplayCondition: new Cesium.DistanceDisplayCondition(80000, Infinity),
             scaleByDistance: new Cesium.NearFarScalar(50000, 3.0, 8000000, 1.0),
           },
           properties: {
@@ -808,10 +808,11 @@ import Layout from '../layouts/Layout.astro';
             const pill = pillMap.get(entity);
             if (!pill) return;
             
-            // Fast cull: skip pills outside the visible rectangle
+            // Fast cull: skip pills outside the visible rectangle (rect is in RADIANS)
             if (rect && pill._lat !== undefined) {
-              const lng = pill._lng, lat = pill._lat;
-              if (lng < rect.west || lng > rect.east || lat < rect.south || lat > rect.north) {
+              const lngR = pill._lng * Math.PI / 180;
+              const latR = pill._lat * Math.PI / 180;
+              if (lngR < rect.west || lngR > rect.east || latR < rect.south || latR > rect.north) {
                 pill.style.opacity = '0';
                 return;
               }
