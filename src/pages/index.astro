@@ -516,20 +516,33 @@ import Layout from '../layouts/Layout.astro';
       return canvas;
     }
 
+    let rentDataSource = null;
+    const clusterCircle = 'data:image/svg+xml;base64,' + btoa('<svg xmlns="http://www.w3.org/2000/svg" width="60" height="60"><circle cx="30" cy="30" r="26" fill="rgba(99,102,241,0.92)" stroke="white" stroke-width="3"/></svg>');
+
     function addPriceDots(Cesium, viewer) {
-      viewer.entities.removeAll();
+      // Remove old datasource (clustered) 
+      if (rentDataSource) viewer.dataSources.remove(rentDataSource);
       // Clear old HTML pills
       const container = document.getElementById('pillContainer');
       container.innerHTML = '';
       pillMap = new WeakMap();
       
+      // CustomDataSource = Cesium's built-in clustering
+      rentDataSource = new Cesium.CustomDataSource('rentmap');
+      rentDataSource.clustering.enabled = true;
+      rentDataSource.clustering.pixelRange = 45;
+      rentDataSource.clustering.minimumClusterSize = 2;
+      
+      // Max 100 dots per city
+      const cityCount = {};
       allPrices.forEach(p => {
         if (!p.lat || !p.lng) return;
-        // Type filter
         if (selectedType !== 'all' && (p.type || 'apartment') !== selectedType) return;
-        const convertedPerM2 = convertPrice(p.price_per_m2 || p.price_total, p.currency || 'DKK', displayCurrency);
+        const key = (p.city || '') + '|' + (p.country || '');
+        cityCount[key] = (cityCount[key] || 0) + 1;
+        if (cityCount[key] > 100) return;
+        
         const color = getColor(p.price_per_m2 || p.price_total, p.currency || 'DKK');
-        const pixelSize = 12;
         const priceText = formatPrice(p.price_total, p.currency);
         
         // Create HTML pill element with inline styles (Astro scopes CSS classes)
@@ -557,11 +570,11 @@ import Layout from '../layouts/Layout.astro';
         };
         container.appendChild(pill);
         
-        const entity = viewer.entities.add({
+        const entity = rentDataSource.entities.add({
           position: Cesium.Cartesian3.fromDegrees(p.lng, p.lat),
           // Dot always visible (zoomed out = small, zoomed in = large)
           point: {
-            pixelSize: pixelSize,
+            pixelSize: 12,
             color: color,
             outlineColor: Cesium.Color.WHITE,
             outlineWidth: 1.5,
@@ -580,6 +593,26 @@ import Layout from '../layouts/Layout.astro';
           }
         });
         pillMap.set(entity, pill);
+      });
+      
+      viewer.dataSources.add(rentDataSource);
+      
+      // Style clusters: show count as label on a circle billboard
+      rentDataSource.clustering.clusterEvent.addEventListener((clusteredEntities, cluster) => {
+        cluster.label.show = true;
+        cluster.label.text = clusteredEntities.length.toString();
+        cluster.label.font = 'bold 16px sans-serif';
+        cluster.label.fillColor = Cesium.Color.WHITE;
+        cluster.label.style = Cesium.LabelStyle.FILL_AND_OUTLINE;
+        cluster.label.outlineColor = Cesium.Color.BLACK;
+        cluster.label.outlineWidth = 3;
+        cluster.label.verticalOrigin = Cesium.VerticalOrigin.CENTER;
+        cluster.label.horizontalOrigin = Cesium.HorizontalOrigin.CENTER;
+        cluster.billboard.show = true;
+        cluster.billboard.image = clusterCircle;
+        cluster.billboard.width = 52;
+        cluster.billboard.height = 52;
+        cluster.billboard.disableDepthTestDistance = Number.POSITIVE_INFINITY;
       });
     }
 
@@ -685,21 +718,35 @@ import Layout from '../layouts/Layout.astro';
         const handler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
         handler.setInputAction(function(click) {
           const picked = viewer.scene.pick(click.position);
-          if (Cesium.defined(picked) && picked.id && picked.id.properties) {
-            // Skip — HTML pills handle their own clicks
+          if (Cesium.defined(picked) && picked.id) {
+            // Cluster clicked? (has billboard/label, no price properties)
+            if (picked.id.billboard && !picked.id.properties) {
+              const pos = picked.id.position.getValue(viewer.clock.currentTime);
+              const carto = Cesium.Cartographic.fromCartesian(pos);
+              const lat = Cesium.Math.toDegrees(carto.latitude);
+              const lng = Cesium.Math.toDegrees(carto.longitude);
+              viewer.camera.flyTo({
+                destination: Cesium.Cartesian3.fromDegrees(lng, lat, 60000),
+                duration: 1.2,
+              });
+              return;
+            }
+            if (picked.id.properties) {
+              // Skip — HTML pills handle their own clicks
             
-            const props = picked.id.properties;
-            const price = {
-              priceId: props.priceId?.getValue?.(),
-              lat: props.lat?.getValue?.(), lng: props.lng?.getValue?.(),
-              priceTotal: props.priceTotal?.getValue?.(), pricePerM2: props.pricePerM2?.getValue?.(),
-              currency: props.currency?.getValue?.(), city: props.city?.getValue?.(),
-              country: props.country?.getValue?.(), sqm: props.sqm?.getValue?.(),
-              rooms: props.rooms?.getValue?.(), type: props.type?.getValue?.(),
-              sourceUrl: props.sourceUrl?.getValue?.(), sourceSite: props.sourceSite?.getValue?.(),
-              listingDate: props.listingDate?.getValue?.(),
-            };
-            openPanel(price);
+              const props = picked.id.properties;
+              const price = {
+                priceId: props.priceId?.getValue?.(),
+                lat: props.lat?.getValue?.(), lng: props.lng?.getValue?.(),
+                priceTotal: props.priceTotal?.getValue?.(), pricePerM2: props.pricePerM2?.getValue?.(),
+                currency: props.currency?.getValue?.(), city: props.city?.getValue?.(),
+                country: props.country?.getValue?.(), sqm: props.sqm?.getValue?.(),
+                rooms: props.rooms?.getValue?.(), type: props.type?.getValue?.(),
+                sourceUrl: props.sourceUrl?.getValue?.(), sourceSite: props.sourceSite?.getValue?.(),
+                listingDate: props.listingDate?.getValue?.(),
+              };
+              openPanel(price);
+            }
           } else {
             closePanel();
           }
@@ -722,7 +769,7 @@ import Layout from '../layouts/Layout.astro';
         
         // Update HTML pill positions on each frame
         viewer.scene.preRender.addEventListener(function() {
-          const entities = viewer.entities.values;
+          const entities = rentDataSource ? rentDataSource.entities.values : [];
           const cameraHeight = viewer.camera.positionCartographic.height;
           
           entities.forEach(function(entity) {
