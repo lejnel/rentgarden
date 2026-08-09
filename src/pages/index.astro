@@ -780,7 +780,16 @@ import Layout from '../layouts/Layout.astro';
         } else {
           pill.textContent = group.length + '×';
           pill.onclick = () => {
-            openGroupPanel(group);
+            // Zoom in on the group first, then show the panel
+            const groupLng = lng, groupLat = lat;
+            const grp = group;
+            if (typeof viewer !== 'undefined' && viewer) {
+              viewer.camera.flyTo({
+                destination: Cesium.Cartesian3.fromDegrees(groupLng, groupLat, Math.max(20000, viewer.camera.positionCartographic.height * 0.3)),
+                duration: 1.0,
+              });
+            }
+            openGroupPanel(grp);
           };
         }
         
@@ -992,10 +1001,16 @@ import Layout from '../layouts/Layout.astro';
           rebuildPills(viewer);
         });
         
-        // Double-tap to zoom in (mobile)
+        // Double-tap to zoom in (mobile) — SINGLE finger only (pinch uses 2+)
         let lastTap = 0;
         let tapTimer = null;
         viewer.scene.canvas.addEventListener('touchend', function(e) {
+          // Only single-finger taps count — ignore pinch (2+ fingers)
+          if (e.touches.length > 0 || e.changedTouches.length !== 1) {
+            lastTap = 0;
+            if (tapTimer) { clearTimeout(tapTimer); tapTimer = null; }
+            return;
+          }
           const now = Date.now();
           if (now - lastTap < 300) {
             // Double tap detected — zoom in on the tapped location
@@ -1045,6 +1060,14 @@ import Layout from '../layouts/Layout.astro';
               // Skip — HTML pills handle their own clicks
               const props = picked.id.properties;
               if (props.isGroup?.getValue?.()) {
+                // Zoom in on the group first, then show the panel
+                const glat = props.lat?.getValue?.(), glng = props.lng?.getValue?.();
+                if (glat !== undefined && glng !== undefined) {
+                  viewer.camera.flyTo({
+                    destination: Cesium.Cartesian3.fromDegrees(glng, glat, Math.max(20000, viewer.camera.positionCartographic.height * 0.3)),
+                    duration: 1.0,
+                  });
+                }
                 openGroupPanel(props.group.getValue());
               } else {
                 const price = {
