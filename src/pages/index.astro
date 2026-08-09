@@ -572,6 +572,8 @@ import Layout from '../layouts/Layout.astro';
         pill.onmouseenter = function() { this.style.filter = 'brightness(1.15)'; this.style.boxShadow = '0 4px 16px rgba(0,0,0,0.5)'; };
         pill.onmouseleave = function() { this.style.filter = ''; this.style.boxShadow = '0 2px 8px rgba(0,0,0,0.3)'; };
         pill.textContent = priceText;
+        pill._lat = lat;
+        pill._lng = lng;
         pill.onclick = () => {
           openPanel({
             priceId: p.id, lat: lat, lng: lng,
@@ -780,20 +782,39 @@ import Layout from '../layouts/Layout.astro';
           }
         }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
         
-        // Update HTML pill positions on each frame
+        // Update HTML pill positions on each frame (optimized: viewport culling + throttling)
+        let frameTick = 0;
         viewer.scene.preRender.addEventListener(function() {
+          frameTick++;
+          if (frameTick % 2 !== 0) return; // only every 2nd frame
+          
           const entities = rentDataSource ? rentDataSource.entities.values : [];
           const cameraHeight = viewer.camera.positionCartographic.height;
+          const container = document.getElementById('pillContainer');
+          
+          if (cameraHeight > 80000) {
+            // Fast path: hide everything at once, no per-pill loop
+            container.style.opacity = '0';
+            container.style.pointerEvents = 'none';
+            return;
+          }
+          container.style.opacity = '1';
+          
+          // Viewport rectangle for culling (pills outside view are skipped)
+          const rect = viewer.camera.computeViewRectangle();
           
           entities.forEach(function(entity) {
             if (!entity.position) return;
             const pill = pillMap.get(entity);
             if (!pill) return;
             
-            if (cameraHeight > 80000) {
-              pill.style.opacity = '0';
-              pill.style.pointerEvents = 'none';
-              return;
+            // Fast cull: skip pills outside the visible rectangle
+            if (rect && pill._lat !== undefined) {
+              const lng = pill._lng, lat = pill._lat;
+              if (lng < rect.west || lng > rect.east || lat < rect.south || lat > rect.north) {
+                pill.style.opacity = '0';
+                return;
+              }
             }
             
             const pos = entity.position.getValue(viewer.clock.currentTime);
