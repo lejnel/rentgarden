@@ -823,15 +823,10 @@ import Layout from '../layouts/Layout.astro';
           const priceText = formatPrice(p.price_total, p.currency);
           pill.textContent = priceText;
           pill.onclick = () => {
-            // Zoom in toward the listing first, then show the panel
+            // Zoom in toward the listing first, then show the panel (never out)
             const plng = lng, plat = lat;
             const pr = p;
-            if (typeof viewer !== 'undefined' && viewer) {
-              viewer.camera.flyTo({
-                destination: Cesium.Cartesian3.fromDegrees(plng, plat, Math.max(30000, viewer.camera.positionCartographic.height * 0.5)),
-                duration: 1.0,
-              });
-            }
+            zoomInOnly(plng, plat, 0.5, 30000);
             openPanel({
               priceId: pr.id, lat: plat, lng: plng,
               priceTotal: pr.price_total, pricePerM2: pr.price_per_m2,
@@ -843,15 +838,10 @@ import Layout from '../layouts/Layout.astro';
         } else {
           pill.textContent = group.length + '×';
           pill.onclick = () => {
-            // Zoom in on the group first, then show the panel
+            // Zoom in on the group first, then show the panel (never out)
             const groupLng = lng, groupLat = lat;
             const grp = group;
-            if (typeof viewer !== 'undefined' && viewer) {
-              viewer.camera.flyTo({
-                destination: Cesium.Cartesian3.fromDegrees(groupLng, groupLat, Math.max(20000, viewer.camera.positionCartographic.height * 0.3)),
-                duration: 1.0,
-              });
-            }
+            zoomInOnly(groupLng, groupLat, 0.3, 20000);
             openGroupPanel(grp);
           };
         }
@@ -867,6 +857,19 @@ import Layout from '../layouts/Layout.astro';
 
     let currentPanelPrice = null;
     let currentPanelGroup = null;
+    
+    // Zoom toward a point but NEVER zoom out — if we're already closer than
+    // the target height, do nothing (no jump back out to a fixed height)
+    function zoomInOnly(lng, lat, factor, minH) {
+      if (!viewer) return;
+      const curH = viewer.camera.positionCartographic.height;
+      const target = Math.max(minH, curH * factor);
+      if (target >= curH) return; // already closer — never zoom out
+      viewer.camera.flyTo({
+        destination: Cesium.Cartesian3.fromDegrees(lng, lat, target),
+        duration: 1.0,
+      });
+    }
 
     async function openPanel(price) {
       currentPanelPrice = price;
@@ -1163,23 +1166,17 @@ import Layout from '../layouts/Layout.astro';
                 const carto = Cesium.Cartographic.fromCartesian(pos);
                 const lat = Cesium.Math.toDegrees(carto.latitude);
                 const lng = Cesium.Math.toDegrees(carto.longitude);
-                viewer.camera.flyTo({
-                  destination: Cesium.Cartesian3.fromDegrees(lng, lat, 60000),
-                  duration: 1.2,
-                });
+                zoomInOnly(lng, lat, 0.4, 20000);
               }
               return;
             }
             if (hasPrice) {
               // Skip — HTML pills handle their own clicks
               if (props.isGroup?.getValue?.()) {
-                // Zoom in on the group first, then show the panel
+                // Zoom in on the group first, then show the panel (never out)
                 const glat = props.lat?.getValue?.(), glng = props.lng?.getValue?.();
                 if (glat !== undefined && glng !== undefined) {
-                  viewer.camera.flyTo({
-                    destination: Cesium.Cartesian3.fromDegrees(glng, glat, Math.max(20000, viewer.camera.positionCartographic.height * 0.3)),
-                    duration: 1.0,
-                  });
+                  zoomInOnly(glng, glat, 0.3, 20000);
                 }
                 openGroupPanel(props.group.getValue());
               } else {
@@ -1193,12 +1190,9 @@ import Layout from '../layouts/Layout.astro';
                   sourceUrl: props.sourceUrl?.getValue?.(), sourceSite: props.sourceSite?.getValue?.(),
                   listingDate: props.listingDate?.getValue?.(),
                 };
-                // Zoom in toward the listing first, then show the panel
+                // Zoom in toward the listing first, then show the panel (never out)
                 if (price.lat !== undefined && price.lng !== undefined) {
-                  viewer.camera.flyTo({
-                    destination: Cesium.Cartesian3.fromDegrees(price.lng, price.lat, Math.max(30000, viewer.camera.positionCartographic.height * 0.5)),
-                    duration: 1.0,
-                  });
+                  zoomInOnly(price.lng, price.lat, 0.5, 30000);
                 }
                 openPanel(price);
               }
