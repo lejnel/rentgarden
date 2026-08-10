@@ -518,6 +518,52 @@ import Layout from '../layouts/Layout.astro';
         return { cities: [], prices: [] };
       }
     }
+    
+    // City name labels on the globe (radio.garden style)
+    // Population tiers control when each city label appears:
+    //   >5M   always visible (up to 40.000 km)
+    //   >1M   visible when closer than 12.000 km
+    //   >250K visible when closer than 5.000 km
+    //   >50K  visible when closer than 2.000 km
+    let cityLabels = null;
+    let cityLabelsLoaded = false;
+    async function loadCityLabels(Cesium, viewer) {
+      if (cityLabelsLoaded) return;
+      cityLabelsLoaded = true;
+      try {
+        const resp = await fetch('/cities50k.json');
+        if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+        const cities = await resp.json();
+        cityLabels = viewer.scene.primitives.add(new Cesium.LabelCollection());
+        cities.forEach(c => {
+          const pop = c.p || 0;
+          let maxDist = 0, fontSize = 10;
+          if (pop >= 5000000) { maxDist = 40000000; fontSize = 13; }
+          else if (pop >= 1000000) { maxDist = 12000000; fontSize = 11; }
+          else if (pop >= 250000) { maxDist = 5000000; fontSize = 10; }
+          else if (pop >= 100000) { maxDist = 3000000; fontSize = 9; }
+          else { maxDist = 2000000; fontSize = 9; }
+          cityLabels.add({
+            position: Cesium.Cartesian3.fromDegrees(c.lng, c.lat),
+            text: c.n,
+            font: `${fontSize}px -apple-system, BlinkMacSystemFont, sans-serif`,
+            fillColor: Cesium.Color.fromCssColorString('#dbe4f3'),
+            outlineColor: Cesium.Color.fromCssColorString('#0a0e17'),
+            outlineWidth: 3,
+            style: Cesium.LabelStyle.FILL_AND_OUTLINE,
+            showBackground: false,
+            disableDepthTestDistance: Number.POSITIVE_INFINITY,
+            distanceDisplayCondition: new Cesium.DistanceDisplayCondition(0, maxDist),
+            pixelOffset: new Cesium.Cartesian2(0, -6),
+            horizontalOrigin: Cesium.HorizontalOrigin.CENTER,
+            verticalOrigin: Cesium.VerticalOrigin.BOTTOM,
+          });
+        });
+        console.log('City labels loaded:', cities.length);
+      } catch (err) {
+        console.warn('City labels unavailable:', err.message);
+      }
+    }
 
     function createPillCanvas(text, bgColor) {
       const canvas = document.createElement('canvas');
@@ -995,6 +1041,9 @@ import Layout from '../layouts/Layout.astro';
         
         // Load data
         await loadData();
+        
+        // Load city name labels (radio.garden style)
+        loadCityLabels(Cesium, viewer);
         
         // Render year pills
         renderYearPills();
