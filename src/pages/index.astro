@@ -858,13 +858,19 @@ import Layout from '../layouts/Layout.astro';
     let currentPanelPrice = null;
     let currentPanelGroup = null;
     
-    // Zoom toward a point but NEVER zoom out — if we're already closer than
-    // the target height, do nothing (no jump back out to a fixed height)
+    // Zoom toward a point but NEVER zoom out. If we're already closer than
+    // the factor target, zoom in a bit anyway (80% of current height) so
+    // clicking always gives some movement — but never jumps back out.
     function zoomInOnly(lng, lat, factor, minH) {
       if (!viewer) return;
       const curH = viewer.camera.positionCartographic.height;
-      const target = Math.max(minH, curH * factor);
-      if (target >= curH) return; // already closer — never zoom out
+      let target = Math.max(minH, curH * factor);
+      if (target >= curH) {
+        // Already closer than the factor target — nudge in a bit anyway
+        target = curH * 0.8;
+        if (target < minH) target = minH;
+        if (target >= curH) return; // can't get closer (already at minH)
+      }
       viewer.camera.flyTo({
         destination: Cesium.Cartesian3.fromDegrees(lng, lat, target),
         duration: 1.0,
