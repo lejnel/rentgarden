@@ -552,7 +552,9 @@ import Layout from '../layouts/Layout.astro';
             outlineWidth: 3,
             style: Cesium.LabelStyle.FILL_AND_OUTLINE,
             showBackground: false,
-            disableDepthTestDistance: Number.POSITIVE_INFINITY,
+            // NO disableDepthTestDistance — labels on the far side of the
+            // globe must be hidden behind it (Sydney must not show when
+            // looking at Aarhus). Default depth testing hides them.
             distanceDisplayCondition: new Cesium.DistanceDisplayCondition(0, maxDist),
             pixelOffset: new Cesium.Cartesian2(0, -6),
             horizontalOrigin: Cesium.HorizontalOrigin.CENTER,
