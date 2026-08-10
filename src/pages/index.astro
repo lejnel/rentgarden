@@ -1058,14 +1058,52 @@ import Layout from '../layouts/Layout.astro';
         const handler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
         handler.setInputAction(function(click) {
           const picked = viewer.scene.pick(click.position);
+          
+          // Helper: find the nearest cluster billboard at a screen position.
+          // Cluster entities have billboard+label but NO priceId property.
+          // (scene.pick sometimes fails to return cluster entities, so we
+          // fall back to a manual screen-space search.)
+          function findClusterAt(screenPos) {
+            if (!rentDataSource) return null;
+            const entities = rentDataSource.entities.values;
+            let best = null;
+            let bestDist = 35; // px threshold
+            for (let i = 0; i < entities.length; i++) {
+              const ent = entities[i];
+              if (!ent.billboard || !ent.position) continue;
+              if (ent.properties && ent.properties.priceId) continue; // real dot, not a cluster
+              let pos = null;
+              try { pos = ent.position.getValue(viewer.clock.currentTime); } catch(e) {}
+              if (!pos) continue;
+              const winPos = Cesium.SceneTransforms.worldToWindowCoordinates(viewer.scene, pos);
+              if (!winPos) continue;
+              const dx = winPos.x - screenPos.x;
+              const dy = winPos.y - screenPos.y;
+              const dist = Math.sqrt(dx * dx + dy * dy);
+              if (dist < bestDist) {
+                bestDist = dist;
+                best = ent;
+              }
+            }
+            return best;
+          }
+          
+          // Resolve what was clicked: picked entity OR nearest cluster
+          let clickedId = null;
           if (Cesium.defined(picked) && picked.id) {
+            clickedId = picked.id;
+          } else {
+            clickedId = findClusterAt(click.position);
+          }
+          
+          if (clickedId) {
             // Cluster clicked? Clusters have billboard but NO priceId in properties
             // (entities ALWAYS have a properties bag — check for priceId instead)
-            const props = picked.id.properties;
+            const props = clickedId.properties;
             const hasPrice = props && props.priceId?.getValue?.();
-            if (picked.id.billboard && !hasPrice) {
+            if (clickedId.billboard && !hasPrice) {
               let pos = null;
-              try { pos = picked.id.position?.getValue?.(viewer.clock.currentTime); } catch(e) {}
+              try { pos = clickedId.position?.getValue?.(viewer.clock.currentTime); } catch(e) {}
               // Fallback: pick the globe under the click
               if (!pos) {
                 pos = viewer.camera.pickEllipsoid(click.position, viewer.scene.globe.ellipsoid);
