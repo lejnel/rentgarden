@@ -957,7 +957,12 @@ import Layout from '../layouts/Layout.astro';
       const first = groupArray[0];
       const city = first.city || 'Unknown';
       document.getElementById('panelCity').textContent = city + ' (' + groupArray.length + ' listings)';
-      document.getElementById('panelCountry').textContent = (first.country || '') + ' · ' + (first.type || 'apartment');
+      document.getElementById('panelCountry').innerHTML = `
+        <div class="panel-badges">
+          <span class="panel-badge">${first.country || ''}</span>
+          <span class="panel-badge">${typeIcon(first.type)} ${first.type || 'apartment'} × ${groupArray.length}</span>
+        </div>
+      `;
       
       let sumPerM2 = 0;
       let countPerM2 = 0;
