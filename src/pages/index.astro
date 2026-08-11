@@ -123,6 +123,31 @@ import Layout from '../layouts/Layout.astro';
         overflow-y: auto;
       }
       .panel-section-title { font-size:11px; font-weight:600; color:#64748b; text-transform:uppercase; letter-spacing:1px; margin-bottom:8px; }
+      .detail-grid {
+        display:grid; grid-template-columns:repeat(4, 1fr); gap:8px; margin-bottom:10px;
+      }
+      @media (max-width: 768px) {
+        .detail-grid { grid-template-columns:repeat(2, 1fr); }
+      }
+      .d-cell {
+        background:rgba(255,255,255,0.04); border-radius:10px;
+        padding:12px 8px; text-align:center;
+      }
+      .d-label {
+        display:block; font-size:10px; color:#8899b4; text-transform:uppercase;
+        letter-spacing:0.6px; margin-bottom:4px;
+      }
+      .d-val {
+        display:block; font-size:15px; font-weight:700; color:#e2e8f0;
+        white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+      }
+      .view-btn {
+        display:block; width:100%; margin:4px 0 0; padding:11px; border-radius:8px;
+        background:linear-gradient(135deg,#6366f1,#7c3aed); color:white;
+        text-align:center; font-weight:600; cursor:pointer; border:none;
+        font-family:inherit; font-size:13px; transition:opacity 0.15s;
+      }
+      .view-btn:hover { opacity:0.88; }
       .detail-card { background:rgba(255,255,255,0.04); border-radius:10px; padding:4px 14px; margin-bottom:8px; }
       .detail-row {
         display:flex; justify-content:space-between; align-items:center;
@@ -131,13 +156,6 @@ import Layout from '../layouts/Layout.astro';
       .detail-row:last-child { border-bottom:none; }
       .detail-label { color:#8899b4; font-size:12px; }
       .detail-value { font-weight:600; text-align:right; }
-      .view-btn {
-        display:block; width:100%; margin:10px 0 12px; padding:11px; border-radius:8px;
-        background:linear-gradient(135deg,#6366f1,#7c3aed); color:white;
-        text-align:center; font-weight:600; cursor:pointer; border:none;
-        font-family:inherit; font-size:13px; transition:opacity 0.15s;
-      }
-      .view-btn:hover { opacity:0.88; }
       .listing-row {
         display:flex; align-items:center; gap:10px; padding:10px; border-radius:8px;
         background:rgba(255,255,255,0.02); margin-bottom:4px; cursor:pointer;
@@ -917,17 +935,16 @@ import Layout from '../layouts/Layout.astro';
       
       const listingsEl = document.getElementById('panelListings');
       const type = price.type || 'apartment';
+      // Build detail grid: 4 cols desktop, 2 cols mobile
+      let cells = '';
+      if (price.rooms)  cells += `<div class="d-cell"><span class="d-label">Rooms</span><span class="d-val">${price.rooms}</span></div>`;
+      if (price.sqm)    cells += `<div class="d-cell"><span class="d-label">Size</span><span class="d-val">${price.sqm} m²</span></div>`;
+      if (price.listingDate) cells += `<div class="d-cell"><span class="d-label">Listed</span><span class="d-val">${price.listingDate}</span></div>`;
+      if (price.sourceSite)  cells += `<div class="d-cell"><span class="d-label">Source</span><span class="d-val">${price.sourceSite.replace(/^www\./,'')}</span></div>`;
+      
       listingsEl.innerHTML = '<div class="panel-section-title">Listing details</div>';
-      listingsEl.innerHTML += `
-        <div class="detail-card">
-          <div class="detail-row"><span class="detail-label">Type</span><span class="detail-value">${typeIcon(type)} ${type}</span></div>
-          ${price.rooms ? `<div class="detail-row"><span class="detail-label">Rooms</span><span class="detail-value">${price.rooms}</span></div>` : ''}
-          ${price.sqm ? `<div class="detail-row"><span class="detail-label">Size</span><span class="detail-value">${price.sqm} m²</span></div>` : ''}
-          ${price.listingDate ? `<div class="detail-row"><span class="detail-label">Listed</span><span class="detail-value">${price.listingDate}</span></div>` : ''}
-          ${price.sourceSite ? `<div class="detail-row"><span class="detail-label">Source</span><span class="detail-value">${price.sourceSite}</span></div>` : ''}
-        </div>
-        <button class="view-btn" onclick="window.open('${price.sourceUrl}', '_blank')">View original listing →</button>
-      `;
+      listingsEl.innerHTML += `<div class="detail-grid">${cells}</div>`;
+      listingsEl.innerHTML += `<button class="view-btn" onclick="window.open('${price.sourceUrl}', '_blank')">View original listing →</button>`;
       
       panel.classList.add('open');
     }
