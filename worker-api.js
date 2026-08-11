@@ -62,7 +62,24 @@ export default {
         
         const price_per_m2 = sqm && sqm > 0 ? Math.round(price_total / sqm) : null;
         const source_site = source_url ? new URL(source_url).hostname : null;
-        
+
+        // Dedup check: exact source_url
+        const exactDup = await db.prepare('SELECT id FROM prices WHERE source_url = ? LIMIT 1').bind(source_url).run();
+        if (exactDup.results.length > 0) {
+          return new Response(JSON.stringify({ success: true, id: exactDup.results[0].id, duplicate: true }), { headers });
+        }
+
+        // Dedup check: NoBroker re-announces the same property with a new UUID,
+        // so the slug (between /property/ and the UUID) identifies the listing.
+        const slugMatch = source_url.match(/\/property\/([^/]+)\//);
+        if (slugMatch) {
+          const slug = slugMatch[1];
+          const slugDup = await db.prepare("SELECT id FROM prices WHERE instr(source_url, ?) > 0 LIMIT 1").bind('/property/' + slug + '/').run();
+          if (slugDup.results.length > 0) {
+            return new Response(JSON.stringify({ success: true, id: slugDup.results[0].id, duplicate: true }), { headers });
+          }
+        }
+
         const { meta } = await db.prepare(`
           INSERT INTO prices (city, country, lat, lng, price_total, price_per_m2, sqm, rooms, type, source_url, source_site, listing_date, currency, submitter_email)
           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
