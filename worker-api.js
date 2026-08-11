@@ -59,6 +59,10 @@ export default {
         if (!city || !lat || !lng || !price_total || !source_url) {
           return new Response(JSON.stringify({ error: 'Missing required fields' }), { status: 400, headers });
         }
+        // Email is REQUIRED (used for moderation, never shown publicly)
+        if (!submitter_email || !String(submitter_email).includes('@')) {
+          return new Response(JSON.stringify({ error: 'Email is required' }), { status: 400, headers });
+        }
         
         const price_per_m2 = sqm && sqm > 0 ? Math.round(price_total / sqm) : null;
         const source_site = source_url ? new URL(source_url).hostname : null;

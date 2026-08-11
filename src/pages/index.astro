@@ -351,8 +351,8 @@ import Layout from '../layouts/Layout.astro';
             <input type="number" id="popRooms" placeholder="2" style="width:100%;padding:8px;border-radius:6px;border:1px solid rgba(255,255,255,0.1);background:rgba(0,0,0,0.3);color:#e2e8f0;font-size:13px;font-family:inherit;outline:none;">
           </div>
           <div>
-            <label style="font-size:11px;color:#8899b4;text-transform:uppercase;">Email (optional)</label>
-            <input type="email" id="popEmail" placeholder="you@example.com" style="width:100%;padding:8px;border-radius:6px;border:1px solid rgba(255,255,255,0.1);background:rgba(0,0,0,0.3);color:#e2e8f0;font-size:13px;font-family:inherit;outline:none;">
+            <label style="font-size:11px;color:#8899b4;text-transform:uppercase;">Email *</label>
+            <input type="email" id="popEmail" required placeholder="you@example.com" style="width:100%;padding:8px;border-radius:6px;border:1px solid rgba(255,255,255,0.1);background:rgba(0,0,0,0.3);color:#e2e8f0;font-size:13px;font-family:inherit;outline:none;">
           </div>
           <!-- F4: Type field -->
           <div>
@@ -1369,6 +1369,9 @@ import Layout from '../layouts/Layout.astro';
           var city = document.getElementById('popCityHidden').value;
           // F5: Use country from hidden field (set by reverse geocode)
           var country = document.getElementById('popCountryHidden').value || 'DK';
+          // Email is REQUIRED — used for moderation, never shown publicly
+          var email = document.getElementById('popEmail').value.trim();
+          if (!email) { alert('Email is required'); return; }
 
           if (!city) { alert('Please pick a location on the map'); return; }
 
@@ -1384,7 +1387,7 @@ import Layout from '../layouts/Layout.astro';
             sqm: parseFloat(document.getElementById('popSqm').value) || null,
             rooms: parseInt(document.getElementById('popRooms').value) || null,
             type: document.getElementById('popType').value || 'apartment',
-            submitter_email: document.getElementById('popEmail').value || null,
+            submitter_email: email,
           };
           
           try {
