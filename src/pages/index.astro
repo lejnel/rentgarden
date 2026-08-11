@@ -1187,7 +1187,17 @@ import Layout from '../layouts/Layout.astro';
               }
             }
           } else {
-            closePanel();
+            // Nothing picked — could be a cluster (clusters aren't pickable in Cesium).
+            // Zoom in on the click position instead of closing panel.
+            const pos = viewer.camera.pickEllipsoid(click.position, viewer.scene.globe.ellipsoid);
+            if (pos) {
+              const carto = Cesium.Cartographic.fromCartesian(pos);
+              const lat = Cesium.Math.toDegrees(carto.latitude);
+              const lng = Cesium.Math.toDegrees(carto.longitude);
+              zoomInOnly(lng, lat, 0.4, 20000);
+            } else {
+              closePanel();
+            }
           }
         }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
         
