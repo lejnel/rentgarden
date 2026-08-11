@@ -97,6 +97,13 @@ import Layout from '../layouts/Layout.astro';
         color: #e2e8f0;
       }
       .info-panel.open { bottom: 0; }
+      .panel-close {
+        position: absolute; top: 12px; right: 12px; z-index: 5;
+        background: rgba(255,255,255,0.08); border: none; border-radius: 8px;
+        color: #94a3b8; font-size: 20px; line-height: 1; width: 32px; height: 32px;
+        cursor: pointer; display: flex; align-items: center; justify-content: center;
+      }
+      .panel-close:hover { background: rgba(255,255,255,0.15); color: #e2e8f0; }
       .panel-handle { width:40px; height:4px; background:rgba(255,255,255,0.2); border-radius:4px; margin:-14px auto 16px; cursor:pointer; }
       .panel-city { font-size:22px; font-weight:700; }
       .panel-country { font-size:13px; color:#8899b4; margin-top:2px; }
@@ -286,6 +293,7 @@ import Layout from '../layouts/Layout.astro';
 
   <!-- Info Panel -->
   <div class="info-panel" id="infoPanel">
+    <button class="panel-close" onclick="closePanel()" aria-label="Close">&times;</button>
     <div class="panel-handle"></div>
     <div class="panel-city" id="panelCity">Select a city</div>
     <div class="panel-country" id="panelCountry"></div>
