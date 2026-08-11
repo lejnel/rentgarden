@@ -561,8 +561,8 @@ import Layout from '../layouts/Layout.astro';
           if (pop >= 5000000) { maxDist = 40000000; fontSize = 13; }
           else if (pop >= 1000000) { maxDist = 12000000; fontSize = 11; }
           else if (pop >= 250000) { maxDist = 5000000; fontSize = 10; }
-          else if (pop >= 100000) { maxDist = 3000000; fontSize = 9; }
-          else { maxDist = 2000000; fontSize = 9; }
+          else if (pop >= 90000) { maxDist = 3000000; fontSize = 9; }
+          else { return; } // skip cities under 90k population
           cityLabels.add({
             position: Cesium.Cartesian3.fromDegrees(c.lng, c.lat),
             text: c.n,
