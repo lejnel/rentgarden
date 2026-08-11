@@ -105,23 +105,46 @@ import Layout from '../layouts/Layout.astro';
       }
       .panel-close:hover { background: rgba(255,255,255,0.15); color: #e2e8f0; }
       .panel-handle { width:40px; height:4px; background:rgba(255,255,255,0.2); border-radius:4px; margin:-14px auto 16px; cursor:pointer; }
-      .panel-city { font-size:22px; font-weight:700; }
+      .panel-city { font-size:22px; font-weight:700; line-height:1.25; }
       .panel-country { font-size:13px; color:#8899b4; margin-top:2px; }
+      .panel-badges { display:flex; gap:6px; margin-top:8px; flex-wrap:wrap; }
+      .panel-badge {
+        font-size:11px; padding:3px 10px; border-radius:999px;
+        background:rgba(255,255,255,0.06); color:#94a3b8;
+        border:1px solid rgba(255,255,255,0.08); white-space:nowrap;
+      }
       .panel-stats { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:16px; }
       .stat-card { background:rgba(255,255,255,0.04); border-radius:10px; padding:12px; text-align:center; }
       .stat-value { font-size:18px; font-weight:700; }
+      .stat-label { font-size:10px; color:#8899b4; text-transform:uppercase; letter-spacing:0.8px; margin-top:3px; }
       .panel-listings { margin-top:14px; max-height:200px; overflow-y:auto; }
       #panelListings {
         max-height: 320px;
         overflow-y: auto;
       }
       .panel-section-title { font-size:11px; font-weight:600; color:#64748b; text-transform:uppercase; letter-spacing:1px; margin-bottom:8px; }
+      .detail-card { background:rgba(255,255,255,0.04); border-radius:10px; padding:4px 14px; margin-bottom:8px; }
+      .detail-row {
+        display:flex; justify-content:space-between; align-items:center;
+        padding:9px 0; border-bottom:1px solid rgba(255,255,255,0.05); font-size:13px;
+      }
+      .detail-row:last-child { border-bottom:none; }
+      .detail-label { color:#8899b4; font-size:12px; }
+      .detail-value { font-weight:600; text-align:right; }
+      .view-btn {
+        display:block; width:100%; margin:10px 0 12px; padding:11px; border-radius:8px;
+        background:linear-gradient(135deg,#6366f1,#7c3aed); color:white;
+        text-align:center; font-weight:600; cursor:pointer; border:none;
+        font-family:inherit; font-size:13px; transition:opacity 0.15s;
+      }
+      .view-btn:hover { opacity:0.88; }
       .listing-row {
         display:flex; align-items:center; gap:10px; padding:10px; border-radius:8px;
         background:rgba(255,255,255,0.02); margin-bottom:4px; cursor:pointer;
         transition:background 0.15s; font-size:13px;
       }
       .listing-row:hover { background:rgba(255,255,255,0.05); }
+      .listing-type { font-size:16px; width:22px; text-align:center; }
       .listing-price { font-weight:700; white-space:nowrap; }
       .listing-source { font-size:10px; color:#64748b; }
       .listing-arrow { color:#6366f1; margin-left:auto; }
@@ -860,6 +883,11 @@ import Layout from '../layouts/Layout.astro';
       });
     }
 
+    function typeIcon(type) {
+      const icons = { apartment: '🏢', house: '🏠', room: '🚪', studio: '🛋️', townhouse: '🏘️', villa: '🏡' };
+      return icons[type] || '🏠';
+    }
+
     async function openPanel(price) {
       currentPanelPrice = price;
       currentPanelGroup = null;
@@ -878,22 +906,27 @@ import Layout from '../layouts/Layout.astro';
       } catch(e) {}
       
       document.getElementById('panelCity').textContent = address;
-      document.getElementById('panelCountry').textContent = (price.country || '') + ' · ' + (price.type || 'apartment');
+      document.getElementById('panelCountry').innerHTML = `
+        <div class="panel-badges">
+          <span class="panel-badge">${price.country || ''}</span>
+          <span class="panel-badge">${typeIcon(price.type)} ${price.type || 'apartment'}</span>
+        </div>
+      `;
       document.getElementById('statAvg').textContent = formatPrice(price.pricePerM2 || price.priceTotal, price.currency) + '/m²';
       document.getElementById('statCount').textContent = formatPrice(price.priceTotal || price.pricePerM2, price.currency) + ' / month';
       
       const listingsEl = document.getElementById('panelListings');
+      const type = price.type || 'apartment';
       listingsEl.innerHTML = '<div class="panel-section-title">Listing details</div>';
       listingsEl.innerHTML += `
-        <div class="listing-row" style="cursor:pointer" onclick="window.open('${price.sourceUrl}', '_blank')">
-          <span>🏠</span>
-          <span style="flex:1">
-            ${price.rooms ? price.rooms + ' rooms' : 'Property'}${price.sqm ? ' · ' + price.sqm + 'm²' : ''}
-            <div class="listing-source">${price.listingDate || ''} · ${price.sourceSite || ''}</div>
-          </span>
-          <span class="listing-price">${formatPrice(price.priceTotal || price.pricePerM2, price.currency)}</span>
-          <span class="listing-arrow">→</span>
+        <div class="detail-card">
+          <div class="detail-row"><span class="detail-label">Type</span><span class="detail-value">${typeIcon(type)} ${type}</span></div>
+          ${price.rooms ? `<div class="detail-row"><span class="detail-label">Rooms</span><span class="detail-value">${price.rooms}</span></div>` : ''}
+          ${price.sqm ? `<div class="detail-row"><span class="detail-label">Size</span><span class="detail-value">${price.sqm} m²</span></div>` : ''}
+          ${price.listingDate ? `<div class="detail-row"><span class="detail-label">Listed</span><span class="detail-value">${price.listingDate}</span></div>` : ''}
+          ${price.sourceSite ? `<div class="detail-row"><span class="detail-label">Source</span><span class="detail-value">${price.sourceSite}</span></div>` : ''}
         </div>
+        <button class="view-btn" onclick="window.open('${price.sourceUrl}', '_blank')">View original listing →</button>
       `;
       
       panel.classList.add('open');
@@ -935,11 +968,12 @@ import Layout from '../layouts/Layout.astro';
       listingsEl.innerHTML = '<div class="panel-section-title">Listing details</div>';
       
       groupArray.forEach(p => {
+        const ptype = p.type || 'apartment';
         listingsEl.innerHTML += `
           <div class="listing-row" style="cursor:pointer" onclick="window.open('${p.source_url || p.sourceUrl || ''}', '_blank')">
-            <span>🏠</span>
+            <span class="listing-type">${typeIcon(ptype)}</span>
             <span style="flex:1">
-              ${p.rooms ? p.rooms + ' rooms' : 'Property'}${p.sqm ? ' · ' + p.sqm + 'm²' : ''}
+              ${p.rooms ? p.rooms + ' rooms' : ptype}${p.sqm ? ' · ' + p.sqm + 'm²' : ''}
               <div class="listing-source">${p.listing_date || p.listingDate || ''} · ${p.source_site || p.sourceSite || ''}</div>
             </span>
             <span class="listing-price">${formatPrice(p.price_total || p.price_per_m2 || p.priceTotal || p.pricePerM2, p.currency)}</span>
