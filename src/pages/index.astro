@@ -286,7 +286,7 @@ import Layout from '../layouts/Layout.astro';
 
   <!-- Info Panel -->
   <div class="info-panel" id="infoPanel">
-    <div class="panel-handle" onclick="closePanel()"></div>
+    <div class="panel-handle"></div>
     <div class="panel-city" id="panelCity">Select a city</div>
     <div class="panel-country" id="panelCountry"></div>
     <div class="panel-stats">
@@ -333,12 +333,30 @@ import Layout from '../layouts/Layout.astro';
               <option value="SEK">SEK</option><option value="NOK">NOK</option>
             </select>
           </div>
+          <!-- F4: Added sqm, rooms, type fields -->
+          <div>
+            <label style="font-size:11px;color:#8899b4;text-transform:uppercase;">m²</label>
+            <input type="number" id="popSqm" placeholder="65" style="width:100%;padding:8px;border-radius:6px;border:1px solid rgba(255,255,255,0.1);background:rgba(0,0,0,0.3);color:#e2e8f0;font-size:13px;font-family:inherit;outline:none;">
+          </div>
+          <div>
+            <label style="font-size:11px;color:#8899b4;text-transform:uppercase;">Rooms</label>
+            <input type="number" id="popRooms" placeholder="2" style="width:100%;padding:8px;border-radius:6px;border:1px solid rgba(255,255,255,0.1);background:rgba(0,0,0,0.3);color:#e2e8f0;font-size:13px;font-family:inherit;outline:none;">
+          </div>
           <div>
             <label style="font-size:11px;color:#8899b4;text-transform:uppercase;">Email (optional)</label>
             <input type="email" id="popEmail" placeholder="you@example.com" style="width:100%;padding:8px;border-radius:6px;border:1px solid rgba(255,255,255,0.1);background:rgba(0,0,0,0.3);color:#e2e8f0;font-size:13px;font-family:inherit;outline:none;">
           </div>
+          <!-- F4: Type field -->
+          <div>
+            <label style="font-size:11px;color:#8899b4;text-transform:uppercase;">Type</label>
+            <select id="popType" style="width:100%;padding:8px;border-radius:6px;border:1px solid rgba(255,255,255,0.1);background:rgba(0,0,0,0.3);color:#e2e8f0;font-size:13px;font-family:inherit;outline:none;">
+              <option value="apartment">Apartment</option><option value="house">House</option>
+              <option value="room">Room</option><option value="studio">Studio</option>
+              <option value="townhouse">Townhouse</option>
+            </select>
+          </div>
         </div>
-        
+
         <!-- Mini map -->
         <div style="margin-top:10px;">
           <div style="display:flex;gap:6px;margin-bottom:6px;">
@@ -348,10 +366,12 @@ import Layout from '../layouts/Layout.astro';
           <div id="popupMap" style="height:180px;border-radius:8px;overflow:hidden;border:1px solid rgba(255,255,255,0.1);background:#1a2030;"></div>
           <div style="font-size:10px;color:#64748b;margin-top:4px;" id="popCoordLabel">Click map to set location</div>
         </div>
-        
+
         <input type="hidden" id="popLat" value="55.6761">
         <input type="hidden" id="popLng" value="12.5683">
         <input type="hidden" id="popCityHidden" value="Copenhagen">
+        <!-- F5: Hidden country field, set by reverse geocode -->
+        <input type="hidden" id="popCountryHidden" value="DK">
         
         <div id="popStatus" style="font-size:12px;margin-top:8px;display:none;"></div>
         <button type="submit" style="width:100%;margin-top:10px;padding:10px;border-radius:8px;border:none;background:linear-gradient(135deg,#6366f1,#7c3aed);color:white;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;">Add Price</button>
@@ -565,51 +585,6 @@ import Layout from '../layouts/Layout.astro';
       } catch (err) {
         console.warn('City labels unavailable:', err.message);
       }
-    }
-
-    function createPillCanvas(text, bgColor) {
-      const canvas = document.createElement('canvas');
-      const ctx = canvas.getContext('2d');
-      const font = 'bold 16px -apple-system, BlinkMacSystemFont, sans-serif';
-      ctx.font = font;
-      const metrics = ctx.measureText(text);
-      const padX = 16;
-      const padY = 10;
-      const w = Math.ceil(metrics.width + padX * 2);
-      const h = Math.ceil(24 + padY * 2);
-      const r = h / 2;
-      
-      canvas.width = w;
-      canvas.height = h;
-      ctx.font = font;
-      
-      // Pill shape with rounded ends
-      ctx.beginPath();
-      ctx.moveTo(r, 0);
-      ctx.lineTo(w - r, 0);
-      ctx.arcTo(w, 0, w, r, r);
-      ctx.arcTo(w, h, w - r, h, r);
-      ctx.lineTo(r, h);
-      ctx.arcTo(0, h, 0, h - r, r);
-      ctx.arcTo(0, 0, r, 0, r);
-      ctx.closePath();
-      
-      // Fill with color
-      ctx.fillStyle = bgColor.toCssColorString();
-      ctx.fill();
-      
-      // White border
-      ctx.strokeStyle = '#ffffff';
-      ctx.lineWidth = 2.5;
-      ctx.stroke();
-      
-      // Text
-      ctx.fillStyle = '#ffffff';
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      ctx.fillText(text, w / 2, h / 2);
-      
-      return canvas;
     }
 
     let rentDataSource = null;
@@ -1080,6 +1055,10 @@ import Layout from '../layouts/Layout.astro';
         let lastTap = 0;
         let tapTimer = null;
         viewer.scene.canvas.addEventListener('touchend', function(e) {
+          // F3: Ignore touches inside the info panel when it's open (avoid conflict with panel swipe)
+          const panel = document.getElementById('infoPanel');
+          if (panel.classList.contains('open') && panel.contains(e.target)) return;
+          
           // Only single-finger taps count — ignore pinch (2+ fingers)
           if (e.touches.length > 0 || e.changedTouches.length !== 1) {
             lastTap = 0;
@@ -1117,6 +1096,10 @@ import Layout from '../layouts/Layout.astro';
         // Click handler
         const handler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
         handler.setInputAction(function(click) {
+          // F1: Hide tooltip on click (prevents it sticking after panel opens)
+          const tooltip = document.getElementById('tooltip');
+          tooltip.classList.remove('visible');
+          
           const picked = viewer.scene.pick(click.position);
           
           // Helper: find the nearest cluster billboard at a screen position.
@@ -1332,6 +1315,9 @@ import Layout from '../layouts/Layout.astro';
             if (d && d.address) {
               var city = d.address.city || d.address.town || d.address.village || '';
               if (city) document.getElementById('popCityHidden').value = city;
+              // F5: Extract country from reverse geocode
+              var countryCode = (d.address.country_code || 'dk').toUpperCase();
+              document.getElementById('popCountryHidden').value = countryCode;
               document.getElementById('popCoordLabel').textContent = (city || 'Unknown') + ' · ' + lat.toFixed(4) + ', ' + lng.toFixed(4);
             }
           } catch(e) {}
@@ -1363,17 +1349,23 @@ import Layout from '../layouts/Layout.astro';
           var lat = parseFloat(document.getElementById('popLat').value);
           var lng = parseFloat(document.getElementById('popLng').value);
           var city = document.getElementById('popCityHidden').value;
-          
+          // F5: Use country from hidden field (set by reverse geocode)
+          var country = document.getElementById('popCountryHidden').value || 'DK';
+
           if (!city) { alert('Please pick a location on the map'); return; }
-          
+
           var data = {
             source_url: document.getElementById('popUrl').value,
             price_total: parseFloat(document.getElementById('popPrice').value),
             currency: document.getElementById('popCurrency').value,
             city: city,
-            country: 'DK',
+            country: country,
             lat: lat,
             lng: lng,
+            // F4: Added sqm, rooms, type from popup form
+            sqm: parseFloat(document.getElementById('popSqm').value) || null,
+            rooms: parseInt(document.getElementById('popRooms').value) || null,
+            type: document.getElementById('popType').value || 'apartment',
             submitter_email: document.getElementById('popEmail').value || null,
           };
           
