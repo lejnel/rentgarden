@@ -109,8 +109,8 @@ import Layout from '../layouts/Layout.astro';
       .panel-handle { width:40px; height:4px; background:rgba(255,255,255,0.2); border-radius:4px; margin:-14px auto 16px; cursor:pointer; }
       .panel-city { font-size:22px; font-weight:700; line-height:1.25; }
       .panel-country { font-size:13px; color:#8899b4; margin-top:2px; }
-      .panel-badges { display:flex; gap:6px; margin-top:8px; flex-wrap:wrap; }
-      .panel-badge {
+      :global(.panel-badges) { display:flex; gap:6px; margin-top:8px; flex-wrap:wrap; }
+      :global(.panel-badge) {
         font-size:12px; padding:5px 12px; border-radius:999px;
         background:rgba(255,255,255,0.10); color:#cbd5e1;
         border:1px solid rgba(255,255,255,0.16); white-space:nowrap;
@@ -125,32 +125,32 @@ import Layout from '../layouts/Layout.astro';
         overflow-y: auto;
       }
       .panel-section-title { font-size:11px; font-weight:600; color:#64748b; text-transform:uppercase; letter-spacing:1px; margin-bottom:8px; }
-      .detail-grid {
+      :global(.detail-grid) {
         display:grid; grid-template-columns:repeat(4, 1fr); gap:8px; margin-bottom:10px;
       }
       @media (max-width: 768px) {
-        .detail-grid { grid-template-columns:repeat(2, 1fr); }
+        :global(.detail-grid) { grid-template-columns:repeat(2, 1fr); }
       }
-      .d-cell {
+      :global(.d-cell) {
         background:rgba(255,255,255,0.04); border-radius:10px;
         padding:12px 8px; text-align:center;
         border:1px solid rgba(255,255,255,0.06);
       }
-      .d-label {
+      :global(.d-label) {
         display:block; font-size:10px; color:#8899b4; text-transform:uppercase;
         letter-spacing:0.6px; margin-bottom:6px;
       }
-      .d-val {
+      :global(.d-val) {
         display:block; font-size:15px; font-weight:700; color:#e2e8f0;
         white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
       }
-      .view-btn {
+      :global(.view-btn) {
         display:block; width:100%; margin:4px 0 0; padding:11px; border-radius:8px;
         background:linear-gradient(135deg,#6366f1,#7c3aed); color:white;
         text-align:center; font-weight:600; cursor:pointer; border:none;
         font-family:inherit; font-size:13px; transition:opacity 0.15s;
       }
-      .view-btn:hover { opacity:0.88; }
+      :global(.view-btn:hover) { opacity:0.88; }
       .detail-card { background:rgba(255,255,255,0.04); border-radius:10px; padding:4px 14px; margin-bottom:8px; }
       .detail-row {
         display:flex; justify-content:space-between; align-items:center;
@@ -159,16 +159,16 @@ import Layout from '../layouts/Layout.astro';
       .detail-row:last-child { border-bottom:none; }
       .detail-label { color:#8899b4; font-size:12px; }
       .detail-value { font-weight:600; text-align:right; }
-      .listing-row {
+      :global(.listing-row) {
         display:flex; align-items:center; gap:10px; padding:10px; border-radius:8px;
         background:rgba(255,255,255,0.02); margin-bottom:4px; cursor:pointer;
         transition:background 0.15s; font-size:13px;
       }
-      .listing-row:hover { background:rgba(255,255,255,0.05); }
-      .listing-type { font-size:16px; width:22px; text-align:center; }
-      .listing-price { font-weight:700; white-space:nowrap; }
-      .listing-source { font-size:10px; color:#64748b; }
-      .listing-arrow { color:#6366f1; margin-left:auto; }
+      :global(.listing-row:hover) { background:rgba(255,255,255,0.05); }
+      :global(.listing-type) { font-size:16px; width:22px; text-align:center; }
+      :global(.listing-price) { font-weight:700; white-space:nowrap; }
+      :global(.listing-source) { font-size:10px; color:#64748b; }
+      :global(.listing-arrow) { color:#6366f1; margin-left:auto; }
       .panel-footer { margin-top:14px; text-align:center; font-size:11px; color:#64748b; }
       .panel-add-link {
         display:inline-flex; align-items:center; gap:5px; margin-top:8px;
