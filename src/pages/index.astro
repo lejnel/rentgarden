@@ -169,18 +169,27 @@ import Layout from '../layouts/Layout.astro';
       .listing-price { font-weight:700; white-space:nowrap; }
       .listing-source { font-size:10px; color:#64748b; }
       .listing-arrow { color:#6366f1; margin-left:auto; }
-      .panel-footer { margin-top:12px; text-align:center; font-size:11px; color:#64748b; font-style:italic; }
+      .panel-footer { margin-top:14px; text-align:center; font-size:11px; color:#64748b; }
+      .panel-add-link {
+        display:inline-flex; align-items:center; gap:5px; margin-top:8px;
+        color:#a5b4fc; font-size:12px; font-weight:600; text-decoration:none;
+        background:none; border:0; cursor:pointer; font-family:inherit;
+      }
+      .panel-add-link:hover { color:#c4b5fd; text-decoration:underline; }
       
       /* ---- FAB ---- */
       .fab {
         position:fixed; bottom:28px; right:28px; z-index:2000;
-        width:56px; height:56px; border-radius:50%; border:none; cursor:pointer;
+        min-width:178px; height:52px; padding:0 18px; border-radius:26px;
+        border:none; cursor:pointer; gap:8px;
         background:linear-gradient(135deg, #4f46e5, #7c3aed);
-        color:white; font-size:26px; box-shadow:0 4px 24px rgba(99,102,241,0.4);
+        color:white; font-size:14px; font-weight:700;
+        box-shadow:0 4px 24px rgba(99,102,241,0.4);
         transition:all 0.2s; display:flex; align-items:center; justify-content:center;
         font-family:inherit;
       }
-      .fab:hover { transform:scale(1.08); box-shadow:0 6px 32px rgba(99,102,241,0.6); }
+      .fab-plus { font-size:23px; font-weight:400; line-height:1; }
+      .fab:hover { transform:translateY(-2px); box-shadow:0 6px 32px rgba(99,102,241,0.6); }
       
       /* ---- Popup ---- */
       .popup-overlay {
@@ -227,7 +236,8 @@ import Layout from '../layouts/Layout.astro';
         }
         /* FAB slightly smaller and clear of the legend */
         .fab {
-          bottom: 16px; right: 16px; width: 52px; height: 52px; font-size: 24px;
+          bottom: 16px; right: 16px; min-width:0; width:auto; height:48px;
+          padding:0 15px; border-radius:24px; font-size:13px;
         }
         /* Popup card more compact on mobile */
         .popup-card { padding: 16px; }
@@ -355,12 +365,13 @@ import Layout from '../layouts/Layout.astro';
       <div class="panel-section-title">Recent listings</div>
     </div>
     <div class="panel-footer">
-      📌 Data updated periodically · <a href="/admin" style="color:#6366f1">Add a price</a>
+      📌 Data updated periodically
+      <button class="panel-add-link" type="button" onclick="openAddPopup()">Know your rent? Add your listing →</button>
     </div>
   </div>
 
-  <!-- FAB — opens add-price popup -->
-  <button class="fab" id="fabAdd" title="Add a price" onclick="openAddPopup()">+</button>
+  <!-- Public CTA — opens add-price popup -->
+  <button class="fab" id="fabAdd" title="Add your listing" aria-label="Add your listing" onclick="openAddPopup()"><span class="fab-plus">+</span><span>Add your listing</span></button>
 
   <!-- Admin link -->
   <a href="/admin" class="admin-link">⚙️ Admin</a>
