@@ -5,6 +5,8 @@ import Layout from '../layouts/Layout.astro';
 
 <Layout>
   <slot name="head">
+    <link rel="preconnect" href="https://cesium.com">
+    <link rel="preconnect" href="https://services.arcgisonline.com">
     <link rel="stylesheet" href="https://cesium.com/downloads/cesiumjs/releases/1.125/Build/Cesium/Widgets/widgets.css">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
     <style>
@@ -310,6 +312,12 @@ import Layout from '../layouts/Layout.astro';
       <option value="GBP">🇬🇧 GBP</option>
       <option value="SEK">🇸🇪 SEK</option>
       <option value="NOK">🇳🇴 NOK</option>
+      <option value="INR">🇮🇳 INR</option>
+      <option value="CNY">🇨🇳 CNY</option>
+      <option value="VND">🇻🇳 VND</option>
+      <option value="THB">🇹🇭 THB</option>
+      <option value="PHP">🇵🇭 PHP</option>
+      <option value="MYR">🇲🇾 MYR</option>
     </select>
   </div>
 
@@ -572,9 +580,9 @@ import Layout from '../layouts/Layout.astro';
 
     async function loadData() {
       try {
-        const apiUrl = selectedYear > 0 
-          ? `https://rentgarden-api.lejnel.workers.dev?year=${selectedYear}`
-          : 'https://rentgarden-api.lejnel.workers.dev';
+        const apiUrl = selectedYear > 0
+          ? `https://rentgarden-api.lejnel.workers.dev?public=1&year=${selectedYear}`
+          : 'https://rentgarden-api.lejnel.workers.dev?public=1';
         const resp = await fetch(apiUrl);
         if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
         const data = await resp.json();
@@ -601,7 +609,7 @@ import Layout from '../layouts/Layout.astro';
       if (cityLabelsLoaded) return;
       cityLabelsLoaded = true;
       try {
-        const resp = await fetch('/cities50k.json');
+        const resp = await fetch('/cities90k.json');
         if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
         const cities = await resp.json();
         cityLabels = viewer.scene.primitives.add(new Cesium.LabelCollection());

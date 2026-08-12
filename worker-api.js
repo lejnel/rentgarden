@@ -5,11 +5,13 @@ export default {
   async fetch(request, env) {
     const url = new URL(request.url);
     
+    const publicView = url.searchParams.get('public') === '1';
     const headers = {
       'Access-Control-Allow-Origin': '*',
       'Access-Control-Allow-Methods': 'GET, POST, DELETE, OPTIONS',
       'Access-Control-Allow-Headers': 'Content-Type',
       'Content-Type': 'application/json',
+      'Cache-Control': publicView ? 'public, max-age=60' : 'no-store',
     };
     
     if (request.method === 'OPTIONS') {
@@ -34,8 +36,11 @@ export default {
           params = [];
         }
         
+        const priceSelect = publicView
+          ? `id, city, country, lat, lng, price_total, price_per_m2, sqm, rooms, type, source_url, source_site, listing_date, currency, CAST(substr(COALESCE(listing_date, submitted_at), 1, 4) AS INTEGER) as listing_year`
+          : `*, CAST(substr(COALESCE(listing_date, submitted_at), 1, 4) AS INTEGER) as listing_year`;
         const { results: prices } = await db.prepare(`
-          SELECT *, CAST(substr(COALESCE(listing_date, submitted_at), 1, 4) AS INTEGER) as listing_year
+          SELECT ${priceSelect}
           FROM prices WHERE verified = 1 ${whereClause}
           ORDER BY submitted_at DESC LIMIT 5000
         `).bind(...params).all();
