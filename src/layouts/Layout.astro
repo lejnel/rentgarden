@@ -33,16 +33,14 @@ const description = 'Explore real rental prices around the world on an interacti
   <link rel="icon" type="image/svg+xml" href="/favicon.svg">
   
   <!-- Structured data -->
-  <script type="application/ld+json">
-  {
-    "@context": "https://schema.org",
-    "@type": "WebSite",
-    "name": "RentMap",
-    "url": "https://rentmap.net/",
-    "description": {description},
-    "inLanguage": "en"
-  }
-  </script>
+  <script type="application/ld+json" set:html={JSON.stringify({
+    '@context': 'https://schema.org',
+    '@type': 'WebSite',
+    name: 'RentMap',
+    url: 'https://rentmap.net/',
+    description,
+    inLanguage: 'en'
+  })}></script>
   
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
