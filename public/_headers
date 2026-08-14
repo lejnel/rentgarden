@@ -1,0 +1,8 @@
+/*
+  Cache-Control: public, max-age=60, must-revalidate
+
+/admin
+  Cache-Control: no-store
+
+/admin/*
+  Cache-Control: no-store
