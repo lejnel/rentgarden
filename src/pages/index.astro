@@ -959,7 +959,9 @@ import Layout from '../layouts/Layout.astro';
           <span class="panel-badge">${typeIcon(price.type)} ${price.type || 'apartment'}</span>
         </div>
       `;
-      document.getElementById('statAvg').textContent = formatPrice(price.pricePerM2 || price.priceTotal, price.currency) + '/m²';
+      // Price / m²: brug gemt price_per_m2, ellers beregn fra total/sqm. Vis "—" hvis ukendt (aldrig duplikér månedsprisen!)
+      const perM2 = price.pricePerM2 || (price.priceTotal && price.sqm ? price.priceTotal / price.sqm : null);
+      document.getElementById('statAvg').textContent = (perM2 ? formatPrice(perM2, price.currency) + '/m²' : '—');
       document.getElementById('statCount').textContent = formatPrice(price.priceTotal || price.pricePerM2, price.currency) + ' / month';
       
       const listingsEl = document.getElementById('panelListings');
