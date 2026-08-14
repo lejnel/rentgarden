@@ -1,165 +1,157 @@
-# RentMap — Global Data Source Plan
+# RentMap — Data Source Plan (opdateret 2026-08-14)
 
-> **Mål:** Én datakilde per land med lejeprisdata — implementeres systematisk.
-> **Oprettet:** 2026-08-11 · **Status:** Plan
+> **Mål:** Få flest mulige lande på kortet med minimal indsats.
+> **Strategi:** Verificér hver kilde med curl FØR implementering. Genbrug eksisterende scripts.
 
----
+## ✅ LIVE lige nu (9 lande)
 
-## Implementeringstyper (genbrug mønstre)
+| Land | Kilde | Type | Listings |
+|------|-------|------|----------|
+| 🇩🇰 Danmark | boligportal.dk | B (Playwright) | ~100 |
+| 🇩🇪 Tyskland | wg-gesucht.de | A | ~40 |
+| 🇺🇸 USA | zumper.com | C (JSON-LD) | ~250 |
+| 🇮🇳 Indien | nobroker.in | A | ~290 |
+| 🇨🇳 Kina | smartshanghai.com | A | ~360 |
+| 🇻🇳 Vietnam | dotproperty.com.vn | A | 64 |
+| 🇵🇭 Filippinerne | dotproperty.com.ph | A | 74 |
+| 🇲🇾 Malaysia | dotproperty.com.my | A | 26 |
 
-| Type | Beskrivelse | Script | Kompleksitet |
-|------|-------------|--------|-------------|
-| **A** | Server-rendered — curl + regex/DOMParser | `rentmap_dotproperty.js` mønster | ⭐ Nem |
-| **B** | JavaScript-rendered — kræver Playwright | `rentmap_boligportal.js` mønster | ⭐⭐ Middel |
-| **C** | JSON-LD / skjult API — fetch JSON direkte | `rentmap_zumper.js` mønster | ⭐ Nem |
-| **D** | Blokeret (Captcha/DataDome) — brug aggregator | Alternativ kilde | ⭐⭐⭐ Svær |
-
----
-
-## 📋 Platforme per region
-
-### 🌏 Asien (Sydøst + Øst)
-
-| Land | Platform | Type | Status |
-|------|----------|------|--------|
-| 🇻🇳 Vietnam | dotproperty.com.vn | **A** | ✅ **Live** |
-| 🇹🇭 Thailand | dotproperty.co.th | **A** | 🔜 Copy Vietnam-script |
-| 🇵🇭 Filippinerne | dotproperty.com.ph | **A** | 🔜 Copy Vietnam-script |
-| 🇲🇾 Malaysia | dotproperty.com.my | **A** | 🔜 Copy Vietnam-script |
-| 🇮🇩 Indonesien | dotproperty.co.id | **A** | 🔜 Copy Vietnam-script |
-| 🇰🇭 Cambodia | dotproperty-kh.com | **A** | 🔜 (lille marked) |
-| 🇱🇦 Laos | dotproperty.la | **A** | 🔜 (lille marked) |
-| 🇲🇲 Myanmar | dotproperty.com.mm | **A** | 🔜 (lille marked) |
-| 🇸🇬 Singapore | dotproperty.com.sg | **A** | 🔜 Copy Vietnam-script |
-| 🇨🇳 Kina | smartshanghai.com | **A** | ✅ **Live** (Shanghai) |
-| 🇮🇳 Indien | nobroker.in | **A/B** | ✅ **Live** (Mumbai) |
-| 🇯🇵 Japan | suumo.jp | **D**? | 🔬 Skal undersøges |
-| 🇰🇷 Sydkorea | zigbang.com | **D**? | 🔬 Skal undersøges |
-| 🇹🇼 Taiwan | 591.com.tw | **A**? | 🔬 Skal undersøges |
-| 🇭🇰 Hong Kong | squarefoot.com.hk | **A**? | 🔬 Skal undersøges |
-
-### 🇪🇺 Europa
-
-| Land | Platform | Type | Status |
-|------|----------|------|--------|
-| 🇩🇰 Danmark | boligportal.dk | **B** | ✅ **Live** |
-| 🇩🇪 Tyskland | wg-gesucht.de | **A/B** | ✅ (cron findes) |
-| 🇩🇪 Tyskland | immowelt.de / immobilienscout24.de | **D** | Blokeret (DataDome) |
-| 🇬🇧 UK | rightmove.co.uk | **A**? | 🔬 Skal undersøges |
-| 🇫🇷 Frankrig | seloger.com | **A**? | 🔬 Skal undersøges |
-| 🇪🇸 Spanien | idealista.com | **A**? | 🔬 Skal undersøges |
-| 🇮🇹 Italien | idealista.it / immobiliare.it | **A**? | 🔬 Skal undersøges |
-| 🇵🇹 Portugal | idealista.pt | **A**? | 🔬 Skal undersøges |
-| 🇳🇱 Holland | funda.nl / pararius.com | **A**? | 🔬 Skal undersøges |
-| 🇧🇪 Belgien | immoweb.be | **A**? | 🔬 Skal undersøges |
-| 🇸🇪 Sverige | hemnet.se / bostad.blocket.se | **A**? | 🔬 Skal undersøges |
-| 🇳🇴 Norge | finn.no | **A**? | 🔬 Skal undersøges |
-| 🇨🇭 Schweiz | homegate.ch / immoscout24.ch | **A**? | 🔬 Skal undersøges |
-| 🇦🇹 Østrig | willhaben.at / immoscout24.at | **A**? | 🔬 Skal undersøges |
-| 🇵🇱 Polen | otodom.pl / olx.pl | **A**? | 🔬 Skal undersøges |
-| 🇬🇷 Grækenland | spitogatos.gr | **A**? | 🔬 Skal undersøges |
-| 🇮🇪 Irland | daft.ie | **A**? | 🔬 Skal undersøges |
-
-### 🌎 Nordamerika
-
-| Land | Platform | Type | Status |
-|------|----------|------|--------|
-| 🇺🇸 USA | zumper.com | **C** (JSON-LD) | ✅ **Live** (NYC) |
-| 🇨🇦 Canada | zumper.com (Canadian listings) | **C** | 🔜 Udvid USA-script |
-| 🇨🇦 Canada | realtor.ca / rentals.ca | **A**? | 🔬 Skal undersøges |
-| 🇲🇽 Mexico | inmuebles24.com / vivanuncios.com | **A**? | 🔬 Skal undersøges |
-
-### 🌎 Latinamerika
-
-| Land | Platform | Type | Status |
-|------|----------|------|--------|
-| 🇧🇷 Brasilien | vivareal.com.br / zapimoveis.com.br | **A**? | 🔬 Skal undersøges |
-| 🇦🇷 Argentina | zonaprop.com.ar / mercadolibre.com.ar | **A**? | 🔬 Skal undersøges |
-| 🇨🇱 Chile | portalimobiliario.com / toctoc.com | **A**? | 🔬 Skal undersøges |
-| 🇨🇴 Colombia | fincaraiz.com.co / metrocuadrado.com | **A**? | 🔬 Skal undersøges |
-| 🇵🇪 Peru | adondevivir.com / urbania.pe | **A**? | 🔬 Skal undersøges |
-
-### 🌍 Mellemøsten & Afrika
-
-| Land | Platform | Type | Status |
-|------|----------|------|--------|
-| 🇦🇪 UAE | propertyfinder.ae / bayut.com | **A**? | 🔬 Skal undersøges |
-| 🇸🇦 Saudi Arabien | aqar.sa / bayut.sa | **A**? | 🔬 Skal undersøges |
-| 🇿🇦 Sydafrika | property24.com / privateproperty.co.za | **A**? | 🔬 Skal undersøges |
-| 🇳🇬 Nigeria | propertypro.ng / nigeriapropertycentre.com | **A**? | 🔬 Skal undersøges |
-| 🇰🇪 Kenya | buyrentkenya.com | **A**? | 🔬 Skal undersøges |
-| 🇲🇦 Marokko | mubawab.ma / avito.ma | **A**? | 🔬 Skal undersøges |
-| 🇪🇬 Egypten | aqarmap.com.eg / olx.com.eg | **A**? | 🔬 Skal undersøges |
-| 🇹🇷 Tyrkiet | sahibinden.com / hepsiemlak.com | **A**? | 🔬 Skal undersøges |
-
-### 🌏 Oceanien
-
-| Land | Platform | Type | Status |
-|------|----------|------|--------|
-| 🇦🇺 Australien | realestate.com.au / domain.com.au | **A**? | 🔬 Skal undersøges |
-| 🇳🇿 New Zealand | trademe.co.nz / realestate.co.nz | **A**? | 🔬 Skal undersøges |
+**I alt: ~1.200 aktive listings**
 
 ---
 
-## 🚀 Første bølge: DotProperty (7 lande, 1 script!)
+## 🌊 Bølge 1 — VERIFICERET, klar til implementering (~2-3 timer)
 
-**Platform:** DotProperty (LIFULL Connect) — **server-rendered, identisk struktur!**
+### 1. 🇹🇭 Thailand — dotproperty.co.th (Type A, eget script)
+**Testet: HTTP 200, 30 artikler pr. side** ✅
 
-| Land | URL | Symbol |
-|------|-----|--------|
-| 🇹🇭 Thailand | dotproperty.co.th/en/properties-for-rent?sort=newest | ฿ THB |
-| 🇵🇭 Filippinerne | dotproperty.com.ph/en/properties-for-rent?sort=newest | ₱ PHP |
-| 🇲🇾 Malaysia | dotproperty.com.my/en/properties-for-rent?sort=newest | RM MYR |
-| 🇮🇩 Indonesien | dotproperty.co.id/en/properties-for-rent?sort=newest | Rp IDR |
-| 🇸🇬 Singapore | dotproperty.com.sg/en/properties-for-rent?sort=newest | S$ SGD |
-| 🇰🇭 Cambodia | dotproperty-kh.com/en/properties-for-rent?sort=newest | $ (USD) |
-| 🇲🇲 Myanmar | dotproperty.com.mm/en/properties-for-rent?sort=newest | K MMK |
+- Struktur: `<article class="relative w-full overflow-hidden">` (ANDERLEDES end VN/PH/MY!)
+- Pris: `฿16,000 per month`
+- Detaljer: `Studio • 1 Bath • 22 SqM • ฿727/SqM • Condo`
+- Adresse: `Khlong Tan Nuea, Watthana, Bangkok`
+- Link: `/en/ads/...`
+- Valuta: THB ฿ (allerede i frontend!)
+- **Arbejde:** Nyt script `rentmap_dotproperty_th.js` med thailandsk parser (~30 min)
+- **Bonus:** Jitter-funktion genbruges
 
-**Implementering:** Ét generisk script `rentmap_dotproperty.js` med parameter: domain + currency. Eller 7 separate scripts (som Vietnam) per land — enklere at debugge.
+### 2. 🇨🇦 Canada — zumper.com (Type C, copy-udvidelse af USA-script)
+**Kendt: Zumper dækker canadiske byer** ✅
 
----
+- Zumper-scriptet bruger JSON-LD — tilføj parameter for land
+- Kilder: `zumper.com/ca/apartments-for-rent/...` (Toronto, Vancouver, Montreal)
+- Valuta: CAD (skal tilføjes til frontend + ratesToUSD)
+- **Arbejde:** Udvid `rentmap_zumper.js` til at acceptere land-parameter (~30 min)
 
-## 🟢 Anden bølge: 1 side per land (lavthængende)
+### 3. 🇧🇪 Belgien — immoweb.be (Type A, nyt script)
+**Testet: HTTP 200, 60 announce-links + 30 priser pr. side** ✅
 
-Platformer der allerede er **server-rendered** og sandsynligvis virker:
-
-1. **🇬🇧 Rightmove** (UK) — rightmove.co.uk/property-to-rent/ → server-rendered
-2. **🇪🇸 Idealista** (ES/IT/PT) — idealista.com → server-rendered (Next.js?)
-3. **🇩🇪 WG-Gesucht** (DE) — allerede i cron, kan udvides
-4. **🇸🇪 Hemnet** (SE) — hemnet.se → server-rendered
-5. **🇳🇴 Finn** (NO) — finn.no/realestate/lettings → server-rendered
-
----
-
-## 📐 Script-skabelon (Type A — server-rendered)
-
-```js
-// rentmap_<platform>.js — generisk mønster
-// 1. fetch side 1 (?sort=newest)
-// 2. Parse listings fra HTML (regex/DOMParser)
-// 3. Dedup mod API (source_url)
-// 4. Geocode med Nominatim (1.1s delay)
-// 5. POST til RentMap API
-```
+- Links: `/en/classified/...`
+- Priser: `€ 1.250` i HTML
+- Sprog: `?searchType=rental` (husk /en/ prefix for engelsk)
+- Valuta: EUR (findes allerede!)
+- **Arbejde:** Nyt script `rentmap_immoweb.js` (~45 min)
 
 ---
 
-## 🔬 Næste skridt (undersøgelse)
+## 🌊 Bølge 2 — LOVENDE, kræver 1-2 timers undersøgelse
 
-Før implementering skal hver platform testes:
-1. **curl-test:** Får vi 200 OK + listings i HTML?
-2. **Parsing:** Kan vi ekstrahere pris/area/rooms/sqm/link/UUID?
-3. **Pagination:** Virker ?page=N?
-4. **Rate-limit:** Blokerer de efter X requests?
-5. **Geocoding:** Kan Nominatim finde adressen?
+### 4. 🇳🇴 Norge — finn.no (Type A/B?)
+**Testet: HTTP 200, 77 kr-træffere, men ingen ad-links i HTML** ⚠️
 
-**Anbefaling:** Start med DotProperty (7 lande på 1 dag), derefter undersøg de resterende én ad gangen.
+- JSON-LD er kun breadcrumbs — listings loader client-side
+- Måske: `https://www.finn.no/api/...` skjult endpoint
+- Eller: Playwright
+- **Næste skridt:** Inspicér network-traffic i browser (DevTools)
+
+### 5. 🇬🇧 UK — rightmove.co.uk (Type B?)
+**Testet: HTTP 200, men INGEN listings i HTML** ⚠️
+
+- Side er React SPA — ingen NEXT_DATA, ingen priser
+- Kendt skjult API: `https://www.rightmove.co.uk/api/propertySearch` (kræver tokens fra session)
+- **Næste skridt:** Playwright-test med fuld session
+
+### 6. 🇳🇱 Holland — funda.nl (Type B?)
+**Testet: HTTP 200, men kun 15KB (bot-check side)** ⚠️
+
+- Funda har stærk bot-beskyttelse
+- **Næste skridt:** Playwright med stealth
 
 ---
 
-## 📊 Status lige nu
+## 🌊 Bølge 3 — PLAYWRIGHT NØDVENDIG (curl blokeret)
 
-| Antal lande live | Antal listings | Platforme |
-|-----------------|----------------|-----------|
-| 6 | ~1.063 | DotProperty VN, Zumper US, NoBroker IN, SmartShanghai CN, BoligPortal DK, WG-Gesucht DE |
-| **Potentielt med plan** | **40+ lande** | **10-15 platforme** |
+### 7. 🇪🇸 Spanien — idealista.com (Type B)
+**Testet: HTTP 403** ⚠️
+- Stor platform (Madrid, Barcelona) — værd at kæmpe for
+
+### 8. 🇸🇪 Sverige — hemnet.se (Type B)
+**Testet: HTTP 403** ⚠️
+
+### 9. 🇫🇷 Frankrig — seloger.com (Type B)
+**Testet: HTTP 403** ⚠️
+
+### 10. 🇮🇪 Irland — daft.ie (Type B)
+**Testet: HTTP 403** ⚠️
+
+**Fælles tilgang:** Én generisk Playwright-script-skabelon med per-site selectors (~2-3 timer per site, men skabelonen genbruges)
+
+---
+
+## 🌊 Bølge 4 — DOTPROPERTY-RESTER
+
+| Land | Domæne | Status | Næste skridt |
+|------|--------|--------|--------------|
+| 🇰🇭 Cambodia | dotproperty-kh.com | 403 | Prøv andre UA/paths |
+| 🇮🇩 Indonesien | dotproperty.co.id | Domæne dødt | Ingen |
+| 🇸🇬 Singapore | dotproperty.com.sg | 410 | Ingen (lukket) |
+| 🇱🇦 Laos | dotproperty.com.la | Domæne dødt | Ingen |
+| 🇲🇲 Myanmar | dotproperty.com.mm | Domæne dødt | Ingen |
+
+---
+
+## 🌊 Bølge 5 — DRØMME (store markeder, sværere)
+
+| Land | Kandidat | Type | Bemærkning |
+|------|----------|------|------------|
+| 🇦🇺 Australien | realestate.com.au | B? | Skal testes |
+| 🇳🇿 New Zealand | trademe.co.nz | A? | Skal testes |
+| 🇧🇷 Brasilien | vivareal.com.br | A? | Skal testes |
+| 🇦🇪 UAE | propertyfinder.ae | A? | Skal testes |
+| 🇹🇷 Tyrkiet | hepsiemlak.com | A? | Skal testes |
+| 🇿🇦 Sydafrika | property24.com | A? | Skal testes |
+| 🇯🇵 Japan | suumo.jp | D? | Tung bot-beskyttelse |
+| 🇰🇷 Sydkorea | zigbang.com | D? | API-baseret, kræver tokens |
+| 🇲🇽 Mexico | inmuebles24.com | A? | Skal testes |
+
+---
+
+## 🧰 Genbrugelige komponenter
+
+| Komponent | Findes i | Genbruges til |
+|-----------|----------|---------------|
+| `jitterCoords()` | dotproperty-scripts | ALLE lande (spreder distrikt-centre) |
+| `geocode()` (Nominatim→OpenMeteo→Photon fallback) | dotproperty-scripts | ALLE scripts |
+| Dedup (source_url mod API) | alle scripts | ALLE scripts |
+| Cron-skabelon (kl. 09:00) | cron jobs | Hvert nyt land |
+| Frontend-valuta (rates + symboler) | index.astro | Nye landes valuta |
+
+## 🎯 Anbefalet prioritering
+
+**I dag/morgen (2-3 timer):**
+1. 🇹🇭 Thailand — script klar baseret på test
+2. 🇨🇦 Canada — Zumper-udvidelse
+3. 🇧🇪 Belgien — Immoweb-script
+
+**Næste uge:**
+4. 🇳🇴 Finn-undersøgelse (skjult API?)
+5. 🇬🇧 Rightmove med Playwright
+6. 🇪🇸 Idealista med Playwright-skabelon
+
+**Effekt:** 3 nye lande nu (+~200 listings), derefter 3-4 mere når Playwright-skabelonen er klar.
+
+## 📊 Kriterier for at droppe en kilde
+
+- HTTP 403/429 i 3 forsøg med forskellige UAs → parkér
+- Ingen listings efter 2 implementeringsforsøg → parkér
+- Data uden adresse/by → tjek om by kan udledes af URL
+- Valuta mangler i frontend → tilføj rates + symbol (10 min)
