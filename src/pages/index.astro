@@ -333,6 +333,8 @@ import Layout from '../layouts/Layout.astro';
       <option value="MYR">🇲🇾 MYR</option>
       <option value="CAD">🇨🇦 CAD</option>
       <option value="ZAR">🇿🇦 ZAR</option>
+      <option value="COP">🇨🇴 COP</option>
+      <option value="ARS">🇦🇷 ARS</option>
     </select>
   </div>
 
@@ -533,7 +535,7 @@ import Layout from '../layouts/Layout.astro';
     
     // Exchange rates to USD (approximate)
     const ratesToUSD = {
-      DKK: 0.147, EUR: 1.10, USD: 1, GBP: 1.27, SEK: 0.096, NOK: 0.094, INR: 0.012, CNY: 0.14, VND: 0.000041, THB: 0.028, PHP: 0.018, MYR: 0.215, CAD: 0.735, ZAR: 0.055
+      DKK: 0.147, EUR: 1.10, USD: 1, GBP: 1.27, SEK: 0.096, NOK: 0.094, INR: 0.012, CNY: 0.14, VND: 0.000041, THB: 0.028, PHP: 0.018, MYR: 0.215, CAD: 0.735, ZAR: 0.055, COP: 0.00024, ARS: 0.0011
     };
     
     function convertPrice(price, fromCurrency, toCurrency) {
@@ -544,7 +546,7 @@ import Layout from '../layouts/Layout.astro';
     
     function changeCurrency() {
       displayCurrency = document.getElementById('currencySelect').value;
-      const sym = ({DKK:'kr',EUR:'€',USD:'$',GBP:'£',SEK:'kr',NOK:'kr',INR:'₹',CNY:'¥',VND:'₫',THB:'฿',PHP:'₱',MYR:'RM',CAD:'CA$',ZAR:'R'})[displayCurrency] || displayCurrency;
+      const sym = ({DKK:'kr',EUR:'€',USD:'$',GBP:'£',SEK:'kr',NOK:'kr',INR:'₹',CNY:'¥',VND:'₫',THB:'฿',PHP:'₱',MYR:'RM',CAD:'CA$',ZAR:'R',COP:'$',ARS:'$'})[displayCurrency] || displayCurrency;
       const t1 = Math.round(convertPrice(15, 'USD', displayCurrency));
       const t2 = Math.round(convertPrice(22, 'USD', displayCurrency));
       const t3 = Math.round(convertPrice(30, 'USD', displayCurrency));
@@ -588,7 +590,7 @@ import Layout from '../layouts/Layout.astro';
 
     function formatPrice(price, currency) {
       if (!price) return '—';
-      const symbols = { DKK: 'kr', EUR: '€', USD: '$', GBP: '£', SEK: 'kr', NOK: 'kr', INR: '₹', CNY: '¥', VND: '₫', THB: '฿', PHP: '₱', MYR: 'RM', CAD: 'CA$', ZAR: 'R' };
+      const symbols = { DKK: 'kr', EUR: '€', USD: '$', GBP: '£', SEK: 'kr', NOK: 'kr', INR: '₹', CNY: '¥', VND: '₫', THB: '฿', PHP: '₱', MYR: 'RM', CAD: 'CA$', ZAR: 'R', COP: '$', ARS: '$' };
       const converted = convertPrice(price, currency || 'DKK', displayCurrency);
       const sym = symbols[displayCurrency] || displayCurrency;
       return new Intl.NumberFormat('en', { maximumFractionDigits: 0 }).format(converted) + ' ' + sym;
