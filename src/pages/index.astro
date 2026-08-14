@@ -307,6 +307,9 @@ import Layout from '../layouts/Layout.astro';
   </slot>
 
   <div id="cesiumContainer"></div>
+
+  <!-- Visuelt skjult H1 for SEO (globussen er ren) -->
+  <h1 style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;margin:-1px;padding:0;border:0;">RentMap — Global Rent Prices on an Interactive Globe</h1>
   
   <!-- Loading -->
   <div class="loading-overlay" id="loadingOverlay">
