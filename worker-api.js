@@ -2,7 +2,7 @@
 // This Worker has D1 access via wrangler.toml binding
 
 export default {
-  async fetch(request, env) {
+  async fetch(request, env, context) {
     const url = new URL(request.url);
     
     const publicView = url.searchParams.get('public') === '1';
@@ -24,8 +24,29 @@ export default {
       // GET /
       if (request.method === 'GET') {
         const year = url.searchParams.get('year');
+      
+        // Cache public GET-svar i Cloudflare Cache API (5 min; historiske år 1 time)
+        // → 1 D1-kald pr. 5 min uanset trafik (sparer rows read på free-planen)
+        if (publicView) {
+          const cache = caches.default;
+          const cacheKey = new Request(request.url, { method: 'GET' });
+          const cached = await cache.match(cacheKey);
+          if (cached) {
+            return cached;
+          }
+          const ttl = year ? 3600 : 300;
+          const resp = await buildGetResponse(db, publicView, year);
+          resp.headers.set('Cache-Control', `public, max-age=${ttl}`);
+          resp.headers.set('CF-Cache-Status', 'HIT-MISS');
+          context.waitUntil(cache.put(cacheKey, resp.clone()));
+          return resp;
+        }
+        return await buildGetResponse(db, publicView, year);
+      }
+    
+      async function buildGetResponse(db, publicView, year) {
         let whereClause, params;
-        
+      
         if (year) {
           // Show all listings from a specific year (historical browsing)
           whereClause = `AND CAST(substr(COALESCE(listing_date, submitted_at), 1, 4) AS INTEGER) = ?`;
@@ -35,7 +56,7 @@ export default {
           whereClause = `AND COALESCE(listing_date, submitted_at) >= date('now', '-12 months')`;
           params = [];
         }
-        
+      
         const priceSelect = publicView
           ? `id, city, country, lat, lng, price_total, price_per_m2, sqm, rooms, type, source_url, source_site, listing_date, currency, CAST(substr(COALESCE(listing_date, submitted_at), 1, 4) AS INTEGER) as listing_year`
           : `*, CAST(substr(COALESCE(listing_date, submitted_at), 1, 4) AS INTEGER) as listing_year`;
@@ -44,15 +65,15 @@ export default {
           FROM prices WHERE verified = 1 ${whereClause}
           ORDER BY submitted_at DESC LIMIT 5000
         `).bind(...params).all();
-        
+      
         const { results: cities } = await db.prepare(`
           SELECT city, country, AVG(price_per_m2) as avg_price_per_m2,
                  MIN(price_per_m2) as min_price_per_m2, MAX(price_per_m2) as max_price_per_m2,
                  COUNT(*) as count, AVG(lat) as lat, AVG(lng) as lng
-          FROM prices WHERE verified = 1 AND price_per_m2 IS NOT NULL ${whereClause.replace('AND ','AND ')}
+          FROM prices WHERE verified = 1 AND price_per_m2 IS NOT NULL ${whereClause}
           GROUP BY city, country ORDER BY count DESC LIMIT 100
         `).bind(...params).all();
-        
+      
         return new Response(JSON.stringify({ prices, cities }), { headers });
       }
       
