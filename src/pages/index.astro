@@ -645,18 +645,20 @@ import Layout from '../layouts/Layout.astro';
       avgDataCache.forEach(entry => {
         (entry.cities || []).forEach(c => cities.push(c));
       });
-      // Radius i meter — skaleret lidt efter pris så dyre byer er tydeligere
+      // Radius/pixelstørrelse — skaleret efter pris så dyre byer er tydeligere
       cities.forEach(c => {
-        const radius = 30000 + Math.min(c.avg || 2000, 6000) * 8;
+        const px = 26 + Math.min(c.avg || 2000, 6000) / 6000 * 34; // 26-60px
         avgDataSource.entities.add({
           position: Cesium.Cartesian3.fromDegrees(c.lng, c.lat),
-          ellipse: {
-            semiMajorAxis: radius,
-            semiMinorAxis: radius,
-            material: getAvgColor(c.avg).withAlpha(0.35),
-            outline: true,
-            outlineColor: Cesium.Color.WHITE.withAlpha(0.15),
-            heightReference: Cesium.HeightReference.CLAMP_TO_GROUND,
+          // POINT i stedet for ellipse: ellipse-geometri crasher Cesiums frustum-
+          // opdatering ved zoom (RangeError: Invalid array length i updateFrustums)
+          point: {
+            pixelSize: px,
+            color: getAvgColor(c.avg).withAlpha(0.45),
+            outlineColor: Cesium.Color.WHITE.withAlpha(0.2),
+            outlineWidth: 1,
+            heightReference: Cesium.HeightReference.NONE,
+            disableDepthTestDistance: Number.POSITIVE_INFINITY,
           },
           // Properties til hover-tooltip
           properties: {
