@@ -60,6 +60,8 @@ import Layout from '../layouts/Layout.astro';
       .legend-title { font-weight:600; margin-bottom:6px; color:#e2e8f0; font-size:13px; }
       .legend-row { display:flex; align-items:center; gap:8px; margin-top:4px; }
       .legend-dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
+      .avg-legend { bottom: 24px; left: 190px; border-color: rgba(34,197,94,0.35); }
+      .legend-note { margin-top:8px; font-size:10px; color:#64748b; border-top:1px solid rgba(255,255,255,0.08); padding-top:6px; }
       
       /* ---- Search ---- */
       .search-bar {
@@ -361,6 +363,18 @@ import Layout from '../layouts/Layout.astro';
     <div class="legend-row"><div class="legend-dot" style="background:#ef4444"></div> <span id="legPremium">30+ $</span></div>
   </div>
 
+  <!-- Avg rent overlay-legend (vises kun når overlay er aktiv) -->
+  <div class="legend avg-legend" id="avgLegend" style="display:none;">
+    <div class="legend-title">Average monthly rent (USD)</div>
+    <div class="legend-row"><div class="legend-dot" style="background:#22c55e"></div> <span>≤ $700</span></div>
+    <div class="legend-row"><div class="legend-dot" style="background:#84cc16"></div> <span>$700–1.200</span></div>
+    <div class="legend-row"><div class="legend-dot" style="background:#eab308"></div> <span>$1.200–1.800</span></div>
+    <div class="legend-row"><div class="legend-dot" style="background:#f97316"></div> <span>$1.800–2.600</span></div>
+    <div class="legend-row"><div class="legend-dot" style="background:#ef4444"></div> <span>$2.600–4.000</span></div>
+    <div class="legend-row"><div class="legend-dot" style="background:#a855f7"></div> <span>$4.000+</span></div>
+    <div class="legend-note">Source: GlobalPropertyGuide</div>
+  </div>
+
   <!-- Info Panel -->
   <div class="info-panel" id="infoPanel">
     <button class="panel-close" onclick="closePanel()" aria-label="Close">&times;</button>
@@ -488,6 +502,10 @@ import Layout from '../layouts/Layout.astro';
     const currentYear = new Date().getFullYear();
     let selectedYear = 0; // 0 = active (last 12 months)
     let selectedType = 'all';
+    // Avg rent overlay (GlobalPropertyGuide data)
+    let avgOverlayActive = false;
+    let avgDataSource = null;
+    let avgDataCache = null;
     
     function renderTypePills() {
       const container = document.getElementById('typePills');
@@ -521,7 +539,12 @@ import Layout from '../layouts/Layout.astro';
       const baseStyle = 'padding:8px 12px;border-radius:10px;border:1px solid rgba(255,255,255,0.12);' +
         'background:rgba(10,14,23,0.9);color:#e2e8f0;cursor:pointer;font-size:13px;font-weight:500;' +
         'backdrop-filter:blur(12px);transition:all 0.2s;font-family:inherit;';
-      let html = `<button class="year-pill" style="${baseStyle}${selectedYear === 0 ? 'background:#6366f1;border-color:#6366f1;color:#fff;' : ''}" onclick="switchYear(0)">Active</button>`;
+      // Avg rent overlay-pille (ved siden af årstallene)
+      const avgStyle = avgOverlayActive
+        ? 'background:#22c55e;border-color:#22c55e;color:#fff;'
+        : 'background:rgba(34,197,94,0.12);border-color:rgba(34,197,94,0.45);color:#86efac;';
+      let html = `<button class="year-pill" style="${baseStyle}${avgStyle}" onclick="toggleAvgOverlay()" title="Show average rent by city (GlobalPropertyGuide data)">📊 Avg rent</button>`;
+      html += `<button class="year-pill" style="${baseStyle}${selectedYear === 0 ? 'background:#6366f1;border-color:#6366f1;color:#fff;' : ''}" onclick="switchYear(0)">Active</button>`;
       for (let y = currentYear; y >= startYear; y--) {
         html += `<button class="year-pill" style="${baseStyle}${y === selectedYear ? 'background:#6366f1;border-color:#6366f1;color:#fff;' : ''}" onclick="switchYear(${y})">${y}</button>`;
       }
@@ -582,6 +605,67 @@ import Layout from '../layouts/Layout.astro';
       if (inUSD <= 30) return Cesium.Color.fromCssColorString('#f97316');
       return Cesium.Color.fromCssColorString('#ef4444');
     }
+
+    // Farve for gennemsnitlig MÅNEDSLEJE (USD) — grøn → gul → orange → rød → lilla
+    function getAvgColor(usd) {
+      if (!usd || usd <= 700) return Cesium.Color.fromCssColorString('#22c55e');
+      if (usd <= 1200) return Cesium.Color.fromCssColorString('#84cc16');
+      if (usd <= 1800) return Cesium.Color.fromCssColorString('#eab308');
+      if (usd <= 2600) return Cesium.Color.fromCssColorString('#f97316');
+      if (usd <= 4000) return Cesium.Color.fromCssColorString('#ef4444');
+      return Cesium.Color.fromCssColorString('#a855f7');
+    }
+
+    // Toggle: vis/skjul gennemsnitlig leje-overlay (gennemsigtige cirkler pr. by)
+    window.toggleAvgOverlay = async function() {
+      if (!viewer) return;
+      if (avgOverlayActive) {
+        // Sluk
+        if (avgDataSource) viewer.dataSources.remove(avgDataSource);
+        avgDataSource = null;
+        avgOverlayActive = false;
+        const leg = document.getElementById('avgLegend');
+        if (leg) leg.style.display = 'none';
+        renderYearPills();
+        return;
+      }
+      // Tænd: hent data (cachet)
+      if (!avgDataCache) {
+        try {
+          const resp = await fetch('/avg-rent.json');
+          avgDataCache = await resp.json();
+        } catch (e) {
+          console.error('Kunne ikke hente avg-rent.json:', e);
+          return;
+        }
+      }
+      avgDataSource = new Cesium.CustomDataSource('avgRent');
+      avgDataSource.clustering.enabled = false;
+      const cities = [];
+      avgDataCache.forEach(entry => {
+        (entry.cities || []).forEach(c => cities.push(c));
+      });
+      // Radius i meter — skaleret lidt efter pris så dyre byer er tydeligere
+      cities.forEach(c => {
+        const radius = 30000 + Math.min(c.avg || 2000, 6000) * 8;
+        avgDataSource.entities.add({
+          position: Cesium.Cartesian3.fromDegrees(c.lng, c.lat),
+          ellipse: {
+            semiMajorAxis: radius,
+            semiMinorAxis: radius,
+            material: getAvgColor(c.avg).withAlpha(0.35),
+            outline: true,
+            outlineColor: Cesium.Color.WHITE.withAlpha(0.15),
+            heightReference: Cesium.HeightReference.CLAMP_TO_GROUND,
+          },
+        });
+      });
+      viewer.dataSources.add(avgDataSource);
+      avgOverlayActive = true;
+      const leg = document.getElementById('avgLegend');
+      if (leg) leg.style.display = 'block';
+      renderYearPills();
+    };
 
     // Get pixel size based on count
     function getSize(count) {
