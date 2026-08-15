@@ -658,6 +658,15 @@ import Layout from '../layouts/Layout.astro';
             outlineColor: Cesium.Color.WHITE.withAlpha(0.15),
             heightReference: Cesium.HeightReference.CLAMP_TO_GROUND,
           },
+          // Properties til hover-tooltip
+          properties: {
+            isAvg: true,
+            city: c.city,
+            avg: c.avg,
+            rent1: c.rent1,
+            rent2: c.rent2,
+            rent3: c.rent3,
+          },
         });
       });
       viewer.dataSources.add(avgDataSource);
@@ -1388,7 +1397,14 @@ import Layout from '../layouts/Layout.astro';
           const picked = viewer.scene.pick(movement.endPosition);
           if (Cesium.defined(picked) && picked.id && picked.id.properties) {
             const props = picked.id.properties;
-            if (props.isGroup?.getValue?.()) {
+            // Avg rent overlay: vis gennemsnitlig månedsleje
+            if (props.isAvg?.getValue?.()) {
+              const avg = props.avg?.getValue?.();
+              const r1 = props.rent1?.getValue?.();
+              const r2 = props.rent2?.getValue?.();
+              const r3 = props.rent3?.getValue?.();
+              tooltip.innerHTML = `<b>${props.city?.getValue?.() || ''}</b> · avg <b>$${avg ? avg.toLocaleString('en-US') : '—'}/mo</b><br><span style="font-size:11px;opacity:0.85;">1-bed $${r1 ? r1.toLocaleString('en-US') : '—'} · 2-bed $${r2 ? r2.toLocaleString('en-US') : '—'} · 3-bed $${r3 ? r3.toLocaleString('en-US') : '—'}</span>`;
+            } else if (props.isGroup?.getValue?.()) {
               const groupVal = props.group.getValue();
               tooltip.textContent = `${props.city?.getValue?.() || ''} · ${groupVal.length} listings`;
             } else {
