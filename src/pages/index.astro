@@ -564,6 +564,7 @@ import Layout from '../layouts/Layout.astro';
     const ratesToUSD = {
       DKK: 0.147, EUR: 1.10, USD: 1, GBP: 1.27, SEK: 0.096, NOK: 0.094, INR: 0.012, CNY: 0.14, VND: 0.000041, THB: 0.028, PHP: 0.018, MYR: 0.215, CAD: 0.735, ZAR: 0.055, COP: 0.00032, ARS: 0.00067, KZT: 0.00213, NGN: 0.00065, IDR: 0.000065
     };
+    const currencySymbols = ({DKK:'kr',EUR:'€',USD:'$',GBP:'£',SEK:'kr',NOK:'kr',INR:'₹',CNY:'¥',VND:'₫',THB:'฿',PHP:'₱',MYR:'RM',CAD:'CA$',ZAR:'R',COP:'$',ARS:'$',KZT:'₸',NGN:'₦',IDR:'Rp'})[displayCurrency] || displayCurrency;
     
     function convertPrice(price, fromCurrency, toCurrency) {
       if (fromCurrency === toCurrency) return price;
@@ -581,6 +582,8 @@ import Layout from '../layouts/Layout.astro';
       document.getElementById('legMid').textContent = `${t1}–${t2} ${sym}`;
       document.getElementById('legHigh').textContent = `${t2}–${t3} ${sym}`;
       document.getElementById('legPremium').textContent = `${t3}+ ${sym}`;
+      // Avg rent-legend: opdater intervaller til valgt valuta
+      updateAvgLegend();
       // Redraw all dots with new currency
       if (viewer) {
         addPriceDots(Cesium, viewer);
@@ -593,6 +596,24 @@ import Layout from '../layouts/Layout.astro';
             openGroupPanel(currentPanelGroup);
           }
         }
+      }
+    }
+
+    // Opdater avg-rent-legendens intervaller til den valgte valuta
+    function updateAvgLegend() {
+      const leg = document.getElementById('avgLegend');
+      if (!leg) return;
+      const sym = ({DKK:'kr',EUR:'€',USD:'$',GBP:'£',SEK:'kr',NOK:'kr',INR:'₹',CNY:'¥',VND:'₫',THB:'฿',PHP:'₱',MYR:'RM',CAD:'CA$',ZAR:'R',COP:'$',ARS:'$',KZT:'₸',NGN:'₦',IDR:'Rp'})[displayCurrency] || displayCurrency;
+      const levels = [700, 1200, 1800, 2600, 4000];
+      const labels = levels.map(u => Math.round(convertPrice(u, 'USD', displayCurrency)));
+      const rows = leg.querySelectorAll('.legend-row span');
+      if (rows.length >= 6) {
+        rows[0].textContent = `≤ ${sym}${labels[0].toLocaleString('en-US')}`;
+        rows[1].textContent = `${sym}${labels[0].toLocaleString('en-US')}–${labels[1].toLocaleString('en-US')}`;
+        rows[2].textContent = `${sym}${labels[1].toLocaleString('en-US')}–${labels[2].toLocaleString('en-US')}`;
+        rows[3].textContent = `${sym}${labels[2].toLocaleString('en-US')}–${labels[3].toLocaleString('en-US')}`;
+        rows[4].textContent = `${sym}${labels[3].toLocaleString('en-US')}–${labels[4].toLocaleString('en-US')}`;
+        rows[5].textContent = `${sym}${labels[4].toLocaleString('en-US')}+`;
       }
     }
 
@@ -657,8 +678,9 @@ import Layout from '../layouts/Layout.astro';
             color: getAvgColor(c.avg).withAlpha(0.45),
             outlineColor: Cesium.Color.WHITE.withAlpha(0.2),
             outlineWidth: 1,
-            heightReference: Cesium.HeightReference.NONE,
-            disableDepthTestDistance: Number.POSITIVE_INFINITY,
+            // CLAMP_TO_GROUND: vises kun på den side af jorden man kigger på
+            // (dybdetest skjuler dem på globussens bagside — aldrig disableDepthTestDistance!)
+            heightReference: Cesium.HeightReference.CLAMP_TO_GROUND,
           },
           // Properties til hover-tooltip
           properties: {
@@ -675,6 +697,7 @@ import Layout from '../layouts/Layout.astro';
       avgOverlayActive = true;
       const leg = document.getElementById('avgLegend');
       if (leg) leg.style.display = 'block';
+      updateAvgLegend();
       renderYearPills();
     };
 
@@ -1399,13 +1422,15 @@ import Layout from '../layouts/Layout.astro';
           const picked = viewer.scene.pick(movement.endPosition);
           if (Cesium.defined(picked) && picked.id && picked.id.properties) {
             const props = picked.id.properties;
-            // Avg rent overlay: vis gennemsnitlig månedsleje
+            // Avg rent overlay: vis gennemsnitlig månedsleje i valgt valuta
             if (props.isAvg?.getValue?.()) {
               const avg = props.avg?.getValue?.();
               const r1 = props.rent1?.getValue?.();
               const r2 = props.rent2?.getValue?.();
               const r3 = props.rent3?.getValue?.();
-              tooltip.innerHTML = `<b>${props.city?.getValue?.() || ''}</b> · avg <b>$${avg ? avg.toLocaleString('en-US') : '—'}/mo</b><br><span style="font-size:11px;opacity:0.85;">1-bed $${r1 ? r1.toLocaleString('en-US') : '—'} · 2-bed $${r2 ? r2.toLocaleString('en-US') : '—'} · 3-bed $${r3 ? r3.toLocaleString('en-US') : '—'}</span>`;
+              const sym = ({DKK:'kr',EUR:'€',USD:'$',GBP:'£',SEK:'kr',NOK:'kr',INR:'₹',CNY:'¥',VND:'₫',THB:'฿',PHP:'₱',MYR:'RM',CAD:'CA$',ZAR:'R',COP:'$',ARS:'$',KZT:'₸',NGN:'₦',IDR:'Rp'})[displayCurrency] || displayCurrency;
+              const f = (usd) => usd ? convertPrice(usd, 'USD', displayCurrency).toLocaleString('en-US') : '—';
+              tooltip.innerHTML = `<b>${props.city?.getValue?.() || ''}</b> · avg <b>${sym}${f(avg)}/mo</b><br><span style="font-size:11px;opacity:0.85;">1-bed ${sym}${f(r1)} · 2-bed ${sym}${f(r2)} · 3-bed ${sym}${f(r3)}</span>`;
             } else if (props.isGroup?.getValue?.()) {
               const groupVal = props.group.getValue();
               tooltip.textContent = `${props.city?.getValue?.() || ''} · ${groupVal.length} listings`;
