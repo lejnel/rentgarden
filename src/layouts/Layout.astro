@@ -1,7 +1,6 @@
 ---
 // src/layouts/Layout.astro
-const title = 'RentMap — Global Rent Prices on an Interactive Globe';
-const description = 'Real rental prices on an interactive 3D globe. Explore what people actually pay for apartments, houses and rooms worldwide.';
+const { title = 'RentMap — Global Rent Prices on an Interactive Globe', description = 'Real rental prices on an interactive 3D globe. Explore what people actually pay for apartments, houses and rooms worldwide.', canonical = 'https://rentmap.net/' } = Astro.props;
 ---
 <!DOCTYPE html>
 <html lang="en">
@@ -10,7 +9,7 @@ const description = 'Real rental prices on an interactive 3D globe. Explore what
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>{title}</title>
   <meta name="description" content={description}>
-  <link rel="canonical" href="https://rentmap.net/">
+  <link rel="canonical" href={canonical}>
   <meta name="robots" content="index, follow">
   
   <!-- Open Graph -->
@@ -18,7 +17,7 @@ const description = 'Real rental prices on an interactive 3D globe. Explore what
   <meta property="og:site_name" content="RentMap">
   <meta property="og:title" content={title}>
   <meta property="og:description" content={description}>
-  <meta property="og:url" content="https://rentmap.net/">
+  <meta property="og:url" content={canonical}>
   <meta property="og:image" content="https://rentmap.net/favicon.svg">
   
   <!-- Twitter -->
