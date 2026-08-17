@@ -25,8 +25,9 @@ export default {
       if (request.method === 'GET') {
         const year = url.searchParams.get('year');
       
-        // Cache public GET-svar i Cloudflare Cache API (1 time; historiske år 6 timer)
-        // → max 24 D1-kald pr. dag pr. URL (data opdateres kun 1× dagligt via cron)
+        // Cache public GET-svar i Cloudflare Cache API (6 timer; historiske år 12 timer)
+        // → max 4 D1-kald pr. dag pr. URL (data opdateres kun 1× dagligt via cron)
+        // Beskytter D1-kvoten (free-plan: 5M rows read/dag) — hvert kald scanner ~2.500 rows
         if (publicView) {
           const cache = caches.default;
           const cacheKey = new Request(request.url, { method: 'GET' });
@@ -34,7 +35,7 @@ export default {
           if (cached) {
             return cached;
           }
-          const ttl = year ? 21600 : 3600;
+          const ttl = year ? 43200 : 21600;
           const resp = await buildGetResponse(db, publicView, year);
           resp.headers.set('Cache-Control', `public, max-age=${ttl}`);
           resp.headers.set('CF-Cache-Status', 'HIT-MISS');
