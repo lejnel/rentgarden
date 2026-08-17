@@ -45,9 +45,30 @@ export default {
         return await buildGetResponse(db, publicView, year);
       }
     
+      // Slet public-feed-cachen så nye listings vises MED DET SAMME
+      // (cache-TTL er 6 timer — uden invalidering ville nye prikker vente timevis)
+      async function invalidatePublicCache() {
+        try {
+          const cache = caches.default;
+          const origin = url.origin;
+          const year = new Date().getUTCFullYear();
+          // Hovedfeeds: med/uden trailing slash + active + nuværende år
+          const keys = [
+            `${origin}?public=1`,
+            `${origin}/?public=1`,
+            `${origin}?public=1&year=${year}`,
+            `${origin}/?public=1&year=${year}`,
+          ];
+          for (const k of keys) {
+            await cache.delete(new Request(k, { method: 'GET' }));
+          }
+        } catch (e) {
+          // Fejl ved invalidering er ikke kritisk — næste TTL-udløb fanger det alligevel
+        }
+      }
+
       async function buildGetResponse(db, publicView, year) {
         let whereClause, params;
-      
         if (year) {
           // Show all listings from a specific year (historical browsing)
           whereClause = `AND CAST(substr(COALESCE(listing_date, submitted_at), 1, 4) AS INTEGER) = ?`;
@@ -123,6 +144,8 @@ export default {
           submitter_email || null
         ).run();
         
+        // Nulstil cache så den nye prik vises MED DET SAMME
+        context.waitUntil(invalidatePublicCache());
         return new Response(JSON.stringify({ success: true, id: meta.last_row_id }), { headers });
       }
       
@@ -133,6 +156,8 @@ export default {
           return new Response(JSON.stringify({ error: 'Invalid ID' }), { status: 400, headers });
         }
         await db.prepare('DELETE FROM prices WHERE id = ?').bind(id).run();
+        // Nulstil cache så slettede prikker forsvinder MED DET SAMME
+        context.waitUntil(invalidatePublicCache());
         return new Response(JSON.stringify({ success: true }), { headers });
       }
       
