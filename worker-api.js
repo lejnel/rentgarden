@@ -45,14 +45,14 @@ export default {
         return await buildGetResponse(db, publicView, year);
       }
     
-      // Slet public-feed-cachen så nye listings vises MED DET SAMME
-      // (cache-TTL er 6 timer — uden invalidering ville nye prikker vente timevis)
-      async function invalidatePublicCache() {
+      // Injicér/fjern en listing DIREKTE i det cachelagrede public-svar — så siden
+      // viser ændringen MED DET SAMME uden at slette cachen (sparer et dyrt D1-scan).
+      // Næste cache-populering (6 t TTL) henter et rent D1-svar og overskriver det hele.
+      async function patchPublicCache({ upsert = null, removeId = null }) {
         try {
           const cache = caches.default;
           const origin = url.origin;
           const year = new Date().getUTCFullYear();
-          // Hovedfeeds: med/uden trailing slash + active + nuværende år
           const keys = [
             `${origin}?public=1`,
             `${origin}/?public=1`,
@@ -60,10 +60,32 @@ export default {
             `${origin}/?public=1&year=${year}`,
           ];
           for (const k of keys) {
-            await cache.delete(new Request(k, { method: 'GET' }));
+            const cacheKey = new Request(k, { method: 'GET' });
+            const cached = await cache.match(cacheKey);
+            if (!cached) continue;
+            const data = await cached.json();
+            if (!data || !Array.isArray(data.prices)) continue;
+            if (removeId !== null) {
+              data.prices = data.prices.filter(p => p.id !== removeId);
+            }
+            if (upsert) {
+              // Undgå midlertidig dublet i cachen, indsæt øverst (submitted_at DESC)
+              data.prices = data.prices.filter(p => p.source_url !== upsert.source_url);
+              data.prices.unshift(upsert);
+            }
+            const fresh = new Response(JSON.stringify(data), {
+              status: 200,
+              headers: {
+                'Content-Type': 'application/json',
+                'Access-Control-Allow-Origin': '*',
+                'Access-Control-Allow-Methods': 'GET, POST, DELETE, OPTIONS',
+                'Cache-Control': 'public, max-age=21600',
+              },
+            });
+            await cache.put(cacheKey, fresh);
           }
         } catch (e) {
-          // Fejl ved invalidering er ikke kritisk — næste TTL-udløb fanger det alligevel
+          // Skrivning til cachen er ikke kritisk — næste TTL-udløb fanger det alligevel
         }
       }
 
@@ -144,8 +166,17 @@ export default {
           submitter_email || null
         ).run();
         
-        // Nulstil cache så den nye prik vises MED DET SAMME
-        context.waitUntil(invalidatePublicCache());
+        // Injicér den nye listing i cachen MED DET SAMME (uden dyrt D1-scan)
+        const listingDate = listing_date || new Date().toISOString().split('T')[0];
+        context.waitUntil(patchPublicCache({
+          upsert: {
+            id: meta.last_row_id,
+            city, country, lat, lng, price_total,
+            price_per_m2, sqm: sqm || null, rooms: rooms || null, type: type || 'apartment',
+            source_url, source_site, listing_date: listingDate, currency: currency || 'EUR',
+            listing_year: parseInt(listingDate.slice(0, 4), 10),
+          },
+        }));
         return new Response(JSON.stringify({ success: true, id: meta.last_row_id }), { headers });
       }
       
@@ -156,8 +187,8 @@ export default {
           return new Response(JSON.stringify({ error: 'Invalid ID' }), { status: 400, headers });
         }
         await db.prepare('DELETE FROM prices WHERE id = ?').bind(id).run();
-        // Nulstil cache så slettede prikker forsvinder MED DET SAMME
-        context.waitUntil(invalidatePublicCache());
+        // Fjern den slettede prik fra cachen MED DET SAMME
+        context.waitUntil(patchPublicCache({ removeId: id }));
         return new Response(JSON.stringify({ success: true }), { headers });
       }
       
