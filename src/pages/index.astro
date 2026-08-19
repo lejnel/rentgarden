@@ -838,12 +838,12 @@ import Layout from '../layouts/Layout.astro';
         const pp = rentDataSource.add({
           position: Cesium.Cartesian3.fromDegrees(lng, lat),
           // Dot visible when zoomed OUT (far away); pills take over when close
-          pixelSize: 12,
+          pixelSize: 15,
           color: color,
           outlineColor: Cesium.Color.WHITE,
-          outlineWidth: 1.5,
-          distanceDisplayCondition: new Cesium.DistanceDisplayCondition(80000, Infinity),
-          scaleByDistance: new Cesium.NearFarScalar(50000, 3.0, 8000000, 1.0),
+          outlineWidth: 2,
+          distanceDisplayCondition: new Cesium.DistanceDisplayCondition(40000, Infinity),
+          scaleByDistance: new Cesium.NearFarScalar(30000, 5.0, 50000000, 1.5),
         });
         // Rå data på pointPrimitive.id — bruges af klik/hover-handlerne
         pp.id = {
