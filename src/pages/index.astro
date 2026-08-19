@@ -281,8 +281,9 @@ import Layout from '../layouts/Layout.astro';
       .hover-tooltip.visible { opacity:1; }
 
       /* ---- Zoom-kontroller (Google Earth/Maps-stil) ---- */
+      /* Placeret OVER "Add your listing"-FAB'en (nederst-højre) så de ikke overlapper */
       .map-controls {
-        position:fixed; bottom:20px; right:20px; z-index:1400;
+        position:fixed; bottom:96px; right:28px; z-index:1400;
         display:flex; flex-direction:column; gap:8px;
         touch-action:none;
       }
@@ -299,7 +300,8 @@ import Layout from '../layouts/Layout.astro';
       .map-ctrl-btn:hover { background:rgba(30,41,59,0.95); }
       .map-ctrl-btn:active { transform:scale(0.94); }
       @media (pointer:coarse) {
-        .map-controls { bottom:88px; right:10px; }
+        /* Mobil: over FAB'en (bottom:16px + 48px højde) */
+        .map-controls { bottom:80px; right:16px; }
         .map-ctrl-btn { width:46px; height:46px; }
       }
       
