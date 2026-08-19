@@ -643,7 +643,7 @@ import Layout from '../layouts/Layout.astro';
       if (!viewer) return;
       if (avgOverlayActive) {
         // Sluk
-        if (avgDataSource) viewer.dataSources.remove(avgDataSource);
+        if (avgDataSource) viewer.scene.primitives.remove(avgDataSource);
         avgDataSource = null;
         avgOverlayActive = false;
         const leg = document.getElementById('avgLegend');
@@ -661,8 +661,9 @@ import Layout from '../layouts/Layout.astro';
           return;
         }
       }
-      avgDataSource = new Cesium.CustomDataSource('avgRent');
-      avgDataSource.clustering.enabled = false;
+      // PointPrimitiveCollection via scene.primitives (dataSources er brudt)
+      if (avgDataSource) viewer.scene.primitives.remove(avgDataSource);
+      avgDataSource = viewer.scene.primitives.add(new Cesium.PointPrimitiveCollection());
       const cities = [];
       avgDataCache.forEach(entry => {
         (entry.cities || []).forEach(c => cities.push(c));
@@ -670,31 +671,23 @@ import Layout from '../layouts/Layout.astro';
       // Radius/pixelstørrelse — skaleret efter pris så dyre byer er tydeligere
       cities.forEach(c => {
         const px = 26 + Math.min(c.avg || 2000, 6000) / 6000 * 34; // 26-60px
-        avgDataSource.entities.add({
+        const pp = avgDataSource.add({
           position: Cesium.Cartesian3.fromDegrees(c.lng, c.lat),
-          // POINT i stedet for ellipse: ellipse-geometri crasher Cesiums frustum-
-          // opdatering ved zoom (RangeError: Invalid array length i updateFrustums)
-          point: {
-            pixelSize: px,
-            color: getAvgColor(c.avg).withAlpha(0.45),
-            outlineColor: Cesium.Color.WHITE.withAlpha(0.2),
-            outlineWidth: 1,
-            // CLAMP_TO_GROUND: vises kun på den side af jorden man kigger på
-            // (dybdetest skjuler dem på globussens bagside — aldrig disableDepthTestDistance!)
-            heightReference: Cesium.HeightReference.CLAMP_TO_GROUND,
-          },
-          // Properties til hover-tooltip
-          properties: {
-            isAvg: true,
-            city: c.city,
-            avg: c.avg,
-            rent1: c.rent1,
-            rent2: c.rent2,
-            rent3: c.rent3,
-          },
+          pixelSize: px,
+          color: getAvgColor(c.avg).withAlpha(0.45),
+          outlineColor: Cesium.Color.WHITE.withAlpha(0.2),
+          outlineWidth: 1,
         });
+        // Rå data til hover-tooltip
+        pp.id = {
+          isAvg: true,
+          city: c.city,
+          avg: c.avg,
+          rent1: c.rent1,
+          rent2: c.rent2,
+          rent3: c.rent3,
+        };
       });
-      viewer.dataSources.add(avgDataSource);
       avgOverlayActive = true;
       const leg = document.getElementById('avgLegend');
       if (leg) leg.style.display = 'block';
@@ -822,19 +815,19 @@ import Layout from '../layouts/Layout.astro';
     }
 
     function addPriceDots(Cesium, viewer) {
-      // Remove old datasource (clustered) 
-      if (rentDataSource) viewer.dataSources.remove(rentDataSource);
+      // Fjern gamle prikker. VIKTIGT: viewer.dataSources.add er brudt på denne side
+      // (containeren accepterer ikke datasources) — vi bruger scene.primitives,
+      // samme vej som by-labels (LabelCollection) der BEVIST virker.
+      if (rentDataSource) viewer.scene.primitives.remove(rentDataSource);
       // Clear old HTML pills
       const container = document.getElementById('pillContainer');
       container.innerHTML = '';
       pillMap = new WeakMap();
       entityByPriceId = {};
       
-      // CustomDataSource = Cesium's built-in clustering
-      rentDataSource = new Cesium.CustomDataSource('rentmap');
-      rentDataSource.clustering.enabled = true;
-      rentDataSource.clustering.pixelRange = 45;
-      rentDataSource.clustering.minimumClusterSize = 2;
+      // PointPrimitiveCollection via scene.primitives — ingen clustering (pills ved zoom-in
+      // og prikker via distanceDisplayCondition ved zoom-out)
+      rentDataSource = viewer.scene.primitives.add(new Cesium.PointPrimitiveCollection());
       
       allGroupData = buildGroups();
       
@@ -842,53 +835,30 @@ import Layout from '../layouts/Layout.astro';
         const first = group[0];
         const color = getColor(first.price_per_m2 || first.price_total, first.currency || 'DKK');
         
-        const entity = rentDataSource.entities.add({
+        const pp = rentDataSource.add({
           position: Cesium.Cartesian3.fromDegrees(lng, lat),
           // Dot visible when zoomed OUT (far away); pills take over when close
-          point: {
-            pixelSize: 12,
-            color: color,
-            outlineColor: Cesium.Color.WHITE,
-            outlineWidth: 1.5,
-            heightReference: Cesium.HeightReference.CLAMP_TO_GROUND,
-            distanceDisplayCondition: new Cesium.DistanceDisplayCondition(80000, Infinity),
-            scaleByDistance: new Cesium.NearFarScalar(50000, 3.0, 8000000, 1.0),
-          },
-          properties: {
-            isGroup: group.length > 1,
-            group: group,
-            priceId: first.id,
-            lat: lat, lng: lng,
-            priceTotal: first.price_total, pricePerM2: first.price_per_m2,
-            currency: first.currency || 'DKK',
-            city: first.city, country: first.country,
-            sqm: first.sqm, rooms: first.rooms, type: first.type,
-            sourceUrl: first.source_url, sourceSite: first.source_site, listingDate: first.listing_date,
-          }
+          pixelSize: 12,
+          color: color,
+          outlineColor: Cesium.Color.WHITE,
+          outlineWidth: 1.5,
+          distanceDisplayCondition: new Cesium.DistanceDisplayCondition(80000, Infinity),
+          scaleByDistance: new Cesium.NearFarScalar(50000, 3.0, 8000000, 1.0),
         });
-        entityByPriceId[first.id] = entity;
-      });
-      
-      viewer.dataSources.add(rentDataSource);
-      
-      // Style clusters: show count as label on a circle billboard
-      rentDataSource.clustering.clusterEvent.addEventListener((clusteredEntities, cluster) => {
-        cluster.label.show = true;
-        cluster.label.text = clusteredEntities.length.toString();
-        cluster.label.font = 'bold 16px sans-serif';
-        cluster.label.fillColor = Cesium.Color.WHITE;
-        cluster.label.style = Cesium.LabelStyle.FILL_AND_OUTLINE;
-        cluster.label.outlineColor = Cesium.Color.BLACK;
-        cluster.label.outlineWidth = 3;
-        cluster.label.verticalOrigin = Cesium.VerticalOrigin.CENTER;
-        cluster.label.horizontalOrigin = Cesium.HorizontalOrigin.CENTER;
-        cluster.label.distanceDisplayCondition = new Cesium.DistanceDisplayCondition(50000, Infinity);
-        cluster.billboard.show = true;
-        cluster.billboard.image = clusterCircle;
-        cluster.billboard.width = 52;
-        cluster.billboard.height = 52;
-        cluster.billboard.disableDepthTestDistance = Number.POSITIVE_INFINITY;
-        cluster.billboard.distanceDisplayCondition = new Cesium.DistanceDisplayCondition(50000, Infinity);
+        // Rå data på pointPrimitive.id — bruges af klik/hover-handlerne
+        pp.id = {
+          isPoint: true,
+          isGroup: group.length > 1,
+          group: group,
+          priceId: first.id,
+          lat: lat, lng: lng,
+          priceTotal: first.price_total, pricePerM2: first.price_per_m2,
+          currency: first.currency || 'DKK',
+          city: first.city, country: first.country,
+          sqm: first.sqm, rooms: first.rooms, type: first.type,
+          sourceUrl: first.source_url, sourceSite: first.source_site, listingDate: first.listing_date,
+        };
+        entityByPriceId[first.id] = pp;
       });
       
       // Build pills only for what's visible in the current viewport
@@ -1258,12 +1228,8 @@ import Layout from '../layouts/Layout.astro';
         
         // Rebuild pills when camera stops moving (viewport-based lazy loading)
         viewer.camera.moveEnd.addEventListener(function() {
-          const camH = viewer.camera.positionCartographic.height;
-          // Clustering only when far away (>80km); close up: clusters dissolve,
-          // individual dots are hidden by distanceDisplayCondition, pills take over
-          if (rentDataSource) {
-            rentDataSource.clustering.enabled = camH > 80000;
-          }
+          // Pills only when close; prikker (PointPrimitiveCollection) vises via
+          // distanceDisplayCondition når man er langt væk
           rebuildPills(viewer);
         });
         
@@ -1323,8 +1289,8 @@ import Layout from '../layouts/Layout.astro';
           // (scene.pick sometimes fails to return cluster entities, so we
           // fall back to a manual screen-space search.)
           function findClusterAt(screenPos) {
-            if (!rentDataSource) return null;
-            const entities = rentDataSource.entities.values;
+            // PointPrimitiveCollection har ingen clusters — returner null
+            return null;
             let best = null;
             let bestDist = 35; // px threshold
             for (let i = 0; i < entities.length; i++) {
@@ -1347,53 +1313,35 @@ import Layout from '../layouts/Layout.astro';
             return best;
           }
           
-          // Resolve what was clicked: picked entity OR nearest cluster
+          // Resolve what was clicked: picked point OR (ingen clusters længere)
           let clickedId = null;
           if (Cesium.defined(picked) && picked.id) {
             clickedId = picked.id;
-          } else {
-            clickedId = findClusterAt(click.position);
           }
           
           if (clickedId) {
-            // Cluster clicked? Clusters have billboard but NO priceId in properties
-            // (entities ALWAYS have a properties bag — check for priceId instead)
-            const props = clickedId.properties;
-            const hasPrice = props && props.priceId?.getValue?.();
-            if (clickedId.billboard && !hasPrice) {
-              let pos = null;
-              try { pos = clickedId.position?.getValue?.(viewer.clock.currentTime); } catch(e) {}
-              // Fallback: pick the globe under the click
-              if (!pos) {
-                pos = viewer.camera.pickEllipsoid(click.position, viewer.scene.globe.ellipsoid);
-              }
-              if (pos) {
-                const carto = Cesium.Cartographic.fromCartesian(pos);
-                const lat = Cesium.Math.toDegrees(carto.latitude);
-                const lng = Cesium.Math.toDegrees(carto.longitude);
-                zoomInOnly(lng, lat, 0.4, 20000);
-              }
-              return;
-            }
+            // clickedId er rå data fra pp.id (PointPrimitive) — ingen PropertyBag
+            const props = clickedId.properties || clickedId;
+            const hasPrice = props && props.priceId;
             if (hasPrice) {
               // Skip — HTML pills handle their own clicks
-              if (props.isGroup?.getValue?.()) {
+              if (props.isGroup) {
                 // Zoom in on the group first, then show the panel (never out)
-                const glat = props.lat?.getValue?.(), glng = props.lng?.getValue?.();
+                const glat = props.lat, glng = props.lng;
                 if (glat !== undefined && glng !== undefined) {
                   zoomInOnly(glng, glat, 0.3, 20000);
                 }
-                openGroupPanel(props.group.getValue());
+                openGroupPanel(props.group);
               } else {
                 const price = {
-                  priceId: props.priceId?.getValue?.(),
-                  lat: props.lat?.getValue?.(), lng: props.lng?.getValue?.(),
-                  priceTotal: props.priceTotal?.getValue?.(), pricePerM2: props.pricePerM2?.getValue?.(),
-                  currency: props.currency?.getValue?.(), city: props.city?.getValue?.(),
-                  country: props.country?.getValue?.(), sqm: props.sqm?.getValue?.(),
-                  rooms: props.rooms?.getValue?.(), type: props.type?.getValue?.(),
-                  sourceUrl: props.sourceUrl?.getValue?.(), sourceSite: props.sourceSite?.getValue?.(),
-                  listingDate: props.listingDate?.getValue?.(),
+                  priceId: props.priceId,
+                  lat: props.lat, lng: props.lng,
+                  priceTotal: props.priceTotal, pricePerM2: props.pricePerM2,
+                  currency: props.currency, city: props.city,
+                  country: props.country, sqm: props.sqm,
+                  rooms: props.rooms, type: props.type,
+                  sourceUrl: props.sourceUrl, sourceSite: props.sourceSite,
+                  listingDate: props.listingDate,
                 };
                 // Zoom in toward the listing first, then show the panel (never out)
                 if (price.lat !== undefined && price.lng !== undefined) {
@@ -1421,22 +1369,26 @@ import Layout from '../layouts/Layout.astro';
         const tooltip = document.getElementById('tooltip');
         handler.setInputAction(function(movement) {
           const picked = viewer.scene.pick(movement.endPosition);
-          if (Cesium.defined(picked) && picked.id && picked.id.properties) {
-            const props = picked.id.properties;
+          if (Cesium.defined(picked) && picked.id) {
+            // Rå data fra pp.id (PointPrimitive) — eller entity-properties (avg)
+            const raw = picked.id;
+            const props = raw.properties || raw;
             // Avg rent overlay: vis gennemsnitlig månedsleje i valgt valuta
-            if (props.isAvg?.getValue?.()) {
-              const avg = props.avg?.getValue?.();
-              const r1 = props.rent1?.getValue?.();
-              const r2 = props.rent2?.getValue?.();
-              const r3 = props.rent3?.getValue?.();
+            if (props.isAvg) {
+              const avg = props.avg;
+              const r1 = props.rent1;
+              const r2 = props.rent2;
+              const r3 = props.rent3;
               const sym = ({DKK:'kr',EUR:'€',USD:'$',GBP:'£',SEK:'kr',NOK:'kr',INR:'₹',CNY:'¥',VND:'₫',THB:'฿',PHP:'₱',MYR:'RM',CAD:'CA$',ZAR:'R',COP:'$',ARS:'$',KZT:'₸',NGN:'₦',IDR:'Rp',TRY:'₺',PLN:'zł',PGK:'K'})[displayCurrency] || displayCurrency;
               const f = (usd) => usd ? convertPrice(usd, 'USD', displayCurrency).toLocaleString('en-US') : '—';
-              tooltip.innerHTML = `<b>${props.city?.getValue?.() || ''}</b> · avg <b>${sym}${f(avg)}/mo</b><br><span style="font-size:11px;opacity:0.85;">1-bed ${sym}${f(r1)} · 2-bed ${sym}${f(r2)} · 3-bed ${sym}${f(r3)}</span>`;
-            } else if (props.isGroup?.getValue?.()) {
-              const groupVal = props.group.getValue();
-              tooltip.textContent = `${props.city?.getValue?.() || ''} · ${groupVal.length} listings`;
+              tooltip.innerHTML = `<b>${props.city || ''}</b> · avg <b>${sym}${f(avg)}/mo</b><br><span style="font-size:11px;opacity:0.85;">1-bed ${sym}${f(r1)} · 2-bed ${sym}${f(r2)} · 3-bed ${sym}${f(r3)}</span>`;
+            } else if (props.isGroup) {
+              tooltip.textContent = `${props.city || ''} · ${props.group.length} listings`;
+            } else if (props.priceId) {
+              tooltip.textContent = `${props.city || ''} · ${formatPrice(props.priceTotal, props.currency)}`;
             } else {
-              tooltip.textContent = `${props.city?.getValue?.() || ''} · ${formatPrice(props.priceTotal?.getValue?.(), props.currency?.getValue?.())}`;
+              tooltip.classList.remove('visible');
+              return;
             }
             tooltip.style.left = (movement.endPosition.x + 16) + 'px';
             tooltip.style.top = (movement.endPosition.y - 30) + 'px';
@@ -1452,7 +1404,10 @@ import Layout from '../layouts/Layout.astro';
           frameTick++;
           if (frameTick % 2 !== 0) return; // only every 2nd frame
           
-          const entities = rentDataSource ? rentDataSource.entities.values : [];
+          const src = rentDataSource;
+          const entities = src && src.length
+            ? Array.from({ length: src.length }, (_, i) => src.get(i))
+            : [];
           const cameraHeight = viewer.camera.positionCartographic.height;
           const container = document.getElementById('pillContainer');
           
@@ -1482,7 +1437,9 @@ import Layout from '../layouts/Layout.astro';
               }
             }
             
-            const pos = entity.position.getValue(viewer.clock.currentTime);
+            const pos = entity.position.getValue
+              ? entity.position.getValue(viewer.clock.currentTime)
+              : entity.position;
             if (!pos) return;
             
             const canvasPos = viewer.scene.cartesianToCanvasCoordinates(pos);
