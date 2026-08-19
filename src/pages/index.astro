@@ -1359,10 +1359,26 @@ import Layout from '../layouts/Layout.astro';
         camCtrl.tapDragZoomEventTypes = [Cesium.CameraEventType.LEFT_DOUBLE_CLICK];
         
         // Zoom-kontroller (Google Earth/Maps-stil) — kun zoom + nulstil (ingen 3D/lokation)
+        // Robust: flyver til samme længde/bredde med halveret/fordoblet højde.
         window.mapZoom = function(dir) {
           if (!viewer) return;
-          if (dir > 0) viewer.camera.zoomIn(1.8);
-          else viewer.camera.zoomOut(1.8);
+          const c = viewer.camera.positionCartographic;
+          if (!c) return;
+          if (dir > 0) {
+            viewer.camera.flyTo({
+              destination: Cesium.Cartesian3.fromDegrees(
+                Cesium.Math.toDegrees(c.longitude), Cesium.Math.toDegrees(c.latitude),
+                Math.max(1500, c.height * 0.5)),
+              duration: 0.35,
+            });
+          } else {
+            viewer.camera.flyTo({
+              destination: Cesium.Cartesian3.fromDegrees(
+                Cesium.Math.toDegrees(c.longitude), Cesium.Math.toDegrees(c.latitude),
+                Math.min(35000000, Math.max(c.height * 2, 2000))),
+              duration: 0.35,
+            });
+          }
         };
         window.mapHome = function() {
           if (!viewer) return;
