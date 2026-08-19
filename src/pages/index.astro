@@ -279,6 +279,29 @@ import Layout from '../layouts/Layout.astro';
         opacity:0; transition:opacity 0.15s;
       }
       .hover-tooltip.visible { opacity:1; }
+
+      /* ---- Zoom-kontroller (Google Earth/Maps-stil) ---- */
+      .map-controls {
+        position:fixed; bottom:20px; right:20px; z-index:1400;
+        display:flex; flex-direction:column; gap:8px;
+        touch-action:none;
+      }
+      .map-ctrl-btn {
+        width:44px; height:44px; border-radius:10px;
+        border:1px solid rgba(255,255,255,0.16);
+        background:rgba(15,23,42,0.88); color:#fff;
+        font-size:22px; font-weight:600; cursor:pointer; line-height:1;
+        backdrop-filter:blur(8px); box-shadow:0 2px 8px rgba(0,0,0,0.35);
+        display:flex; align-items:center; justify-content:center;
+        transition:background 0.2s, transform 0.1s;
+        user-select:none; -webkit-user-select:none; -webkit-tap-highlight-color:transparent;
+      }
+      .map-ctrl-btn:hover { background:rgba(30,41,59,0.95); }
+      .map-ctrl-btn:active { transform:scale(0.94); }
+      @media (pointer:coarse) {
+        .map-controls { bottom:88px; right:10px; }
+        .map-ctrl-btn { width:46px; height:46px; }
+      }
       
       /* ---- Admin link ---- */
       .admin-link {
@@ -309,6 +332,13 @@ import Layout from '../layouts/Layout.astro';
   </slot>
 
   <div id="cesiumContainer"></div>
+
+  <!-- Zoom-kontroller (Google Earth/Maps-stil) — ingen 3D/lokations-knap -->
+  <div class="map-controls" id="mapControls">
+    <button class="map-ctrl-btn" onclick="mapZoom(1)" title="Zoom ind" aria-label="Zoom ind">+</button>
+    <button class="map-ctrl-btn" onclick="mapZoom(-1)" title="Zoom ud" aria-label="Zoom ud">−</button>
+    <button class="map-ctrl-btn" onclick="mapHome()" title="Nulstil visning" aria-label="Nulstil visning">⌂</button>
+  </div>
 
   <!-- Visuelt skjult H1 for SEO (globussen er ren) -->
   <h1 style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;margin:-1px;padding:0;border:0;">RentMap — Global Rent Prices on an Interactive Globe</h1>
@@ -1233,47 +1263,23 @@ import Layout from '../layouts/Layout.astro';
           rebuildPills(viewer);
         });
         
-        // Double-tap to zoom in (mobile) — SINGLE finger only (pinch uses 2+)
-        let lastTap = 0;
-        let tapTimer = null;
-        viewer.scene.canvas.addEventListener('touchend', function(e) {
-          // F3: Ignore touches inside the info panel when it's open (avoid conflict with panel swipe)
-          const panel = document.getElementById('infoPanel');
-          if (panel.classList.contains('open') && panel.contains(e.target)) return;
-          
-          // Only single-finger taps count — ignore pinch (2+ fingers)
-          if (e.touches.length > 0 || e.changedTouches.length !== 1) {
-            lastTap = 0;
-            if (tapTimer) { clearTimeout(tapTimer); tapTimer = null; }
-            return;
-          }
-          const now = Date.now();
-          if (now - lastTap < 300) {
-            // Double tap detected — zoom in on the tapped location
-            e.preventDefault();
-            if (tapTimer) { clearTimeout(tapTimer); tapTimer = null; }
-            const touch = e.changedTouches[0];
-            const pos = new Cesium.Cartesian2(touch.clientX, touch.clientY);
-            const picked = viewer.camera.pickEllipsoid(pos, viewer.scene.globe.ellipsoid);
-            if (picked) {
-              const carto = Cesium.Cartographic.fromCartesian(picked);
-              const lat = Cesium.Math.toDegrees(carto.latitude);
-              const lng = Cesium.Math.toDegrees(carto.longitude);
-              const curH = viewer.camera.positionCartographic.height;
-              const targetH = Math.max(5000, curH * 0.4);
-              viewer.camera.flyTo({
-                destination: Cesium.Cartesian3.fromDegrees(lng, lat, targetH),
-                duration: 0.8,
-              });
-            }
-            lastTap = 0;
-          } else {
-            lastTap = now;
-            // If a second tap never comes, reset so the next tap can be a double tap
-            if (tapTimer) clearTimeout(tapTimer);
-            tapTimer = setTimeout(function() { lastTap = 0; }, 350);
-          }
-        }, { passive: false });
+        // Google Earth-stil mobil-zoom (indbygget i Cesium):
+        //  - pinch = zoom (standard)
+        //  - hurtigt dobbelttryk = zoom ind på punktet
+        //  - dobbelttryk + hold + træk = kontinuerlig zoom
+        camCtrl.enableTapZoom = true;
+        camCtrl.tapDragZoomEventTypes = [Cesium.CameraEventType.LEFT_DOUBLE_CLICK];
+        
+        // Zoom-kontroller (Google Earth/Maps-stil) — kun zoom + nulstil (ingen 3D/lokation)
+        window.mapZoom = function(dir) {
+          if (!viewer) return;
+          if (dir > 0) viewer.camera.zoomIn(1.8);
+          else viewer.camera.zoomOut(1.8);
+        };
+        window.mapHome = function() {
+          if (!viewer) return;
+          viewer.camera.flyHome(0.8);
+        };
         
         // Click handler
         const handler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
