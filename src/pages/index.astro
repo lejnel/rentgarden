@@ -877,13 +877,13 @@ import Layout from '../layouts/Layout.astro';
         
         const pp = rentDataSource.add({
           position: Cesium.Cartesian3.fromDegrees(lng, lat),
-          // Prikker synlige mellem 40 km og 2.000 km; over 2.000 km vises lilla
-          // klynger i stedet (updateClusters) så kortet ikke bliver ét rod
+          // Visning styres EKSPLICIT via updateVisibility() (.show) — ikke
+          // distanceDisplayCondition (upålideligt på PointPrimitives og giver
+          // overlap med pille-området)
           pixelSize: 15,
           color: color,
           outlineColor: Cesium.Color.WHITE,
           outlineWidth: 2,
-          distanceDisplayCondition: new Cesium.DistanceDisplayCondition(40000, 2000000),
           scaleByDistance: new Cesium.NearFarScalar(30000, 5.0, 5000000, 1.5),
         });
         // Rå data på pointPrimitive.id — bruges af klik/hover-handlerne
@@ -907,23 +907,34 @@ import Layout from '../layouts/Layout.astro';
       updateClusters();
     }
 
+    // Central visningstyring: klynger > 2.000 km, prikker 80-2.000 km, pills < 80 km.
+    // Ingen overlap — prikker forsvinder helt når man zoomer ind i pille-området.
+    function updateVisibility() {
+      if (!viewer || !rentDataSource) return;
+      const camH = viewer.camera.positionCartographic.height;
+      const showDots = camH >= 80000 && camH < 2000000;
+      const showClusters = camH >= 2000000;
+      if (rentDataSource.show !== showDots) rentDataSource.show = showDots;
+      if (clusterSource && clusterSource.show !== showClusters) {
+        clusterSource.show = showClusters;
+        if (!showClusters) clusterSource.removeAll();
+      }
+      if (clusterLabelSource && clusterLabelSource.show !== showClusters) {
+        clusterLabelSource.show = showClusters;
+        if (!showClusters) clusterLabelSource.removeAll();
+      }
+      return showClusters;
+    }
+
     // Opdater de lilla antals-klynger (screen-space): ved lang zoom-afstand samles
     // prikker der ligger inden for ~55px på skærmen til én klynge med tal.
     function updateClusters() {
       if (!viewer || !clusterSource || !allGroupData.length) return;
-      const camH = viewer.camera.positionCartographic.height;
-      // Klynger kun når vi er langt væk (>2.000 km); ellers vises enkeltprikker
-      if (camH < 2000000) {
-        clusterSource.show = false;
-        clusterSource.removeAll();
-        clusterLabelSource.show = false;
-        clusterLabelSource.removeAll();
-        return;
-      }
-      clusterSource.show = true;
+      const showClusters = updateVisibility();
+      // Tøm evt. gamle klynger
       clusterSource.removeAll();
-      clusterLabelSource.show = true;
       clusterLabelSource.removeAll();
+      if (!showClusters) return;
       
       const threshold = 55; // px
       const threshold2 = threshold * threshold;
@@ -1529,6 +1540,9 @@ import Layout from '../layouts/Layout.astro';
         viewer.scene.preRender.addEventListener(function() {
           frameTick++;
           if (frameTick % 2 !== 0) return; // only every 2nd frame
+          
+          // Hold prikker/klynger/pills synkroniseret med kamera-højden (ingen overlap)
+          updateVisibility();
           
           const src = rentDataSource;
           const entities = src && src.length
