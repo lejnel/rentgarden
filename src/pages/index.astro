@@ -964,7 +964,8 @@ import Layout from '../layouts/Layout.astro';
           image: clusterCircle,
           width: size,
           height: size,
-          disableDepthTestDistance: Number.POSITIVE_INFINITY,
+          // INGEN disableDepthTestDistance: ellers vises klyngerne gennem globussen
+          // (bagsiden) — dybdetest default (0) skjuler dem bag jorden korrekt
         });
         bb.id = { isCluster: true, count: c.count, lat, lng };
         clusterLabelSource.add({
@@ -977,7 +978,7 @@ import Layout from '../layouts/Layout.astro';
           outlineWidth: 2,
           verticalOrigin: Cesium.VerticalOrigin.CENTER,
           horizontalOrigin: Cesium.HorizontalOrigin.CENTER,
-          disableDepthTestDistance: Number.POSITIVE_INFINITY,
+          // INGEN disableDepthTestDistance (vises ikke gennem globussen)
         });
       }
     }
