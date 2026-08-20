@@ -995,8 +995,15 @@ import Layout from '../layouts/Layout.astro';
     function renderCityResults(q) {
       const box = document.getElementById('citySearchResults');
       const term = q.trim().toLowerCase();
-      const base = cityLookup.filter(x => !term || (x.name + ' ' + x.country).toLowerCase().includes(term));
-      currentMatches = base.slice(0, 12);
+      // Ingen anbefalinger i tomt felt — kun autocomplete på det brugeren skriver
+      if (!term) {
+        currentMatches = [];
+        box.innerHTML = '';
+        return;
+      }
+      currentMatches = cityLookup
+        .filter(x => (x.name + ' ' + x.country).toLowerCase().includes(term))
+        .slice(0, 12);
       if (!currentMatches.length) { box.innerHTML = '<div class="res" style="color:#64748b">Ingen byer fundet</div>'; return; }
       box.innerHTML = currentMatches.map((x, i) =>
         `<div class="res" data-i="${i}"><span>${x.name}, ${x.country}</span><span class="cnt">${x.count ? x.count + ' boliger' : ''}</span></div>`
