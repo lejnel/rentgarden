@@ -22,7 +22,7 @@ import Layout from '../layouts/Layout.astro';
       
       /* ---- Year pills ---- */
       .year-pills {
-        position:fixed; top:20px; left:50%; transform:translateX(-50%); z-index:1500;
+        position:fixed; top:62px; left:50%; transform:translateX(-50%); z-index:1500;
         display:flex; gap:8px; flex-wrap:wrap; justify-content:center;
       }
       .year-pill {
@@ -314,6 +314,43 @@ import Layout from '../layouts/Layout.astro';
         background:rgba(10,14,23,0.7); border:1px solid rgba(255,255,255,0.08);
       }
       .admin-link:hover { color:#e2e8f0; border-color:rgba(255,255,255,0.2); }
+
+      /* ---- By-søgning (radio.garden-stil) ---- */
+      .city-search {
+        position:fixed; top:14px; left:50%; transform:translateX(-50%); z-index:1600;
+      }
+      .city-search-toggle {
+        display:flex; align-items:center; gap:7px; padding:8px 18px; border-radius:20px;
+        border:1px solid rgba(255,255,255,0.2); background:rgba(15,23,42,0.88); color:#fff;
+        font-size:13px; font-weight:500; cursor:pointer; backdrop-filter:blur(8px);
+        font-family:inherit; transition:background 0.2s;
+      }
+      .city-search-toggle:hover { background:rgba(30,41,59,0.95); }
+      .city-search-drop { display:none; margin-top:8px; width:320px; }
+      .city-search.open .city-search-drop { display:block; }
+      .city-search-drop input {
+        width:100%; padding:10px 14px; border-radius:12px; border:1px solid rgba(167,139,250,0.55);
+        background:rgba(10,14,23,0.96); color:#fff; font-size:14px; outline:none; font-family:inherit;
+        backdrop-filter:blur(10px);
+      }
+      .city-search-drop input:focus { border-color:#a78bfa; box-shadow:0 0 0 3px rgba(124,58,237,0.25); }
+      .city-search-results {
+        margin-top:6px; border-radius:12px; border:1px solid rgba(255,255,255,0.12);
+        background:rgba(10,14,23,0.97); backdrop-filter:blur(12px); overflow:hidden;
+        max-height:300px; overflow-y:auto;
+      }
+      .city-search-results .res {
+        padding:9px 14px; font-size:13px; color:#e2e8f0; cursor:pointer;
+        display:flex; justify-content:space-between; gap:10px;
+      }
+      .city-search-results .res:hover, .city-search-results .res.hl { background:rgba(124,58,237,0.25); }
+      .city-search-results .res .cnt { color:#64748b; font-size:11px; white-space:nowrap; }
+      @media (pointer:coarse) {
+        .city-search { top:14px; left:auto; right:12px; transform:none; }
+        .city-search-toggle .hint { display:none; }
+        .city-search-toggle { padding:9px 12px; }
+        .city-search-drop { width:min(86vw, 340px); }
+      }
       
       /* Loading */
       .loading-overlay {
@@ -385,6 +422,15 @@ import Layout from '../layouts/Layout.astro';
   
   <!-- Year pills -->
   <div class="year-pills" id="yearPills"></div>
+
+  <!-- By-søgning (radio.garden-stil) -->
+  <div class="city-search" id="citySearch">
+    <button class="city-search-toggle" id="citySearchToggle" onclick="toggleCitySearch()" aria-label="Søg by">🔍 <span class="hint">Søg by</span></button>
+    <div class="city-search-drop" id="citySearchDrop">
+      <input id="citySearchInput" type="text" placeholder="Skriv en by… (Enter = vælg)" autocomplete="off" spellcheck="false">
+      <div class="city-search-results" id="citySearchResults"></div>
+    </div>
+  </div>
 
   <!-- Type pills (top left) -->
   <div class="type-pills" id="typePills"></div>
@@ -907,7 +953,77 @@ import Layout from '../layouts/Layout.astro';
       // Build pills only for what's visible in the current viewport
       rebuildPills(viewer);
       updateClusters();
+      buildCityLookup();
     }
+
+    // ---- By-søgning (radio.garden-stil) ----
+    let cityLookup = [];
+    function buildCityLookup() {
+      const seen = new Map();
+      (allGroupData || []).forEach(g => {
+        const first = g.group && g.group[0];
+        if (!first || !first.city) return;
+        const key = (first.city + '|' + (first.country || '')).toLowerCase();
+        if (!seen.has(key)) seen.set(key, { name: first.city, country: first.country || '', lat: g.lat, lng: g.lng, count: 0 });
+        seen.get(key).count += g.group.length;
+      });
+      (avgDataCache || []).forEach(entry => {
+        (entry.cities || []).forEach(c => {
+          const key = (c.city + '|' + entry.country).toLowerCase();
+          if (!seen.has(key) && c.lat) seen.set(key, { name: c.city, country: entry.country, lat: c.lat, lng: c.lng, count: 0 });
+        });
+      });
+      cityLookup = Array.from(seen.values()).sort((a, b) => b.count - a.count);
+    }
+    window.toggleCitySearch = function() {
+      const el = document.getElementById('citySearch');
+      const open = el.classList.toggle('open');
+      const inp = document.getElementById('citySearchInput');
+      buildCityLookup(); // genbyg = fanger også byer når avg-data først er loadet
+      if (open) { inp.value = ''; renderCityResults(''); inp.focus(); }
+    };
+    let currentMatches = [];
+    function renderCityResults(q) {
+      const box = document.getElementById('citySearchResults');
+      const term = q.trim().toLowerCase();
+      currentMatches = cityLookup
+        .filter(x => !term || (x.name + ' ' + x.country).toLowerCase().includes(term))
+        .slice(0, 12);
+      if (!currentMatches.length) { box.innerHTML = '<div class="res" style="color:#64748b">Ingen byer fundet</div>'; return; }
+      box.innerHTML = currentMatches.map((x, i) =>
+        `<div class="res" data-i="${i}"><span>${x.name}, ${x.country}</span><span class="cnt">${x.count ? x.count + ' boliger' : ''}</span></div>`
+      ).join('');
+    }
+    window.goToCity = function(idx) {
+      const x = currentMatches[idx];
+      if (!x || !viewer) return;
+      viewer.camera.flyTo({
+        destination: Cesium.Cartesian3.fromDegrees(x.lng, x.lat, 22000),
+        duration: 1.4,
+      });
+      document.getElementById('citySearch').classList.remove('open');
+    };
+    document.addEventListener('click', (e) => {
+      const wrap = document.getElementById('citySearch');
+      if (wrap && wrap.classList.contains('open') && !wrap.contains(e.target)) wrap.classList.remove('open');
+    });
+    (function initCitySearch() {
+      const inp = document.getElementById('citySearchInput');
+      if (!inp) return;
+      inp.addEventListener('input', () => renderCityResults(inp.value));
+      inp.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          if (currentMatches.length) goToCity(0);
+        } else if (e.key === 'Escape') {
+          document.getElementById('citySearch').classList.remove('open');
+        }
+      });
+      const box = document.getElementById('citySearchResults');
+      box.addEventListener('click', (e) => {
+        const row = e.target.closest('.res');
+        if (row && row.dataset.i !== undefined) goToCity(row.dataset.i);
+      });
+    })();
 
     // Central visningstyring: klynger > 2.000 km, prikker 80-2.000 km, pills < 80 km.
     // Ingen overlap — prikker forsvinder helt når man zoomer ind i pille-området.
