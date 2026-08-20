@@ -718,6 +718,22 @@ import Layout from '../layouts/Layout.astro';
       return Cesium.Color.fromCssColorString('#a855f7');
     }
 
+    // Indlæs avg-rent.json (cachet) — deles af overlay + by-søgning
+    async function loadAvgData() {
+      if (avgDataCache) return avgDataCache;
+      try {
+        const resp = await fetch('/avg-rent.json');
+        avgDataCache = await resp.json();
+      } catch (e) {
+        console.error('Kunne ikke hente avg-rent.json:', e);
+        return null;
+      }
+      // Når avg-byerne er loadet: genbyg søgeindekset så også byer uden
+      // listings (fx Paris) kan findes
+      buildCityLookup();
+      return avgDataCache;
+    }
+
     // Toggle: vis/skjul gennemsnitlig leje-overlay (gennemsigtige cirkler pr. by)
     window.toggleAvgOverlay = async function() {
       if (!viewer) return;
@@ -732,15 +748,8 @@ import Layout from '../layouts/Layout.astro';
         return;
       }
       // Tænd: hent data (cachet)
-      if (!avgDataCache) {
-        try {
-          const resp = await fetch('/avg-rent.json');
-          avgDataCache = await resp.json();
-        } catch (e) {
-          console.error('Kunne ikke hente avg-rent.json:', e);
-          return;
-        }
-      }
+      const ad = await loadAvgData();
+      if (!ad) return;
       // PointPrimitiveCollection via scene.primitives (dataSources er brudt)
       if (avgDataSource) viewer.scene.primitives.remove(avgDataSource);
       avgDataSource = viewer.scene.primitives.add(new Cesium.PointPrimitiveCollection());
@@ -986,9 +995,8 @@ import Layout from '../layouts/Layout.astro';
     function renderCityResults(q) {
       const box = document.getElementById('citySearchResults');
       const term = q.trim().toLowerCase();
-      currentMatches = cityLookup
-        .filter(x => !term || (x.name + ' ' + x.country).toLowerCase().includes(term))
-        .slice(0, 12);
+      const base = cityLookup.filter(x => !term || (x.name + ' ' + x.country).toLowerCase().includes(term));
+      currentMatches = base.slice(0, 12);
       if (!currentMatches.length) { box.innerHTML = '<div class="res" style="color:#64748b">Ingen byer fundet</div>'; return; }
       box.innerHTML = currentMatches.map((x, i) =>
         `<div class="res" data-i="${i}"><span>${x.name}, ${x.country}</span><span class="cnt">${x.count ? x.count + ' boliger' : ''}</span></div>`
@@ -1472,6 +1480,9 @@ import Layout from '../layouts/Layout.astro';
         
         // Add dots
         addPriceDots(Cesium, viewer);
+        
+        // Indlæs avg-byer i baggrunden (til by-søgning: Paris osv. har ingen listings)
+        loadAvgData();
         
         // Rebuild pills when camera stops moving (viewport-based lazy loading)
         viewer.camera.moveEnd.addEventListener(function() {
