@@ -423,11 +423,11 @@ import Layout from '../layouts/Layout.astro';
   <!-- Year pills -->
   <div class="year-pills" id="yearPills"></div>
 
-  <!-- By-søgning (radio.garden-stil) -->
+  <!-- City search (radio.garden style) -->
   <div class="city-search" id="citySearch">
-    <button class="city-search-toggle" id="citySearchToggle" onclick="toggleCitySearch()" aria-label="Søg by">🔍 <span class="hint">Søg by</span></button>
+    <button class="city-search-toggle" id="citySearchToggle" onclick="toggleCitySearch()" aria-label="Search city">🔍 <span class="hint">Search city</span></button>
     <div class="city-search-drop" id="citySearchDrop">
-      <input id="citySearchInput" type="text" placeholder="Skriv en by… (Enter = vælg)" autocomplete="off" spellcheck="false">
+      <input id="citySearchInput" type="text" placeholder="Type a city… (Enter = select)" autocomplete="off" spellcheck="false">
       <div class="city-search-results" id="citySearchResults"></div>
     </div>
   </div>
@@ -444,7 +444,7 @@ import Layout from '../layouts/Layout.astro';
     <div class="legend-row"><div class="legend-dot" style="background:#ef4444"></div> <span id="legPremium">30+ $</span></div>
   </div>
 
-  <!-- Avg rent overlay-legend (vises kun når overlay er aktiv) -->
+  <!-- Avg rent overlay legend (shown only when overlay is active) -->
   <div class="legend avg-legend" id="avgLegend" style="display:none;">
     <div class="legend-title">Average monthly rent</div>
     <div class="legend-row"><div class="legend-dot" style="background:#22c55e"></div> <span>≤ $700</span></div>
@@ -1004,9 +1004,9 @@ import Layout from '../layouts/Layout.astro';
       currentMatches = cityLookup
         .filter(x => (x.name + ' ' + x.country).toLowerCase().includes(term))
         .slice(0, 12);
-      if (!currentMatches.length) { box.innerHTML = '<div class="res" style="color:#64748b">Ingen byer fundet</div>'; return; }
+      if (!currentMatches.length) { box.innerHTML = '<div class="res" style="color:#64748b">No cities found</div>'; return; }
       box.innerHTML = currentMatches.map((x, i) =>
-        `<div class="res" data-i="${i}"><span>${x.name}, ${x.country}</span><span class="cnt">${x.count ? x.count + ' boliger' : ''}</span></div>`
+        `<div class="res" data-i="${i}"><span>${x.name}, ${x.country}</span><span class="cnt">${x.count ? x.count + ' listings' : ''}</span></div>`
       ).join('');
     }
     window.goToCity = function(idx) {

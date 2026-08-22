@@ -1,6 +1,15 @@
 ---
 // src/pages/countries/[slug].astro
 // Statiske LAND-sider genereret fra avg-rent.json — SEO for "average rent in <land>"
+
+// NB: getStaticPaths står FØR imports for at undgå Astro/Vite CJS-hoisting-fejl
+export async function getStaticPaths() {
+  return avgData.map(entry => ({
+    params: { slug: entry.country.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') },
+    props: { country: entry.country, cities: entry.cities },
+  }));
+}
+
 import Layout from '../../layouts/Layout.astro';
 import avgData from '../../../public/avg-rent.json';
 import dstData from '../../data/dst-index.json';
@@ -11,14 +20,6 @@ function bySlug(city, country) {
 }
 const usd = n => '$' + Math.round(n).toLocaleString('en-US');
 const week = n => Math.round(n * 12 / 52); // måned → uge
-
-export function getStaticPaths() {
-  // landSlug inline (kalder ikke hjælpefn. — undgår bundling-konflikt med anden [slug])
-  return avgData.map(entry => ({
-    params: { slug: entry.country.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') },
-    props: { country: entry.country, cities: entry.cities },
-  }));
-}
 
 const { country, cities } = Astro.props;
 const sorted = [...cities].sort((a, b) => (a.avg || 0) - (b.avg || 0));
@@ -40,7 +41,6 @@ const avgAll = Math.round(sorted.reduce((s, c) => s + (c.avg || 0), 0) / sorted.
       border:1px solid rgba(255,255,255,0.1); border-radius:14px; background:rgba(255,255,255,0.04); }
     .hero .big{ font-size:30px; font-weight:800; color:#a78bfa; }
     .hero .week{ font-size:14px; color:#a3e635; font-weight:700; margin-left:10px; }
-    .week-sub{ color:#a3e635; }
     .hero .lab{ font-size:12px; color:#94a3b8; text-transform:uppercase; letter-spacing:0.5px; }
     .dst{ margin:0 0 26px; padding:16px 18px; border:1px solid rgba(74,222,128,0.25);
       border-radius:14px; background:rgba(74,222,128,0.05); }
@@ -69,41 +69,41 @@ const avgAll = Math.round(sorted.reduce((s, c) => s + (c.avg || 0), 0) / sorted.
 
   <div class="layout">
     <h1>Average Rent in {country}</h1>
-    <div class="meta">2026 · {cities.length} byer · baseret på real listings på RentMap</div>
+    <div class="meta">2026 · {cities.length} cities · based on real listings on RentMap</div>
 
     <div class="hero">
-      <div><div class="big">{usd(avgAll)}<span class="week">≈ {usd(week(avgAll))}/uge</span></div><div class="lab">gennemsnitlig husleje / md</div></div>
+      <div><div class="big">{usd(avgAll)}<span class="week">≈ {usd(week(avgAll))}/week</span></div><div class="lab">average monthly rent</div></div>
       <div style="flex:1"></div>
-      <div style="text-align:right"><div class="big" style="color:#4ade80">{usd(cheap.avg)}</div><div class="lab">billigste: {cheap.city}</div></div>
+      <div style="text-align:right"><div class="big" style="color:#4ade80">{usd(cheap.avg)}</div><div class="lab">cheapest: {cheap.city}</div></div>
     </div>
 
     {country === 'Denmark' && dstData.all && (
       <div class="dst">
-        <div class="dst-title">📈 Huslejeudvikling — officiel statistik (Danmarks Statistik)</div>
+        <div class="dst-title">📈 Rent development — official statistics (Denmark)</div>
         <div class="dst-row">
           <div>
-            <div class="dst-big">{dstData.all.index}<span class="dst-base"> (indeks 2015=100, {dstData.all.period})</span></div>
-            <div class="dst-sub">Huslejeindeks for boliger · hele landet</div>
+            <div class="dst-big">{dstData.all.index}<span class="dst-base"> (index 2015=100, {dstData.all.period})</span></div>
+            <div class="dst-sub">Rent index for dwellings · whole country</div>
           </div>
           <div style="flex:1"></div>
           <div class="dst-change">
-            <div class="dst-sub">Sidste år</div>
+            <div class="dst-sub">Last year</div>
             <div class="dst-pct">+{(dstData.all.yoy * 100).toFixed(1)}%</div>
           </div>
           <div class="dst-change">
-            <div class="dst-sub">Sidste kvartal</div>
+            <div class="dst-sub">Last quarter</div>
             <div class="dst-pct dst-pct-q">+{(dstData.all.qoq * 100).toFixed(1)}%</div>
           </div>
         </div>
-        <div class="dst-src">Kilde: <a href={dstData.url} rel="nofollow">Statistikbanken · HUS1</a> — opdateret {dstData.updated}</div>
+        <div class="dst-src">Source: <a href={dstData.url} rel="nofollow">Statistikbanken · HUS1</a> — updated {dstData.updated}</div>
       </div>
     )}
 
     <p style="color:#cbd5e1; line-height:1.6; margin-bottom:20px;">
-      Hvad koster en lejebolig i {country} i 2026? {sorted.length > 1
-        ? `I ${country} varierer gennemsnitshuslejen fra ${usd(cheap.avg)}/måned i ${cheap.city} til ${usd(expensive.avg)}/måned i ${expensive.city}.`
-        : `Gennemsnitshuslejen i ${country} er ${usd(avgAll)}/måned.`}
-      Herunder er de konkrete priser pr. by — og du kan zoome ind på selve kortet for at se rigtige annoncer med adresse og link til den oprindelige udlejning.
+      What does a rental home cost in {country} in 2026? {sorted.length > 1
+        ? `In ${country}, the average monthly rent varies from ${usd(cheap.avg)}/month in ${cheap.city} to ${usd(expensive.avg)}/month in ${expensive.city}.`
+        : `The average monthly rent in ${country} is ${usd(avgAll)}/month.`}
+      Below are the concrete prices per city — and you can zoom in on the globe itself to see real listings with address and a link to the original ad.
     </p>
 
     <div class="yours">
@@ -115,10 +115,10 @@ const avgAll = Math.round(sorted.reduce((s, c) => s + (c.avg || 0), 0) / sorted.
       ))}
     </div>
 
-    <div class="cta"><a href="/">Se boligerne på globussen 🌍</a></div>
+    <div class="cta"><a href="/">See the listings on the globe 🌍</a></div>
 
     <div class="others">
-      <h2>Andre lande</h2>
+      <h2>Other countries</h2>
       {avgData.filter(e => e.country !== country).slice(0, 30).map(e => (
         <a href={`/countries/${landSlug(e.country)}/`}>{e.country} · {usd(Math.round(e.cities.reduce((s, c) => s + (c.avg || 0), 0) / e.cities.length))}</a>
       ))}

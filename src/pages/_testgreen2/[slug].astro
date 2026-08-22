@@ -1,0 +1,18 @@
+---
+// Test 2: dstData-import + Layout-import + getStaticPaths (mønstret fra [slug]-siderne)
+import Layout from '../layouts/Layout.astro';
+import avgData from '../../public/avg-rent.json';
+import dstData from '../data/dst-index.json';
+
+export function getStaticPaths() {
+  return avgData.slice(0, 3).map(entry => ({
+    params: { slug: 'test' + entry.country.length },
+    props: { country: entry.country },
+  }));
+}
+const { country } = Astro.props;
+---
+<Layout title={`Test ${country}`} description="test">
+  <h1>TEST2 {country}</h1>
+  <p>dst: {dstData.source} / {dstData.all.index}</p>
+</Layout>
