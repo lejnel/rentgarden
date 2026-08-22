@@ -1,5 +1,9 @@
 /*
-  Cache-Control: public, max-age=60, must-revalidate
+  Cache-Control: public, max-age=60, must-revalidate, s-maxage=0
+
+# Statiske aktiver caches aggressivt (de har indholdede hashes i URL'en)
+/_astro/*
+  Cache-Control: public, max-age=31536000, immutable
 
 /admin
   Cache-Control: no-store
