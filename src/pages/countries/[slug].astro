@@ -22,10 +22,6 @@ export function getStaticPaths() {
 const { country, cities } = Astro.props;
 const sorted = [...cities].sort((a, b) => (a.avg || 0) - (b.avg || 0));
 const cheap = sorted[0], expensive = sorted[sorted.length - 1];
-const cityList = sorted
-  .filter(c => c.avg)
-  .map(c => `  <a href="/rent-prices/${bySlug(c.city, country)}/" class="row"><span class="name">${c.city}</span><span class="price">${usd(c.avg)}/mo · 1-bed ${usd(c.rent1)} · 2-bed ${usd(c.rent2)}</span></a>`)
-  .join('\n');
 
 const title = `Average Rent in ${country} (2026 prices) | RentMap`;
 const description = `Average monthly rent in ${country}: from ${usd(cheap.avg)} in ${cheap.city} to ${usd(expensive.avg)} in ${expensive.city}. See real rental listings on the interactive RentMap globe.`;
@@ -107,7 +103,14 @@ const avgAll = Math.round(sorted.reduce((s, c) => s + (c.avg || 0), 0) / sorted.
       Herunder er de konkrete priser pr. by — og du kan zoome ind på selve kortet for at se rigtige annoncer med adresse og link til den oprindelige udlejning.
     </p>
 
-    <div class="yours">{cityList}</div>
+    <div class="yours">
+      {sorted.filter(c => c.avg).map(c => (
+        <a href={`/rent-prices/${bySlug(c.city, country)}/`} class="row">
+          <span class="name">{c.city}</span>
+          <span class="price">{usd(c.avg)}/mo · 1-bed {usd(c.rent1)} · 2-bed {usd(c.rent2)}</span>
+        </a>
+      ))}
+    </div>
 
     <div class="cta"><a href="/">Se boligerne på globussen 🌍</a></div>
 
