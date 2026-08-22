@@ -10,6 +10,7 @@ function bySlug(city, country) {
   return `${city.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')}-${country.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`;
 }
 const usd = n => '$' + Math.round(n).toLocaleString('en-US');
+const week = n => Math.round(n * 12 / 52); // måned → uge
 
 export function getStaticPaths() {
   // landSlug inline (kalder ikke hjælpefn. — undgår bundling-konflikt med anden [slug])
@@ -38,6 +39,8 @@ const avgAll = Math.round(sorted.reduce((s, c) => s + (c.avg || 0), 0) / sorted.
     .hero{ display:flex; gap:24px; align-items:center; margin:24px 0 32px; padding:18px 20px;
       border:1px solid rgba(255,255,255,0.1); border-radius:14px; background:rgba(255,255,255,0.04); }
     .hero .big{ font-size:30px; font-weight:800; color:#a78bfa; }
+    .hero .week{ font-size:14px; color:#a3e635; font-weight:700; margin-left:10px; }
+    .week-sub{ color:#a3e635; }
     .hero .lab{ font-size:12px; color:#94a3b8; text-transform:uppercase; letter-spacing:0.5px; }
     .dst{ margin:0 0 26px; padding:16px 18px; border:1px solid rgba(74,222,128,0.25);
       border-radius:14px; background:rgba(74,222,128,0.05); }
@@ -69,7 +72,7 @@ const avgAll = Math.round(sorted.reduce((s, c) => s + (c.avg || 0), 0) / sorted.
     <div class="meta">2026 · {cities.length} byer · baseret på real listings på RentMap</div>
 
     <div class="hero">
-      <div><div class="big">{usd(avgAll)}</div><div class="lab">gennemsnitlig husleje / md</div></div>
+      <div><div class="big">{usd(avgAll)}<span class="week">≈ {usd(week(avgAll))}/uge</span></div><div class="lab">gennemsnitlig husleje / md</div></div>
       <div style="flex:1"></div>
       <div style="text-align:right"><div class="big" style="color:#4ade80">{usd(cheap.avg)}</div><div class="lab">billigste: {cheap.city}</div></div>
     </div>
@@ -107,7 +110,7 @@ const avgAll = Math.round(sorted.reduce((s, c) => s + (c.avg || 0), 0) / sorted.
       {sorted.filter(c => c.avg).map(c => (
         <a href={`/rent-prices/${bySlug(c.city, country)}/`} class="row">
           <span class="name">{c.city}</span>
-          <span class="price">{usd(c.avg)}/mo · 1-bed {usd(c.rent1)} · 2-bed {usd(c.rent2)}</span>
+          <span class="price">{usd(c.avg)}/mo <span class="week-sub">≈ {usd(week(c.avg))}/wk</span> · 1-bed {usd(c.rent1)} · 2-bed {usd(c.rent2)}</span>
         </a>
       ))}
     </div>

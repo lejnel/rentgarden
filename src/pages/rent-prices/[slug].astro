@@ -18,9 +18,10 @@ export function getStaticPaths() {
 
 const { city, country } = Astro.props;
 const { city: cityName, lat, lng, rent1, rent2, rent3, avg } = city;
+const week = n => Math.round(n * 12 / 52); // måned → uge
 
 const title = `Average Rent in ${cityName} (${country}) — 1, 2 & 3-Bedroom Prices | RentMap`;
-const description = `Average monthly rent in ${cityName}, ${country}: $${avg.toLocaleString('en-US')}/mo (1-bed $${rent1.toLocaleString('en-US')}, 2-bed $${rent2.toLocaleString('en-US')}, 3-bed $${rent3.toLocaleString('en-US')}). See real rental listings on the interactive RentMap globe.`;
+const description = `Average monthly rent in ${cityName}, ${country}: $${avg.toLocaleString('en-US')}/mo (≈$${week(avg).toLocaleString('en-US')}/week). 1-bed $${rent1.toLocaleString('en-US')}, 2-bed $${rent2.toLocaleString('en-US')}, 3-bed $${rent3.toLocaleString('en-US')} per month. See real rental listings on the interactive RentMap globe.`;
 const pageUrl = `https://rentmap.net/rent-prices/${Astro.params.slug}/`;
 
 // DST-huslejeindeks for danske byer (region-niveau, officiel statistik)
@@ -56,19 +57,22 @@ const dstEntry = country === 'Denmark'
 
       <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:16px;padding:24px;margin-bottom:24px;">
         <div style="font-size:14px;color:#8899b4;margin-bottom:4px;">Average monthly rent</div>
-        <div style="font-size:40px;font-weight:800;color:#22c55e;">${avg.toLocaleString('en-US')}<span style="font-size:18px;color:#8899b4;">/mo</span></div>
+        <div style="font-size:40px;font-weight:800;color:#22c55e;">${avg.toLocaleString('en-US')}<span style="font-size:18px;color:#8899b4;">/mo</span> <span style="font-size:22px;color:#a3e635;font-weight:700;">≈ $${week(avg).toLocaleString('en-US')}<span style="font-size:14px;">/week</span></span></div>
         <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:20px;">
           <div style="background:rgba(255,255,255,0.04);border-radius:12px;padding:14px;text-align:center;">
             <div style="font-size:20px;font-weight:700;color:#fff;">${rent1.toLocaleString('en-US')}</div>
             <div style="font-size:12px;color:#8899b4;">1-bedroom /mo</div>
+            <div style="font-size:12px;color:#a3e635;">≈ $${week(rent1).toLocaleString('en-US')}/wk</div>
           </div>
           <div style="background:rgba(255,255,255,0.04);border-radius:12px;padding:14px;text-align:center;">
             <div style="font-size:20px;font-weight:700;color:#fff;">${rent2.toLocaleString('en-US')}</div>
             <div style="font-size:12px;color:#8899b4;">2-bedroom /mo</div>
+            <div style="font-size:12px;color:#a3e635;">≈ $${week(rent2).toLocaleString('en-US')}/wk</div>
           </div>
           <div style="background:rgba(255,255,255,0.04);border-radius:12px;padding:14px;text-align:center;">
             <div style="font-size:20px;font-weight:700;color:#fff;">${rent3.toLocaleString('en-US')}</div>
             <div style="font-size:12px;color:#8899b4;">3-bedroom /mo</div>
+            <div style="font-size:12px;color:#a3e635;">≈ $${week(rent3).toLocaleString('en-US')}/wk</div>
           </div>
         </div>
       </div>
