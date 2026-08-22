@@ -3,6 +3,7 @@
 // Statiske by-sider genereret fra avg-rent.json — SEO for "average rent in <by>"
 import Layout from '../../layouts/Layout.astro';
 import avgData from '../../../public/avg-rent.json';
+import dstData from '../../data/dst-index.json';
 
 export function getStaticPaths() {
   const paths = [];
@@ -21,6 +22,12 @@ const { city: cityName, lat, lng, rent1, rent2, rent3, avg } = city;
 const title = `Average Rent in ${cityName} (${country}) — 1, 2 & 3-Bedroom Prices | RentMap`;
 const description = `Average monthly rent in ${cityName}, ${country}: $${avg.toLocaleString('en-US')}/mo (1-bed $${rent1.toLocaleString('en-US')}, 2-bed $${rent2.toLocaleString('en-US')}, 3-bed $${rent3.toLocaleString('en-US')}). See real rental listings on the interactive RentMap globe.`;
 const pageUrl = `https://rentmap.net/rent-prices/${Astro.params.slug}/`;
+
+// DST-huslejeindeks for danske byer (region-niveau, officiel statistik)
+const DK_REGION = { aalborg: '081', aarhus: '082' };
+const dstEntry = country === 'Denmark'
+  ? (dstData.regions[DK_REGION[cityName.toLowerCase()]] || dstData.all)
+  : null;
 ---
 
 <Layout title={title} description={description} canonical={pageUrl}>
@@ -65,6 +72,27 @@ const pageUrl = `https://rentmap.net/rent-prices/${Astro.params.slug}/`;
           </div>
         </div>
       </div>
+
+      {dstEntry && (
+        <div style="background:rgba(74,222,128,0.05);border:1px solid rgba(74,222,128,0.25);border-radius:16px;padding:20px;margin-bottom:24px;">
+          <div style="font-size:13px;color:#4ade80;font-weight:700;margin-bottom:10px;">📈 Huslejeudvikling — officiel statistik (Danmarks Statistik)</div>
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap;">
+            <div>
+              <div style="font-size:28px;font-weight:800;color:#fff;">{dstEntry.index}<span style="font-size:13px;color:#94a3b8;font-weight:500;"> (indeks 2015=100, {dstEntry.period})</span></div>
+              <div style="font-size:12px;color:#94a3b8;">{dstEntry.label} · huslejeindeks for boliger</div>
+            </div>
+            <div style="text-align:right;">
+              <div style="font-size:12px;color:#94a3b8;">Sidste år</div>
+              <div style="font-size:18px;font-weight:800;color:#4ade80;">+{(dstEntry.yoy * 100).toFixed(1)}%</div>
+            </div>
+            <div style="text-align:right;">
+              <div style="font-size:12px;color:#94a3b8;">Sidste kvartal</div>
+              <div style="font-size:18px;font-weight:800;color:#a3e635;">+{(dstEntry.qoq * 100).toFixed(1)}%</div>
+            </div>
+          </div>
+          <div style="margin-top:10px;font-size:11px;color:#64748b;">Kilde: <a href={dstData.url} style="color:#4ade80;text-decoration:none;" rel="nofollow">Statistikbanken · HUS1</a> — opdateret {dstData.updated}</div>
+        </div>
+      )}
 
       <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:16px;padding:24px;margin-bottom:24px;">
         <h2 style="font-size:18px;font-weight:700;color:#fff;margin-bottom:12px;">Real rental listings in {cityName}</h2>

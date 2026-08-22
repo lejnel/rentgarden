@@ -1,0 +1,58 @@
+{
+  "source": "Danmarks Statistik",
+  "table": "HUS1",
+  "url": "https://www.statistikbanken.dk/HUS1",
+  "updated": "2026-08-22",
+  "note": "Huslejeindeks for boliger (indeks 2015=100). qoq=ændring vs forrige kvartal, yoy=ændring vs samme kvartal året før (procentpoint).",
+  "all": {
+    "label": "Hele landet",
+    "period": "2026K2",
+    "index": 111.8,
+    "qoq": 0.002,
+    "yoy": 0.027
+  },
+  "regions": {
+    "000": {
+      "label": "Hele landet",
+      "period": "2026K2",
+      "index": 111.8,
+      "qoq": 0.002,
+      "yoy": 0.027
+    },
+    "084": {
+      "label": "Region Hovedstaden",
+      "period": "2026K2",
+      "index": 113.3,
+      "qoq": 0.003,
+      "yoy": 0.032
+    },
+    "085": {
+      "label": "Region Sjælland",
+      "period": "2026K2",
+      "index": 112.1,
+      "qoq": 0.004,
+      "yoy": 0.026
+    },
+    "083": {
+      "label": "Region Syddanmark",
+      "period": "2026K2",
+      "index": 110.9,
+      "qoq": 0.003,
+      "yoy": 0.026
+    },
+    "082": {
+      "label": "Region Midtjylland",
+      "period": "2026K2",
+      "index": 110.7,
+      "qoq": 0.003,
+      "yoy": 0.023
+    },
+    "081": {
+      "label": "Region Nordjylland",
+      "period": "2026K2",
+      "index": 109.5,
+      "qoq": 0.001,
+      "yoy": 0.02
+    }
+  }
+}

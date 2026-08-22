@@ -3,6 +3,7 @@
 // Statiske LAND-sider genereret fra avg-rent.json — SEO for "average rent in <land>"
 import Layout from '../../layouts/Layout.astro';
 import avgData from '../../../public/avg-rent.json';
+import dstData from '../../data/dst-index.json';
 
 function landSlug(c) { return c.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, ''); }
 function bySlug(city, country) {
@@ -42,6 +43,18 @@ const avgAll = Math.round(sorted.reduce((s, c) => s + (c.avg || 0), 0) / sorted.
       border:1px solid rgba(255,255,255,0.1); border-radius:14px; background:rgba(255,255,255,0.04); }
     .hero .big{ font-size:30px; font-weight:800; color:#a78bfa; }
     .hero .lab{ font-size:12px; color:#94a3b8; text-transform:uppercase; letter-spacing:0.5px; }
+    .dst{ margin:0 0 26px; padding:16px 18px; border:1px solid rgba(74,222,128,0.25);
+      border-radius:14px; background:rgba(74,222,128,0.05); }
+    .dst-title{ font-size:13px; color:#4ade80; font-weight:700; margin-bottom:12px; }
+    .dst-row{ display:flex; align-items:center; gap:18px; flex-wrap:wrap; }
+    .dst-big{ font-size:24px; font-weight:800; color:#fff; }
+    .dst-base{ font-size:12px; color:#94a3b8; font-weight:500; }
+    .dst-sub{ font-size:11px; color:#94a3b8; }
+    .dst-change{ text-align:right; }
+    .dst-pct{ font-size:17px; font-weight:800; color:#4ade80; }
+    .dst-pct-q{ color:#a3e635; }
+    .dst-src{ margin-top:10px; font-size:11px; color:#64748b; }
+    .dst-src a{ color:#4ade80; text-decoration:none; }
     .row{ display:flex; justify-content:space-between; gap:12px; padding:12px 4px;
       border-bottom:1px solid rgba(255,255,255,0.06); text-decoration:none; color:inherit; }
     .row:hover{ color:#a78bfa; }
@@ -64,6 +77,28 @@ const avgAll = Math.round(sorted.reduce((s, c) => s + (c.avg || 0), 0) / sorted.
       <div style="flex:1"></div>
       <div style="text-align:right"><div class="big" style="color:#4ade80">{usd(cheap.avg)}</div><div class="lab">billigste: {cheap.city}</div></div>
     </div>
+
+    {country === 'Denmark' && dstData.all && (
+      <div class="dst">
+        <div class="dst-title">📈 Huslejeudvikling — officiel statistik (Danmarks Statistik)</div>
+        <div class="dst-row">
+          <div>
+            <div class="dst-big">{dstData.all.index}<span class="dst-base"> (indeks 2015=100, {dstData.all.period})</span></div>
+            <div class="dst-sub">Huslejeindeks for boliger · hele landet</div>
+          </div>
+          <div style="flex:1"></div>
+          <div class="dst-change">
+            <div class="dst-sub">Sidste år</div>
+            <div class="dst-pct">+{(dstData.all.yoy * 100).toFixed(1)}%</div>
+          </div>
+          <div class="dst-change">
+            <div class="dst-sub">Sidste kvartal</div>
+            <div class="dst-pct dst-pct-q">+{(dstData.all.qoq * 100).toFixed(1)}%</div>
+          </div>
+        </div>
+        <div class="dst-src">Kilde: <a href={dstData.url} rel="nofollow">Statistikbanken · HUS1</a> — opdateret {dstData.updated}</div>
+      </div>
+    )}
 
     <p style="color:#cbd5e1; line-height:1.6; margin-bottom:20px;">
       Hvad koster en lejebolig i {country} i 2026? {sorted.length > 1
