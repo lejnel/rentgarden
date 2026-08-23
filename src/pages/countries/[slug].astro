@@ -24,14 +24,44 @@ const week = n => Math.round(n * 12 / 52); // måned → uge
 const { country, cities } = Astro.props;
 const sorted = [...cities].sort((a, b) => (a.avg || 0) - (b.avg || 0));
 const cheap = sorted[0], expensive = sorted[sorted.length - 1];
+const avgAll = Math.round(sorted.reduce((s, c) => s + (c.avg || 0), 0) / sorted.length);
 
-const title = `Average Rent in ${country} (2026 prices) | RentMap`;
+const title = `Average Rent in ${country} 2026: $${Math.round(avgAll)}/mo | RentMap`;
 const description = `Average monthly rent in ${country}: from ${usd(cheap.avg)} in ${cheap.city} to ${usd(expensive.avg)} in ${expensive.city}. See real rental listings on the interactive RentMap globe.`;
 const pageUrl = `https://rentmap.net/countries/${Astro.params.slug}/`;
-const avgAll = Math.round(sorted.reduce((s, c) => s + (c.avg || 0), 0) / sorted.length);
 ---
 
 <Layout title={title} description={description} canonical={pageUrl}>
+  <script type="application/ld+json" set:html={JSON.stringify({
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    mainEntity: [
+      {
+        '@type': 'Question',
+        name: `What is the average rent in ${country}?`,
+        acceptedAnswer: {
+          '@type': 'Answer',
+          text: `The average monthly rent in ${country} is $${usd(avgAll)}/month (≈${usd(week(avgAll))}/week), based on real listings across ${cities.length} cities.`
+        }
+      },
+      {
+        '@type': 'Question',
+        name: `Which city in ${country} has the cheapest rent?`,
+        acceptedAnswer: {
+          '@type': 'Answer',
+          text: `${cheap.city} has the most affordable average rent in ${country} at $${usd(cheap.avg)}/month.`
+        }
+      },
+      {
+        '@type': 'Question',
+        name: `Is ${country} expensive to rent?`,
+        acceptedAnswer: {
+          '@type': 'Answer',
+          text: `${country} has an average rent of $${usd(avgAll)}/month, which is ${avgAll > 2000 ? 'above' : avgAll > 1000 ? 'around' : 'below'} the global average. Rents vary significantly by city — from $${usd(cheap.avg)} in ${cheap.city} to $${usd(expensive.avg)} in ${expensive.city}.`
+        }
+      }
+    ]
+  })}></script>
   <style>
     :global(body) { background:#0b1020; color:#e2e8f0; overflow:auto; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif; }
     :global(.layout){ max-width:820px; margin:0 auto; padding:32px 20px 80px; }
@@ -98,6 +128,22 @@ const avgAll = Math.round(sorted.reduce((s, c) => s + (c.avg || 0), 0) / sorted.
         <div class="dst-src">Source: <a href={dstData.url} rel="nofollow">Statistikbanken · HUS1</a> — updated {dstData.updated}</div>
       </div>
     )}
+
+    <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:16px;padding:24px;margin-bottom:24px;">
+      <h2 style="font-size:18px;font-weight:700;color:#fff;margin-bottom:16px;">Frequently Asked Questions</h2>
+      <div style="margin-bottom:16px;">
+        <div style="font-size:15px;font-weight:600;color:#e2e8f0;margin-bottom:8px;">What is the average rent in {country}?</div>
+        <div style="font-size:14px;color:#94a3b8;line-height:1.6;">The average monthly rent in {country} is ${usd(avgAll)}/month (≈${usd(week(avgAll))}/week), based on real listings across {cities.length} cities.</div>
+      </div>
+      <div style="margin-bottom:16px;">
+        <div style="font-size:15px;font-weight:600;color:#e2e8f0;margin-bottom:8px;">Which city in {country} has the cheapest rent?</div>
+        <div style="font-size:14px;color:#94a3b8;line-height:1.6;">{cheap.city} has the most affordable average rent in {country} at ${usd(cheap.avg)}/month.</div>
+      </div>
+      <div>
+        <div style="font-size:15px;font-weight:600;color:#e2e8f0;margin-bottom:8px;">Is {country} expensive to rent?</div>
+        <div style="font-size:14px;color:#94a3b8;line-height:1.6;">{country} has an average rent of ${usd(avgAll)}/month, which is {avgAll > 2000 ? 'above' : avgAll > 1000 ? 'around' : 'below'} the global average. Rents vary significantly by city — from ${usd(cheap.avg)} in {cheap.city} to ${usd(expensive.avg)} in {expensive.city}.</div>
+      </div>
+    </div>
 
     <p style="color:#cbd5e1; line-height:1.6; margin-bottom:20px;">
       What does a rental home cost in {country} in 2026? {sorted.length > 1
