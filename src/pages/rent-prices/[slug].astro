@@ -22,7 +22,7 @@ const { city, country } = Astro.props;
 const { city: cityName, lat, lng, rent1, rent2, rent3, avg } = city;
 const week = n => Math.round(n * 12 / 52); // måned → uge
 
-const title = `Average Rent in ${cityName} (${country}) — 1, 2 & 3-Bedroom Prices | RentMap`;
+const title = `Average Rent in ${cityName} 2026: $${avg.toLocaleString('en-US')}/mo | RentMap`;
 const description = `Average monthly rent in ${cityName}, ${country}: $${avg.toLocaleString('en-US')}/mo (≈$${week(avg).toLocaleString('en-US')}/week). 1-bed $${rent1.toLocaleString('en-US')}, 2-bed $${rent2.toLocaleString('en-US')}, 3-bed $${rent3.toLocaleString('en-US')} per month. See real rental listings on the interactive RentMap globe.`;
 const pageUrl = `https://rentmap.net/rent-prices/${Astro.params.slug}/`;
 
@@ -49,6 +49,36 @@ const dstEntry = country === 'Denmark'
         ]
       }
     })}></script>
+  <script type="application/ld+json" set:html={JSON.stringify({
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    mainEntity: [
+      {
+        '@type': 'Question',
+        name: `What is the average rent in ${cityName}?`,
+        acceptedAnswer: {
+          '@type': 'Answer',
+          text: `The average monthly rent in ${cityName}, ${country} is $${avg.toLocaleString('en-US')}/month (≈$${week(avg).toLocaleString('en-US')}/week).`
+        }
+      },
+      {
+        '@type': 'Question',
+        name: `How much is a 1-bedroom apartment in ${cityName}?`,
+        acceptedAnswer: {
+          '@type': 'Answer',
+          text: `A 1-bedroom apartment in ${cityName} costs an average of $${rent1.toLocaleString('en-US')}/month ($${week(rent1).toLocaleString('en-US')}/week).`
+        }
+      },
+      {
+        '@type': 'Question',
+        name: `Is ${cityName} expensive to rent?`,
+        acceptedAnswer: {
+          '@type': 'Answer',
+          text: `${cityName} has an average rent of $${avg.toLocaleString('en-US')}/month, which is ${avg > 2000 ? 'above' : avg > 1000 ? 'around' : 'below'} the global average. Compared to ${country}'s capital, rents here are typically ${avg < 1500 ? 'more affordable' : 'competitive'}.`
+        }
+      }
+    ]
+  })}></script>
 
   <main style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#0a0e17;color:#e2e8f0;min-height:100vh;padding:40px 20px;overflow-y:auto;">
     <div style="max-width:720px;margin:0 auto;">
@@ -59,22 +89,22 @@ const dstEntry = country === 'Denmark'
 
       <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:16px;padding:24px;margin-bottom:24px;">
         <div style="font-size:14px;color:#8899b4;margin-bottom:4px;">Average monthly rent</div>
-        <div style="font-size:40px;font-weight:800;color:#22c55e;">${avg.toLocaleString('en-US')}<span style="font-size:18px;color:#8899b4;">/mo</span> <span style="font-size:22px;color:#a3e635;font-weight:700;">≈ $${week(avg).toLocaleString('en-US')}<span style="font-size:14px;">/week</span></span></div>
+        <div style="font-size:40px;font-weight:800;color:#22c55e;">${avg.toLocaleString('en-US')}<span style="font-size:18px;color:#8899b4;">/mo</span> <span style="font-size:22px;color:#a3e635;font-weight:700;">≈ ${week(avg).toLocaleString('en-US')}<span style="font-size:14px;">/week</span></span></div>
         <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:20px;">
           <div style="background:rgba(255,255,255,0.04);border-radius:12px;padding:14px;text-align:center;">
             <div style="font-size:20px;font-weight:700;color:#fff;">${rent1.toLocaleString('en-US')}</div>
             <div style="font-size:12px;color:#8899b4;">1-bedroom /mo</div>
-            <div style="font-size:12px;color:#a3e635;">≈ $${week(rent1).toLocaleString('en-US')}/wk</div>
+            <div style="font-size:12px;color:#a3e635;">≈ ${week(rent1).toLocaleString('en-US')}/wk</div>
           </div>
           <div style="background:rgba(255,255,255,0.04);border-radius:12px;padding:14px;text-align:center;">
             <div style="font-size:20px;font-weight:700;color:#fff;">${rent2.toLocaleString('en-US')}</div>
             <div style="font-size:12px;color:#8899b4;">2-bedroom /mo</div>
-            <div style="font-size:12px;color:#a3e635;">≈ $${week(rent2).toLocaleString('en-US')}/wk</div>
+            <div style="font-size:12px;color:#a3e635;">≈ ${week(rent2).toLocaleString('en-US')}/wk</div>
           </div>
           <div style="background:rgba(255,255,255,0.04);border-radius:12px;padding:14px;text-align:center;">
             <div style="font-size:20px;font-weight:700;color:#fff;">${rent3.toLocaleString('en-US')}</div>
             <div style="font-size:12px;color:#8899b4;">3-bedroom /mo</div>
-            <div style="font-size:12px;color:#a3e635;">≈ $${week(rent3).toLocaleString('en-US')}/wk</div>
+            <div style="font-size:12px;color:#a3e635;">≈ ${week(rent3).toLocaleString('en-US')}/wk</div>
           </div>
         </div>
       </div>
@@ -99,6 +129,22 @@ const dstEntry = country === 'Denmark'
           <div style="margin-top:10px;font-size:11px;color:#64748b;">Source: <a href={dstData.url} style="color:#4ade80;text-decoration:none;" rel="nofollow">Statistikbanken · HUS1</a> — updated {dstData.updated}</div>
         </div>
       )}
+
+      <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:16px;padding:24px;margin-bottom:24px;">
+        <h2 style="font-size:18px;font-weight:700;color:#fff;margin-bottom:16px;">Frequently Asked Questions</h2>
+        <div style="margin-bottom:16px;">
+          <div style="font-size:15px;font-weight:600;color:#e2e8f0;margin-bottom:8px;">What is the average rent in {cityName}?</div>
+          <div style="font-size:14px;color:#94a3b8;line-height:1.6;">The average monthly rent in {cityName}, {country} is ${avg.toLocaleString('en-US')}/month (≈${week(avg).toLocaleString('en-US')}/week).</div>
+        </div>
+        <div style="margin-bottom:16px;">
+          <div style="font-size:15px;font-weight:600;color:#e2e8f0;margin-bottom:8px;">How much is a 1-bedroom apartment in {cityName}?</div>
+          <div style="font-size:14px;color:#94a3b8;line-height:1.6;">A 1-bedroom apartment in {cityName} costs an average of ${rent1.toLocaleString('en-US')}/month (${week(rent1).toLocaleString('en-US')}/week).</div>
+        </div>
+        <div>
+          <div style="font-size:15px;font-weight:600;color:#e2e8f0;margin-bottom:8px;">Is {cityName} expensive to rent?</div>
+          <div style="font-size:14px;color:#94a3b8;line-height:1.6;">{cityName} has an average rent of ${avg.toLocaleString('en-US')}/month, which is {avg > 2000 ? 'above' : avg > 1000 ? 'around' : 'below'} the global average. Compared to {country}'s capital, rents here are typically {avg < 1500 ? 'more affordable' : 'competitive'}.</div>
+        </div>
+      </div>
 
       <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:16px;padding:24px;margin-bottom:24px;">
         <h2 style="font-size:18px;font-weight:700;color:#fff;margin-bottom:12px;">Real rental listings in {cityName}</h2>
