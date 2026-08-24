@@ -219,3 +219,18 @@ Ingen unødvendig tracking af brugere.
 8. Pris- og landefiltre
 9. Cron-dashboard
 10. Cesium performance-optimering
+
+## SEO-sammenligning med lignende side (Numbeo) — 24/8
+
+Analyse af numbeo.com ("Cost of Living in Copenhagen. Aug 2026") mod rentmap.net:
+
+### ⚡ Udført 24/8
+- **Deploy af ventende SEO-arbejde** (commits 18:34-18:38 23/8 lå klar, aldrig deployet): alle 196 by-sider + 71 land-sider har nu unikke titler med priser ("Average Rent in Aalborg 2026: $1,163/mo | RentMap"), unikke descriptions, synlige H1'er og FAQPage-skema. Live verificeret efter `wrangler pages deploy`.
+- IndexNow pinget efter deploy (HTTP 200, til ca. 5 nøglesider via rentmap_indexnow.sh).
+
+### 📋 Næste forbedringer (fra Numbeo-sammenligningen)
+- **København mangler i avg-rent.json** (kun Aarhus + Aalborg — DK's vigtigste by for "average rent" søgninger). Undersøg hvorfor data-generatoren mangler CPH og få den ind.
+- **Cross-links mellem byer:** Numbeo linker by→by ("compare with..."). Tilføj "Sammenlign med" blok på by-sider (3-4 nabobyer) — internt link-netværk.
+- **Friskhed i titler:** Numbeo har måned/år i titlen ("Aug 2026"). Vi har "2026"; overvej måned via updatedDate-logik.
+- **Sammenligningsværktøj:** Numbeo har city-comparator — en "by A vs by B"-side ville matche 'rent comparison' søgninger.
+- **Ryd op i 404-tjeneste-caches:** gamle by-URLs (fx copenhagen-denmark, som ikke længere er i data) kan blive serveret fra CF-cache — verificér efter deploy at de 404'er (s-maxage=0 er sat).
