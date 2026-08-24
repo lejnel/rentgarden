@@ -7,7 +7,7 @@
     "start": "astro dev",
     "build": "astro build",
     "preview": "astro preview",
-    "deploy": "astro build && wrangler pages deploy dist",
+    "deploy": "astro build && wrangler pages deploy dist && bash ~/.hermes/scripts/rentmap_indexnow.sh",
     "db:create": "wrangler d1 create rentradar-db",
     "db:init": "wrangler d1 execute rentradar-db --file=./schema.sql"
   },
