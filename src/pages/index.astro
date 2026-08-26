@@ -869,6 +869,7 @@ import Layout from '../layouts/Layout.astro';
     }
 
     let rentDataSource = null;
+    let isMobile = false;           // mobile-first: prikker/klynger nedskaleres
     let clusterSource = null;       // BillboardCollection for lilla klynger (antal)
     let clusterLabelSource = null;  // LabelCollection for tallene i klyngerne
     let entityByPriceId = {};
@@ -928,6 +929,13 @@ import Layout from '../layouts/Layout.astro';
       
       allGroupData = buildGroups();
       
+      // Mobile-first (Rasmus' regel): prikker skal være små på mobil —
+      // 9px base på mobil vs 15px på desktop; mildere zoom-skala.
+      isMobile = window.innerWidth < 768 || (navigator.maxTouchPoints > 0 && window.innerWidth < 1024);
+      const DOT = isMobile
+        ? { size: 9, outline: 1.5, scale: new Cesium.NearFarScalar(30000, 3.0, 5000000, 1.15) }
+        : { size: 15, outline: 2, scale: new Cesium.NearFarScalar(30000, 5.0, 5000000, 1.5) };
+      
       allGroupData.forEach(({ group, lat, lng }) => {
         const first = group[0];
         const color = getColor(first.price_per_m2 || first.price_total, first.currency || 'DKK');
@@ -937,11 +945,11 @@ import Layout from '../layouts/Layout.astro';
           // Visning styres EKSPLICIT via updateVisibility() (.show) — ikke
           // distanceDisplayCondition (upålideligt på PointPrimitives og giver
           // overlap med pille-området)
-          pixelSize: 15,
+          pixelSize: DOT.size,
           color: color,
           outlineColor: Cesium.Color.WHITE,
-          outlineWidth: 2,
-          scaleByDistance: new Cesium.NearFarScalar(30000, 5.0, 5000000, 1.5),
+          outlineWidth: DOT.outline,
+          scaleByDistance: DOT.scale,
         });
         // Rå data på pointPrimitive.id — bruges af klik/hover-handlerne
         pp.id = {
@@ -1102,7 +1110,10 @@ import Layout from '../layouts/Layout.astro';
         const lat = c.latSum / c.count;
         const lng = c.lngSum / c.count;
         const pos = Cesium.Cartesian3.fromDegrees(lng, lat);
-        const size = 36 + Math.round((c.count / maxCount) * 30); // 36-66px
+        // Mobile-first: klynger nedskaleres på mobil (36-66px desktop → 30-52px mobil)
+        const size = isMobile
+          ? 30 + Math.round((c.count / maxCount) * 22)
+          : 36 + Math.round((c.count / maxCount) * 30); // 36-66px
         const bb = clusterSource.add({
           position: pos,
           image: clusterCircle,
