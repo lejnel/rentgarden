@@ -27,7 +27,7 @@ const cheap = sorted[0], expensive = sorted[sorted.length - 1];
 const avgAll = Math.round(sorted.reduce((s, c) => s + (c.avg || 0), 0) / sorted.length);
 
 const title = `Average Rent in ${country} 2026: $${Math.round(avgAll)}/mo | RentMap`;
-const description = `Average monthly rent in ${country}: from ${usd(cheap.avg)} in ${cheap.city} to ${usd(expensive.avg)} in ${expensive.city}. See real rental listings on the interactive RentMap globe.`;
+const description = `Average rent in ${country} 2026: from $${usd(cheap.avg)}/mo in ${cheap.city} to $${usd(expensive.avg)}/mo in ${expensive.city}. Updated daily from real rental listings on RentMap.`;
 const pageUrl = `https://rentmap.net/countries/${Astro.params.slug}/`;
 ---
 

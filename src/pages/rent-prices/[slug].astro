@@ -23,7 +23,7 @@ const { city: cityName, lat, lng, rent1, rent2, rent3, avg } = city;
 const week = n => Math.round(n * 12 / 52); // måned → uge
 
 const title = `Average Rent in ${cityName} 2026: $${avg.toLocaleString('en-US')}/mo | RentMap`;
-const description = `Average monthly rent in ${cityName}, ${country}: $${avg.toLocaleString('en-US')}/mo (≈$${week(avg).toLocaleString('en-US')}/week). 1-bed $${rent1.toLocaleString('en-US')}, 2-bed $${rent2.toLocaleString('en-US')}, 3-bed $${rent3.toLocaleString('en-US')} per month. See real rental listings on the interactive RentMap globe.`;
+const description = `Average rent in ${cityName}, ${country} 2026: $${avg.toLocaleString('en-US')}/mo (≈$${week(avg).toLocaleString('en-US')}/wk). 1-bed $${rent1.toLocaleString('en-US')} · 2-bed $${rent2.toLocaleString('en-US')} · 3-bed $${rent3.toLocaleString('en-US')}. Updated daily from real rental listings.`;
 const pageUrl = `https://rentmap.net/rent-prices/${Astro.params.slug}/`;
 
 // DST-huslejeindeks for danske byer (region-niveau, officiel statistik)
