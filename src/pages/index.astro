@@ -153,6 +153,11 @@ import Layout from '../layouts/Layout.astro';
         font-family:inherit; font-size:13px; transition:opacity 0.15s;
       }
       :global(.view-btn:hover) { opacity:0.88; }
+      :global(.view-btn-city) { display:block; text-decoration:none; margin-top:8px;
+        background:linear-gradient(135deg,#7c3aed,#a855f7); }
+      .res-page { color:#a78bfa; text-decoration:none; font-size:15px; font-weight:700; padding:0 6px;
+        border-radius:6px; flex-shrink:0; }
+      .res-page:hover { background:rgba(124,58,237,0.25); }
       .detail-card { background:rgba(255,255,255,0.04); border-radius:10px; padding:4px 14px; margin-bottom:8px; }
       .detail-row {
         display:flex; justify-content:space-between; align-items:center;
@@ -724,6 +729,7 @@ import Layout from '../layouts/Layout.astro';
       try {
         const resp = await fetch('/avg-rent.json');
         avgDataCache = await resp.json();
+        buildCitySlugs(); // byer med SEO-side → prik-panel + søge-genveje
       } catch (e) {
         console.error('Kunne ikke hente avg-rent.json:', e);
         return null;
@@ -992,6 +998,17 @@ import Layout from '../layouts/Layout.astro';
       });
       cityLookup = Array.from(seen.values()).sort((a, b) => b.count - a.count);
     }
+
+    // Slug til by-sider (/rent-prices/{slug}/): matcher [slug].astro's slugify
+    function slugOf(city, country) {
+      return `${String(city || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')}-${String(country || '').toLowerCase().replace(/[^a-z0-9]+/g, '-')}`;
+    }
+    let citySlugs = null; // Set med slugs for byer der FAKTISK har en side
+    function buildCitySlugs() {
+      citySlugs = new Set();
+      (avgDataCache || []).forEach(e => (e.cities || []).forEach(c => citySlugs.add(slugOf(c.city, e.country))));
+    }
+    function escHtml(s) { return String(s || '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
     window.toggleCitySearch = function() {
       const el = document.getElementById('citySearch');
       const open = el.classList.toggle('open');
@@ -1013,9 +1030,14 @@ import Layout from '../layouts/Layout.astro';
         .filter(x => (x.name + ' ' + x.country).toLowerCase().includes(term))
         .slice(0, 12);
       if (!currentMatches.length) { box.innerHTML = '<div class="res" style="color:#64748b">No cities found</div>'; return; }
-      box.innerHTML = currentMatches.map((x, i) =>
-        `<div class="res" data-i="${i}"><span>${x.name}, ${x.country}</span><span class="cnt">${x.count ? x.count + ' listings' : ''}</span></div>`
-      ).join('');
+      box.innerHTML = currentMatches.map((x, i) => {
+        // Byer med en SEO-side får en "page" genvej (↗) ved siden af flyve-resultatet
+        const hasPage = citySlugs && citySlugs.has(slugOf(x.name, x.country));
+        const pageLink = hasPage
+          ? `<a class="res-page" href="/rent-prices/${slugOf(x.name, x.country)}/" target="_blank" rel="noopener" onclick="event.stopPropagation()" title="Open pricing page for ${escHtml(x.name)}">↗</a>`
+          : '';
+        return `<div class="res" data-i="${i}"><span>${escHtml(x.name)}, ${escHtml(x.country)}</span>${pageLink}<span class="cnt">${x.count ? x.count + ' listings' : ''}</span></div>`;
+      }).join('');
     }
     window.goToCity = function(idx) {
       const x = currentMatches[idx];
@@ -1340,6 +1362,11 @@ import Layout from '../layouts/Layout.astro';
       listingsEl.innerHTML = '<div class="panel-section-title">Listing details</div>';
       listingsEl.innerHTML += `<div class="detail-grid">${cells}</div>`;
       listingsEl.innerHTML += `<button class="view-btn" onclick="window.open('${price.sourceUrl}', '_blank')">View original listing →</button>`;
+      // Bridge til by-siden: hvis byen har en SEO-side (/rent-prices/{slug}/)
+      const slug = slugOf(price.city, price.country);
+      if (citySlugs && citySlugs.has(slug)) {
+        listingsEl.innerHTML += `<a class="view-btn view-btn-city" href="/rent-prices/${slug}/">📊 View ${escHtml(price.city)} pricing page →</a>`;
+      }
       
       panel.classList.add('open');
     }
