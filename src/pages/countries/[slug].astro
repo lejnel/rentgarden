@@ -25,6 +25,10 @@ const { country, cities } = Astro.props;
 const sorted = [...cities].sort((a, b) => (a.avg || 0) - (b.avg || 0));
 const cheap = sorted[0], expensive = sorted[sorted.length - 1];
 const avgAll = Math.round(sorted.reduce((s, c) => s + (c.avg || 0), 0) / sorted.length);
+// Globalt gennemsnit på tværs af alle tracked byer (ekspat-sammenligning)
+const _allCities = avgData.flatMap(e => (e.cities || []).map(c => c.avg || 0)).filter(Boolean);
+const _globalAvg = Math.round(_allCities.reduce((s, v) => s + v, 0) / _allCities.length);
+const _pct = Math.round(((avgAll - _globalAvg) / _globalAvg) * 100);
 
 const title = `Average Rent in ${country} 2026: $${Math.round(avgAll)}/mo | RentMap`;
 const description = `Average rent in ${country} 2026: from $${usd(cheap.avg)}/mo in ${cheap.city} to $${usd(expensive.avg)}/mo in ${expensive.city}. Updated daily from real rental listings on RentMap.`;
@@ -58,6 +62,30 @@ const pageUrl = `https://rentmap.net/countries/${Astro.params.slug}/`;
         acceptedAnswer: {
           '@type': 'Answer',
           text: `${country} has an average rent of $${usd(avgAll)}/month, which is ${avgAll > 2000 ? 'above' : avgAll > 1000 ? 'around' : 'below'} the global average. Rents vary significantly by city — from $${usd(cheap.avg)} in ${cheap.city} to $${usd(expensive.avg)} in ${expensive.city}.`
+        }
+      },
+      {
+        '@type': 'Question',
+        name: `How much is rent in ${country} for expats?`,
+        acceptedAnswer: {
+          '@type': 'Answer',
+          text: `In our data, the average rent in ${country} is $${usd(avgAll)}/month — from $${usd(cheap.avg)}/month in ${cheap.city} to $${usd(expensive.avg)}/month in ${expensive.city}.`
+        }
+      },
+      {
+        '@type': 'Question',
+        name: `How does ${country} compare to other countries when it comes to rent?`,
+        acceptedAnswer: {
+          '@type': 'Answer',
+          text: `Across our tracked cities worldwide the average rent is $${usd(_globalAvg)}/month — ${country} is ${Math.abs(_pct)}% ${_pct > 0 ? 'above' : _pct < 0 ? 'below' : 'at'} that level.`
+        }
+      },
+      {
+        '@type': 'Question',
+        name: `What do I need to rent an apartment in ${country}?`,
+        acceptedAnswer: {
+          '@type': 'Answer',
+          text: `Landlords typically require a passport or ID, proof of income (payslips or employment contract) and a deposit. Some ask for references or a guarantor — confirm the required documents before you view a place.`
         }
       }
     ]
@@ -142,6 +170,30 @@ const pageUrl = `https://rentmap.net/countries/${Astro.params.slug}/`;
       <div>
         <div style="font-size:15px;font-weight:600;color:#e2e8f0;margin-bottom:8px;">Is {country} expensive to rent?</div>
         <div style="font-size:14px;color:#94a3b8;line-height:1.6;">{country} has an average rent of ${usd(avgAll)}/month, which is {avgAll > 2000 ? 'above' : avgAll > 1000 ? 'around' : 'below'} the global average. Rents vary significantly by city — from ${usd(cheap.avg)} in {cheap.city} to ${usd(expensive.avg)} in {expensive.city}.</div>
+      </div>
+    </div>
+
+    <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:16px;padding:24px;margin-bottom:24px;">
+      <h2 style="font-size:18px;font-weight:700;color:#fff;margin-bottom:16px;">Renting in {country} as an expat</h2>
+      <div style="margin-bottom:16px;">
+        <div style="font-size:15px;font-weight:600;color:#e2e8f0;margin-bottom:8px;">How much is rent in {country} for expats?</div>
+        <div style="font-size:14px;color:#94a3b8;line-height:1.6;">In our data, the average rent in {country} is ${usd(avgAll)}/month (≈${usd(week(avgAll))}/week) — from ${usd(cheap.avg)}/month in {cheap.city} to ${usd(expensive.avg)}/month in {expensive.city}. You can compare real listings on the globe and jump to any city's pricing page.</div>
+      </div>
+      <div style="margin-bottom:16px;">
+        <div style="font-size:15px;font-weight:600;color:#e2e8f0;margin-bottom:8px;">How does {country} compare to other countries?</div>
+        <div style="font-size:14px;color:#94a3b8;line-height:1.6;">Across our tracked cities worldwide the average rent is ${usd(_globalAvg)}/month — {country} is <b style="color:#a3e635;">{Math.abs(_pct)}% {_pct > 0 ? 'above' : _pct < 0 ? 'below' : 'at'}</b> that level. Useful context when negotiating or budgeting.</div>
+      </div>
+      <div style="margin-bottom:16px;">
+        <div style="font-size:15px;font-weight:600;color:#e2e8f0;margin-bottom:8px;">What do I need to rent an apartment in {country}?</div>
+        <div style="font-size:14px;color:#94a3b8;line-height:1.6;">Landlords typically require a passport or ID, proof of income (payslips or employment contract) and a deposit. Some ask for references or a guarantor — confirm the required documents before you view a place.</div>
+      </div>
+      <div style="margin-bottom:16px;">
+        <div style="font-size:15px;font-weight:600;color:#e2e8f0;margin-bottom:8px;">Are utilities included in the rent?</div>
+        <div style="font-size:14px;color:#94a3b8;line-height:1.6;">Often not — water, heating, electricity and internet are frequently billed separately after move-in. Always confirm with the landlord exactly what is included and what utilities typically cost per month.</div>
+      </div>
+      <div>
+        <div style="font-size:15px;font-weight:600;color:#e2e8f0;margin-bottom:8px;">How much deposit do I need?</div>
+        <div style="font-size:14px;color:#94a3b8;line-height:1.6;">A deposit of one to three months' rent is common in most countries, and the first month is usually paid upfront. Budget for this before you move so the paperwork is not a surprise.</div>
       </div>
     </div>
 
