@@ -1,0 +1,133 @@
+---
+// 10 Cheapest Cities to Rent in 2026 — statisk, genereret ved build fra avg-rent.json
+import Layout from '../layouts/Layout.astro';
+import avgData from '../../public/avg-rent.json';
+
+function bySlug(city, country) {
+  return `${city.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')}-${country.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`;
+}
+function landSlug(c) { return c.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, ''); }
+const usd = n => '$' + Math.round(n).toLocaleString('en-US');
+const week = n => Math.round(n * 12 / 52);
+
+const cities = avgData.flatMap(e => (e.cities || [])
+  .filter(c => c.avg)
+  .map(c => ({ ...c, country: e.country })));
+const sorted = [...cities].sort((a, b) => a.avg - b.avg);
+const top10 = sorted.slice(0, 10);
+const cheapest = top10[0];
+const top10avg = Math.round(top10.reduce((s, c) => s + c.avg, 0) / top10.length);
+
+const title = '10 Cheapest Cities to Rent in 2026 (Real Data) | RentMap';
+const description = `The 10 cheapest cities to rent in 2026: from $${cheapest.avg.toLocaleString('en-US')}/mo in ${cheapest.city} to $${top10[9].avg.toLocaleString('en-US')}/mo in ${top10[9].city}. Real listings, updated daily — compare on RentMap.`;
+const pageUrl = 'https://rentmap.net/cheapest-cities-to-rent/';
+---
+<Layout title={title} description={description} canonical={pageUrl}>
+  <script type="application/ld+json" set:html={JSON.stringify({
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    mainEntity: [
+      {
+        '@type': 'Question',
+        name: 'What is the cheapest city to rent in the world?',
+        acceptedAnswer: {
+          '@type': 'Answer',
+          text: `According to our 2026 data, ${cheapest.city} in ${cheapest.country} has the lowest average rent at $${cheapest.avg.toLocaleString('en-US')}/month (1-bed apartment around $${cheapest.rent1.toLocaleString('en-US')}/month).`
+        }
+      },
+      {
+        '@type': 'Question',
+        name: 'How are these rent prices calculated?',
+        acceptedAnswer: {
+          '@type': 'Answer',
+          text: 'Averages come from our dataset of real rental listings across 66 cities per country on average, converted to USD and refreshed daily.'
+        }
+      },
+      {
+        '@type': 'Question',
+        name: 'Where can I see the actual rental listings?',
+        acceptedAnswer: {
+          '@type': 'Answer',
+          text: 'Zoom into any city on the RentMap globe (rentmap.net) to see real listings with addresses, prices and links to the original ads.'
+        }
+      }
+    ]
+  })}></script>
+  <style>
+    :global(body) { background:#0b1020; color:#e2e8f0; overflow:auto; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif; }
+    :global(.layout){ max-width:820px; margin:0 auto; padding:32px 20px 80px; }
+    h1{ font-size:26px; font-weight:800; color:#fff; margin-bottom:6px; }
+    .meta{ color:#94a3b8; font-size:14px; margin-bottom:24px; }
+    .hero{ display:flex; gap:24px; align-items:center; margin:24px 0 32px; padding:18px 20px;
+      border:1px solid rgba(255,255,255,0.1); border-radius:14px; background:rgba(255,255,255,0.04); }
+    .hero .big{ font-size:30px; font-weight:800; color:#a3e635; }
+    .hero .lab{ font-size:12px; color:#94a3b8; text-transform:uppercase; letter-spacing:0.5px; }
+    .row{ display:flex; align-items:center; gap:14px; padding:14px 16px; border-radius:12px;
+      text-decoration:none; color:inherit; margin-bottom:8px; transition:background 0.15s;
+      border:1px solid rgba(255,255,255,0.08); background:rgba(255,255,255,0.03); }
+    .row:hover{ background:rgba(255,255,255,0.07); }
+    .rank{ width:30px; height:30px; border-radius:50%; flex-shrink:0; display:flex; align-items:center;
+      justify-content:center; font-weight:800; font-size:14px; background:rgba(163,230,53,0.15); color:#a3e635; }
+    .row .name{ font-weight:600; color:#e2e8f0; min-width:0; }
+    .row .sub{ font-size:12px; color:#64748b; }
+    .row .price{ margin-left:auto; text-align:right; font-size:14px; color:#f1f5f9; font-weight:700; white-space:nowrap; }
+    .row .wk{ display:block; font-size:11px; color:#a3e635; font-weight:600; }
+    .cta{ margin:28px 0; text-align:center; }
+    .cta a{ display:inline-block; padding:13px 26px; border-radius:10px; text-decoration:none;
+      background:linear-gradient(135deg,#6366f1,#7c3aed); color:#fff; font-weight:700; font-size:15px; }
+    .explore{ margin-top:36px; padding:18px 20px; border:1px solid rgba(255,255,255,0.1); border-radius:14px;
+      background:rgba(255,255,255,0.03); font-size:14px; color:#94a3b8; }
+    .explore a{ color:#a78bfa; text-decoration:none; margin-right:14px; font-weight:600; }
+    .faq{ margin-top:28px; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.1);
+      border-radius:16px; padding:24px; }
+    .faq h2{ font-size:18px; font-weight:700; color:#fff; margin-bottom:16px; }
+    .faq .q{ font-size:15px; font-weight:600; color:#e2e8f0; margin-bottom:8px; }
+    .faq .a{ font-size:14px; color:#94a3b8; line-height:1.6; margin-bottom:16px; }
+    @media (max-width:600px){ .row .sub{ display:none; } .meta{ font-size:13px; } }
+  </style>
+
+  <div class="layout">
+    <h1>10 Cheapest Cities to Rent in 2026</h1>
+    <div class="meta">Ranked by average monthly rent from real listings · Updated daily · USD</div>
+
+    <div class="hero">
+      <div class="big">{usd(cheapest.avg)}<div class="lab">cheapest avg rent / mo — {cheapest.city}, {cheapest.country}</div></div>
+      <div style="width:1px;height:44px;background:rgba(255,255,255,0.15);"></div>
+      <div>
+        <div style="font-size:26px;font-weight:800;color:#fff;">{usd(top10avg)}</div>
+        <div class="lab">average of the 10 cheapest</div>
+      </div>
+      <div style="flex:1"></div>
+    </div>
+
+    {top10.map((c, i) => (
+      <a class="row" href={`/rent-prices/${bySlug(c.city, c.country)}/`}>
+        <span class="rank">{i + 1}</span>
+        <span>
+          <span class="name">{c.city}</span><br />
+          <span class="sub"><a href={`/countries/${landSlug(c.country)}/`} style="color:#a78bfa;text-decoration:none;">{c.country}</a></span>
+        </span>
+        <span class="price">{usd(c.avg)}/mo · 1-bed {usd(c.rent1)}<span class="wk">≈ {usd(week(c.avg))}/wk</span></span>
+      </a>
+    ))}
+
+    <div class="cta"><a href="/">See all listings on the globe 🌍</a></div>
+
+    <div class="faq">
+      <h2>Frequently Asked Questions</h2>
+      <div class="q">Which country has the cheapest rent?</div>
+      <div class="a">In our data, {top10.filter(c => c.country === top10[0].country).length > 1 ? top10[0].country + ' appears ' + top10.filter(c => c.country === top10[0].country).length + ' times' : top10[0].country} among the 10 cheapest cities — {top10[0].country === top10[1].country ? 'a strong sign of affordability' : 'with ' + top10[0].city + ' the cheapest overall'}.</div>
+      <div class="q">Are these real listings?</div>
+      <div class="a">Yes — every average is calculated from real rental listings collected daily from local rental portals, not estimates or surveys.</div>
+      <div class="q">Is living in the cheapest cities actually affordable?</div>
+      <div class="a">Rent is only part of the cost of living. These cities are ranked purely on rent — check local food, transport and utilities before moving. The RentMap globe shows every listing used in the averages.</div>
+    </div>
+
+    <div class="explore">
+      <strong style="color:#e2e8f0;">Explore more:</strong>
+      <a href="/most-expensive-cities/">💸 Most expensive cities</a>
+      <a href="/best-cities-for-remote-workers/">🧑‍💻 Remote-worker cities</a>
+      <a href="/">🌍 The globe</a>
+    </div>
+  </div>
+</Layout>
