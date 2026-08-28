@@ -23,3 +23,4 @@ CREATE TABLE IF NOT EXISTS prices (
 CREATE INDEX IF NOT EXISTS idx_prices_city ON prices(city);
 CREATE INDEX IF NOT EXISTS idx_prices_lat_lng ON prices(lat, lng);
 CREATE INDEX IF NOT EXISTS idx_prices_country ON prices(country);
+CREATE INDEX IF NOT EXISTS idx_prices_dates ON prices(listing_date, submitted_at);

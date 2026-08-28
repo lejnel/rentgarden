@@ -20,6 +20,12 @@ export default {
     
     const db = env.DB;
     
+    // Sørg for dato-index ved kold start (idempotent) — skærer rows read
+    // markant på public-listen (ORDER BY submitted_at uden index = fuldt scan)
+    context.waitUntil(
+      db.prepare('CREATE INDEX IF NOT EXISTS idx_prices_dates ON prices(listing_date, submitted_at)').run()
+    );
+    
     try {
       // GET /
       if (request.method === 'GET') {
@@ -30,7 +36,14 @@ export default {
         // Beskytter D1-kvoten (free-plan: 5M rows read/dag) — hvert kald scanner ~2.500 rows
         if (publicView) {
           const cache = caches.default;
-          const cacheKey = new Request(request.url, { method: 'GET' });
+          // Normaliser cache-nøglen: ignorer u-relevante query-parametre
+          // (?cb, ?utm_*, ?fbclid osv. fra bots/værktøjer skaber ellers ÉT
+          // D1-scan pr. variant) — kun public + year bestemmer dataene.
+          const base = `${url.origin}${url.pathname === '/' ? '/' : url.pathname}`;
+          const cacheKey = new Request(
+            year ? `${base}?public=1&year=${year}` : `${base}?public=1`,
+            { method: 'GET' }
+          );
           const cached = await cache.match(cacheKey);
           if (cached) {
             return cached;
