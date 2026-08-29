@@ -826,49 +826,140 @@ import Layout from '../layouts/Layout.astro';
       }
     }
     
-    // City name labels on the globe (radio.garden style)
-    // Population tiers control when each city label appears:
-    //   >5M   always visible (up to 40.000 km)
-    //   >1M   visible when closer than 12.000 km
-    //   >250K visible when closer than 5.000 km
-    //   >50K  visible when closer than 2.000 km
+    // City labels use a Google Maps/Earth-style decluttering pass:
+    // labels are ranked, limited by zoom tier, and rejected when their
+    // screen-space boxes overlap an already accepted (more important) city.
+    // This keeps labels readable instead of showing every city in a region.
     let cityLabels = null;
+    let cityLabelMeta = [];
     let cityLabelsLoaded = false;
+    let cityLabelUpdateQueued = false;
+
+    function cityLabelTier(cameraHeight) {
+      const mobile = isMobile || window.innerWidth < 768 ||
+        (navigator.maxTouchPoints > 0 && window.innerWidth < 1024);
+      const tiers = mobile
+        ? [
+            { min: 12000000, max: 5,  minPop: 2000000, gap: 76 },
+            { min: 6000000,  max: 8,  minPop: 1000000, gap: 66 },
+            { min: 2500000,  max: 14, minPop: 250000,  gap: 58 },
+            { min: 800000,   max: 24, minPop: 90000,  gap: 50 },
+            { min: 0,        max: 36, minPop: 90000,  gap: 44 },
+          ]
+        : [
+            { min: 12000000, max: 8,  minPop: 2000000, gap: 62 },
+            { min: 6000000,  max: 14, minPop: 1000000, gap: 54 },
+            { min: 2500000,  max: 24, minPop: 250000, gap: 46 },
+            { min: 800000,   max: 45, minPop: 90000,  gap: 38 },
+            { min: 0,        max: 80, minPop: 90000,  gap: 32 },
+          ];
+      return tiers.find(t => cameraHeight >= t.min) || tiers[tiers.length - 1];
+    }
+
+    function updateCityLabels() {
+      if (!viewer || !cityLabels || !cityLabelMeta.length) return;
+      const cameraHeight = viewer.camera.positionCartographic.height;
+      const tier = cityLabelTier(cameraHeight);
+      const canvas = viewer.scene.canvas;
+      const width = canvas.clientWidth || window.innerWidth;
+      const height = canvas.clientHeight || window.innerHeight;
+      const candidates = [];
+
+      cityLabelMeta.forEach(meta => {
+        meta.label.show = false;
+        if (meta.population < tier.minPop || cameraHeight > meta.maxDistance) return;
+        const screen = viewer.scene.cartesianToCanvasCoordinates(meta.position);
+        if (!screen || screen.x < -80 || screen.x > width + 80 || screen.y < -40 || screen.y > height + 40) return;
+
+        const textWidth = Math.max(18, meta.text.length * meta.fontSize * 0.56);
+        const halfWidth = textWidth / 2 + tier.gap;
+        const halfHeight = meta.fontSize / 2 + tier.gap * 0.42;
+        candidates.push({
+          meta,
+          left: screen.x - halfWidth,
+          right: screen.x + halfWidth,
+          top: screen.y - halfHeight,
+          bottom: screen.y + halfHeight,
+        });
+      });
+
+      // Population is the primary importance signal. Listing presence is a
+      // small tie-breaker so active cities win without overpowering major cities.
+      candidates.sort((a, b) => b.meta.priority - a.meta.priority);
+      const accepted = [];
+      for (const candidate of candidates) {
+        const overlaps = accepted.some(other =>
+          candidate.left < other.right && candidate.right > other.left &&
+          candidate.top < other.bottom && candidate.bottom > other.top
+        );
+        if (overlaps) continue;
+        candidate.meta.label.show = true;
+        accepted.push(candidate);
+        if (accepted.length >= tier.max) break;
+      }
+    }
+
+    function scheduleCityLabelUpdate() {
+      if (cityLabelUpdateQueued) return;
+      cityLabelUpdateQueued = true;
+      requestAnimationFrame(() => {
+        cityLabelUpdateQueued = false;
+        updateCityLabels();
+      });
+    }
+
     async function loadCityLabels(Cesium, viewer) {
       if (cityLabelsLoaded) return;
       cityLabelsLoaded = true;
+      // Insert the collection before marker collections, then populate it
+      // asynchronously. This preserves draw order without delaying the globe.
+      cityLabels = viewer.scene.primitives.add(new Cesium.LabelCollection());
       try {
         const resp = await fetch('/cities90k.json');
         if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
         const cities = await resp.json();
-        cityLabels = viewer.scene.primitives.add(new Cesium.LabelCollection());
+        cityLabelMeta = [];
+        const listingCounts = Object.create(null);
+        allPrices.forEach(p => {
+          const key = String(p.city || '').toLowerCase();
+          if (key) listingCounts[key] = (listingCounts[key] || 0) + 1;
+        });
         cities.forEach(c => {
-          const pop = c.p || 0;
-          let maxDist = 0, fontSize = 10;
-          if (pop >= 5000000) { maxDist = 40000000; fontSize = 13; }
-          else if (pop >= 1000000) { maxDist = 12000000; fontSize = 11; }
-          else if (pop >= 250000) { maxDist = 5000000; fontSize = 10; }
-          else if (pop >= 90000) { maxDist = 3000000; fontSize = 9; }
-          else { return; } // skip cities under 90k population
-          cityLabels.add({
-            position: Cesium.Cartesian3.fromDegrees(c.lng, c.lat),
+          const population = c.p || 0;
+          if (population < 90000) return;
+          const fontSize = population >= 5000000 ? 13 : population >= 1000000 ? 11 : population >= 250000 ? 10 : 9;
+          const maxDistance = population >= 5000000 ? 40000000 : population >= 1000000 ? 12000000 : population >= 250000 ? 5000000 : 3000000;
+          const position = Cesium.Cartesian3.fromDegrees(c.lng, c.lat);
+          const label = cityLabels.add({
+            position,
             text: c.n,
             font: `${fontSize}px -apple-system, BlinkMacSystemFont, sans-serif`,
-            fillColor: Cesium.Color.fromCssColorString('#dbe4f3'),
+            fillColor: Cesium.Color.fromCssColorString('#b7c5da'),
             outlineColor: Cesium.Color.fromCssColorString('#0a0e17'),
-            outlineWidth: 3,
+            outlineWidth: 2,
             style: Cesium.LabelStyle.FILL_AND_OUTLINE,
+            show: false,
             showBackground: false,
-            // NO disableDepthTestDistance — labels on the far side of the
-            // globe must be hidden behind it (Sydney must not show when
-            // looking at Aarhus). Default depth testing hides them.
-            distanceDisplayCondition: new Cesium.DistanceDisplayCondition(0, maxDist),
-            pixelOffset: new Cesium.Cartesian2(0, -6),
+            // Keep depth testing enabled: labels on the far side of the
+            // globe must remain hidden behind the Earth.
+            distanceDisplayCondition: new Cesium.DistanceDisplayCondition(0, maxDistance),
+            pixelOffset: new Cesium.Cartesian2(0, -7),
             horizontalOrigin: Cesium.HorizontalOrigin.CENTER,
             verticalOrigin: Cesium.VerticalOrigin.BOTTOM,
           });
+          const listingCount = listingCounts[String(c.n).toLowerCase()] || 0;
+          cityLabelMeta.push({
+            label,
+            position,
+            text: c.n,
+            fontSize,
+            population,
+            maxDistance,
+            priority: Math.log10(population + 1) * 100 + Math.min(listingCount, 500) * 0.05,
+          });
         });
-        console.log('City labels loaded:', cities.length);
+        console.log('City labels loaded:', cityLabelMeta.length, 'decluttered candidates');
+        scheduleCityLabelUpdate();
       } catch (err) {
         console.warn('City labels unavailable:', err.message);
       }
@@ -977,6 +1068,7 @@ import Layout from '../layouts/Layout.astro';
       rebuildPills(viewer);
       updateClusters();
       buildCityLookup();
+      scheduleCityLabelUpdate();
     }
 
     // ---- By-søgning (radio.garden-stil) ----
@@ -1514,7 +1606,7 @@ import Layout from '../layouts/Layout.astro';
         // Load data
         await loadData();
         
-        // Load city name labels (radio.garden style)
+        // Start loading labels; the empty collection was inserted before markers.
         loadCityLabels(Cesium, viewer);
         
         // Render year pills
@@ -1535,7 +1627,12 @@ import Layout from '../layouts/Layout.astro';
           // distanceDisplayCondition når man er langt væk
           rebuildPills(viewer);
           updateClusters();
+          scheduleCityLabelUpdate();
         });
+
+        // Re-run decluttering while panning/zooming and after orientation changes.
+        viewer.camera.changed.addEventListener(scheduleCityLabelUpdate);
+        window.addEventListener('resize', scheduleCityLabelUpdate, { passive: true });
         
         // Google Earth-stil mobil-zoom (indbygget i Cesium):
         //  - pinch = zoom (standard)
@@ -1773,6 +1870,7 @@ import Layout from '../layouts/Layout.astro';
         viewer.camera.setView({
           destination: Cesium.Cartesian3.fromDegrees(15, 48, 8000000),
         });
+        scheduleCityLabelUpdate();
         
         // Hide loading
         document.getElementById('loadingOverlay').classList.add('hidden');
