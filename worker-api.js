@@ -1,6 +1,74 @@
 // Standalone Worker for RentGarden API — deployed separately from Pages
 // This Worker has D1 access via wrangler.toml binding
 
+const ACTIVE_LISTING_LIMIT = 100000;
+const MIN_VISIBLE_PER_COUNTRY = 250;
+const ACTIVE_LISTING_FILTER = "verified = 1 AND hidden = 0 AND COALESCE(listing_date, submitted_at) >= date('now', '-12 months')";
+const PUBLIC_CACHE_VERSION = '2';
+let retentionSchemaPromise = null;
+let retentionCheckPromise = null;
+let lastRetentionCheckAt = 0;
+
+async function ensureRetentionSchema(db) {
+  if (!retentionSchemaPromise) {
+    retentionSchemaPromise = (async () => {
+      const { results } = await db.prepare('PRAGMA table_info(prices)').all();
+      if (!(results || []).some(column => column.name === 'hidden')) {
+        await db.prepare('ALTER TABLE prices ADD COLUMN hidden INTEGER NOT NULL DEFAULT 0').run();
+      }
+    })().catch(error => {
+      retentionSchemaPromise = null;
+      throw error;
+    });
+  }
+  return retentionSchemaPromise;
+}
+
+function enforceActiveListingCap(db) {
+  const now = Date.now();
+  if (now - lastRetentionCheckAt < 60 * 60 * 1000) return Promise.resolve({ hidden: 0, skipped: true });
+  if (retentionCheckPromise) return retentionCheckPromise;
+
+  retentionCheckPromise = (async () => {
+    const { results } = await db.prepare(`
+      SELECT COUNT(*) AS total
+      FROM prices
+      WHERE ${ACTIVE_LISTING_FILTER}
+    `).all();
+    const total = Number(results?.[0]?.total || 0);
+    const overflow = total - ACTIVE_LISTING_LIMIT;
+    if (overflow <= 0) return { hidden: 0, total };
+
+    const { meta } = await db.prepare(`
+      UPDATE prices
+      SET hidden = 1
+      WHERE id IN (
+        SELECT p.id
+        FROM prices p
+        WHERE p.verified = 1
+          AND p.hidden = 0
+          AND COALESCE(p.listing_date, p.submitted_at) >= date('now', '-12 months')
+          AND p.country IN (
+            SELECT country
+            FROM prices
+            WHERE ${ACTIVE_LISTING_FILTER}
+            GROUP BY country
+            HAVING COUNT(*) > ?
+          )
+        ORDER BY COALESCE(p.listing_date, p.submitted_at) ASC, p.submitted_at ASC, p.id ASC
+        LIMIT ?
+      )
+    `).bind(MIN_VISIBLE_PER_COUNTRY, overflow).run();
+    return { hidden: Number(meta?.changes || 0), total, overflow };
+  })().then(result => {
+    lastRetentionCheckAt = Date.now();
+    return result;
+  }).finally(() => {
+    retentionCheckPromise = null;
+  });
+  return retentionCheckPromise;
+}
+
 export default {
   async fetch(request, env, context) {
     const url = new URL(request.url);
@@ -19,12 +87,18 @@ export default {
     }
     
     const db = env.DB;
+
+    try {
+      await ensureRetentionSchema(db);
+    } catch (error) {
+      return new Response(JSON.stringify({ error: `Schema initialization failed: ${error.message}` }), { status: 500, headers });
+    }
     
-    // Sørg for dato-index ved kold start (idempotent) — skærer rows read
-    // markant på public-listen (ORDER BY submitted_at uden index = fuldt scan)
-    context.waitUntil(
-      db.prepare('CREATE INDEX IF NOT EXISTS idx_prices_dates ON prices(listing_date, submitted_at)').run()
-    );
+    // Sørg for dato- og visibility-index ved kold start (idempotent)
+    context.waitUntil(Promise.all([
+      db.prepare('CREATE INDEX IF NOT EXISTS idx_prices_dates ON prices(listing_date, submitted_at)').run(),
+      db.prepare('CREATE INDEX IF NOT EXISTS idx_prices_visibility_dates ON prices(hidden, listing_date, submitted_at)').run(),
+    ]));
     
     try {
       // GET /
@@ -41,13 +115,14 @@ export default {
           // D1-scan pr. variant) — kun public + year bestemmer dataene.
           const base = `${url.origin}${url.pathname === '/' ? '/' : url.pathname}`;
           const cacheKey = new Request(
-            year ? `${base}?public=1&year=${year}` : `${base}?public=1`,
+            year ? `${base}?public=1&v=${PUBLIC_CACHE_VERSION}&year=${year}` : `${base}?public=1&v=${PUBLIC_CACHE_VERSION}`,
             { method: 'GET' }
           );
           const cached = await cache.match(cacheKey);
           if (cached) {
             return cached;
           }
+          if (!year) await enforceActiveListingCap(db);
           const ttl = year ? 43200 : 21600;
           const resp = await buildGetResponse(db, publicView, year);
           resp.headers.set('Cache-Control', `public, max-age=${ttl}`);
@@ -67,10 +142,10 @@ export default {
           const origin = url.origin;
           const year = new Date().getUTCFullYear();
           const keys = [
-            `${origin}?public=1`,
-            `${origin}/?public=1`,
-            `${origin}?public=1&year=${year}`,
-            `${origin}/?public=1&year=${year}`,
+            `${origin}?public=1&v=${PUBLIC_CACHE_VERSION}`,
+            `${origin}/?public=1&v=${PUBLIC_CACHE_VERSION}`,
+            `${origin}?public=1&v=${PUBLIC_CACHE_VERSION}&year=${year}`,
+            `${origin}/?public=1&v=${PUBLIC_CACHE_VERSION}&year=${year}`,
           ];
           for (const k of keys) {
             const cacheKey = new Request(k, { method: 'GET' });
@@ -112,6 +187,7 @@ export default {
           // Default: show active listings (last 12 months)
           whereClause = `AND COALESCE(listing_date, submitted_at) >= date('now', '-12 months')`;
           params = [];
+          if (publicView) whereClause += ' AND hidden = 0';
         }
       
         const priceSelect = publicView
@@ -178,6 +254,9 @@ export default {
           currency || 'EUR',
           submitter_email || null
         ).run();
+
+        // Enforce the visibility cap without deleting historical rows.
+        context.waitUntil(enforceActiveListingCap(db));
         
         // Injicér den nye listing i cachen MED DET SAMME (uden dyrt D1-scan)
         const listingDate = listing_date || new Date().toISOString().split('T')[0];
