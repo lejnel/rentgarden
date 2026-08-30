@@ -199,8 +199,8 @@ const pageUrl = `https://rentmap.net/countries/${Astro.params.slug}/`;
 
     <p style="color:#cbd5e1; line-height:1.6; margin-bottom:20px;">
       What does a rental home cost in {country} in 2026? {sorted.length > 1
-        ? `In ${country}, the average monthly rent varies from {usd(cheap.avg)}/month in ${cheap.city} to {usd(expensive.avg)}/month in ${expensive.city}.`
-        : `The average monthly rent in ${country} is {usd(avgAll)}/month.`}
+        ? `In ${country}, the average monthly rent varies from ${usd(cheap.avg)}/month in ${cheap.city} to ${usd(expensive.avg)}/month in ${expensive.city}.`
+        : `The average monthly rent in ${country} is ${usd(avgAll)}/month.`}
       Below are the concrete prices per city — and you can zoom in on the globe itself to see real listings with address and a link to the original ad.
     </p>
 
