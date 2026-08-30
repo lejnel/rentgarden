@@ -871,7 +871,7 @@ import Layout from '../layouts/Layout.astro';
         const screen = viewer.scene.cartesianToCanvasCoordinates(meta.position);
         if (!screen || screen.x < -80 || screen.x > width + 80 || screen.y < -40 || screen.y > height + 40) return;
 
-        const textWidth = Math.max(18, meta.text.length * meta.fontSize * 0.56);
+        const textWidth = Math.max(18, meta.text.length * meta.fontSize * 0.6);
         const halfWidth = textWidth / 2 + tier.gap;
         const halfHeight = meta.fontSize / 2 + tier.gap * 0.42;
         candidates.push({
@@ -927,16 +927,20 @@ import Layout from '../layouts/Layout.astro';
         cities.forEach(c => {
           const population = c.p || 0;
           if (population < 90000) return;
-          const fontSize = population >= 5000000 ? 13 : population >= 1000000 ? 11 : population >= 250000 ? 10 : 9;
+          const fontSize = population >= 5000000 ? 16 : population >= 1000000 ? 14 : population >= 250000 ? 12 : 10;
           const maxDistance = population >= 5000000 ? 40000000 : population >= 1000000 ? 12000000 : population >= 250000 ? 5000000 : 3000000;
-          const position = Cesium.Cartesian3.fromDegrees(c.lng, c.lat);
+          const position = Cesium.Cartesian3.fromDegrees(
+            c.lng,
+            c.lat,
+            population >= 1000000 ? 900 : 500,
+          );
           const label = cityLabels.add({
             position,
             text: c.n,
-            font: `${fontSize}px -apple-system, BlinkMacSystemFont, sans-serif`,
-            fillColor: Cesium.Color.fromCssColorString('#b7c5da'),
-            outlineColor: Cesium.Color.fromCssColorString('#0a0e17'),
-            outlineWidth: 2,
+            font: `${population >= 1000000 ? 'bold ' : ''}${fontSize}px -apple-system, BlinkMacSystemFont, sans-serif`,
+            fillColor: Cesium.Color.fromCssColorString('#f7f9fc'),
+            outlineColor: Cesium.Color.fromCssColorString('#080b12'),
+            outlineWidth: 3,
             style: Cesium.LabelStyle.FILL_AND_OUTLINE,
             show: false,
             showBackground: false,
