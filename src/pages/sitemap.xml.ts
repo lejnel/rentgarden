@@ -17,6 +17,7 @@ export async function GET() {
       urls.push(`https://rentmap.net/rent-prices/${slugify(c.city, entry.country)}/`);
     }
   }
+  const uniqueUrls = [...new Set(urls)];
   const front = `  <url><loc>https://rentmap.net/</loc><changefreq>daily</changefreq><priority>1.0</priority></url>`;
   const build = u => {
     const isCountry = u.includes('/countries/');
@@ -25,7 +26,7 @@ export async function GET() {
   const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 ${front}
-${urls.slice(1).map(build).join('\n')}
+${uniqueUrls.slice(1).map(build).join('\n')}
 </urlset>`;
   return new Response(xml, { headers: { 'Content-Type': 'application/xml' } });
 }
