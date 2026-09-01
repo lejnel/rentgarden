@@ -1,6 +1,6 @@
 ---
 // src/layouts/Layout.astro
-const { title = 'RentMap — Real Rent Prices Across 25 Countries on a 3D Globe', description = 'Like Google Earth, but for rent. 2,600+ real listings from 25 countries. Zoom in, compare cities, open the original ad. Prices refreshed daily.', canonical = 'https://rentmap.net/' } = Astro.props;
+const { title = 'RentMap — Real Rent Prices Across 25 Countries on a 3D Globe', description = 'Like Google Earth, but for rent. 2,600+ real listings from 25 countries. Zoom in, compare cities, open the original ad. Prices refreshed daily.', canonical = 'https://rentmap.net/', pageType = 'content' } = Astro.props;
 ---
 <!DOCTYPE html>
 <html lang="en">
@@ -30,6 +30,8 @@ const { title = 'RentMap — Real Rent Prices Across 25 Countries on a 3D Globe'
   <meta name="geo.placename" content="Worldwide">
   
   <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <meta name="google-adsense-account" content="ca-pub-3304804122762203">
+  <script is:inline async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3304804122762203" crossorigin="anonymous"></script>
   
   <!-- Structured data -->
   <script type="application/ld+json" set:html={JSON.stringify({
@@ -51,10 +53,31 @@ const { title = 'RentMap — Real Rent Prices Across 25 Countries on a 3D Globe'
       height: 100vh;
       width: 100vw;
     }
+    .site-footer {
+      display:flex; justify-content:center; flex-wrap:wrap; gap:8px 14px;
+      padding:22px 20px; color:#94a3b8; font-size:12px; line-height:1.5;
+    }
+    .site-footer a { color:#c4b5fd; text-decoration:none; }
+    .site-footer a:hover { color:#fff; text-decoration:underline; }
+    .globe-page .site-footer {
+      position:fixed; left:50%; bottom:6px; transform:translateX(-50%); z-index:1600;
+      width:max-content; max-width:calc(100vw - 24px); padding:5px 10px;
+      border-radius:10px; background:rgba(10,14,23,.78); backdrop-filter:blur(8px);
+    }
+    @media (max-width: 768px) {
+      .globe-page .site-footer { left:12px; bottom:7px; transform:none; justify-content:flex-start; gap:4px 10px; font-size:10px; }
+    }
   </style>
   <slot name="head" />
 </head>
-<body>
+<body class={pageType === 'globe' ? 'globe-page' : undefined}>
   <slot />
+  <footer class="site-footer">
+    <a href="/">RentMap</a>
+    <a href="/about/">About & methodology</a>
+    <a href="/privacy/">Privacy</a>
+    <a href="/terms/">Terms</a>
+    <a href="mailto:kontakt@lejel.dk">Contact</a>
+  </footer>
 </body>
 </html>

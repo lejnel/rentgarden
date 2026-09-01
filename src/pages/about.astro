@@ -1,0 +1,45 @@
+---
+import Layout from '../layouts/Layout.astro';
+
+const title = 'About RentMap — Global Rental Price Data & Methodology';
+const description = 'Learn how RentMap collects, compares and presents real rental listings and average rent data across cities worldwide.';
+---
+
+<Layout title={title} description={description} canonical="https://rentmap.net/about/">
+  <style>
+    :global(body) { background:#0b1020; color:#e2e8f0; overflow:auto; height:auto; min-height:100vh; }
+    .page { max-width:760px; margin:0 auto; padding:48px 20px 48px; }
+    h1 { color:#fff; font-size:clamp(28px,5vw,42px); line-height:1.1; margin-bottom:14px; }
+    h2 { color:#fff; font-size:22px; margin:34px 0 10px; }
+    p, li { color:#cbd5e1; font-size:16px; line-height:1.7; }
+    p { margin:0 0 16px; }
+    ul { padding-left:22px; margin:0 0 16px; }
+    li + li { margin-top:8px; }
+    .eyebrow { color:#a78bfa; font-size:13px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; margin-bottom:12px; }
+    .intro { font-size:19px; color:#e2e8f0; }
+    .card { margin-top:26px; padding:22px; border:1px solid rgba(255,255,255,.12); border-radius:16px; background:rgba(255,255,255,.04); }
+    a { color:#c4b5fd; }
+  </style>
+  <main class="page">
+    <p class="eyebrow">About RentMap</p>
+    <h1>Rental prices, made easier to compare.</h1>
+    <p class="intro">RentMap is an independent interactive map for exploring rental prices across cities worldwide. It brings together real rental listings and comparable average-rent data in one place.</p>
+
+    <h2>How the data works</h2>
+    <p>RentMap collects publicly available rental listings from local housing portals and converts the results into a common format. City pages show averages drawn from the listings available in our dataset, while the globe helps you compare individual listings geographically.</p>
+    <ul>
+      <li>Prices are shown in the original listing currency and can be converted for comparison.</li>
+      <li>Listings and averages are refreshed periodically; the precise timing varies by source and market.</li>
+      <li>We link back to original listings whenever a source URL is available, so you can verify the details before making any decision.</li>
+    </ul>
+
+    <h2>What RentMap is—and is not</h2>
+    <p>RentMap is a research and comparison tool, not a rental agency. Prices are indicators based on available listings, not a guarantee of availability, final rent, property condition or legal suitability. Always confirm terms directly with the listing provider or landlord.</p>
+
+    <div class="card">
+      <h2 style="margin-top:0">Help improve the map</h2>
+      <p>If you know of a listing that should be included, you can submit it from the globe. Submitted information is reviewed before it may be used in the dataset.</p>
+      <p style="margin-bottom:0">Questions or corrections? <a href="mailto:kontakt@lejel.dk">Contact RentMap</a>.</p>
+    </div>
+  </main>
+</Layout>

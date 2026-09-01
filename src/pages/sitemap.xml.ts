@@ -9,7 +9,7 @@ function landSlug(country) {
 }
 
 export async function GET() {
-  const urls = ['https://rentmap.net/', 'https://rentmap.net/cheapest-cities-to-rent/', 'https://rentmap.net/most-expensive-cities/', 'https://rentmap.net/best-cities-for-remote-workers/'];
+  const urls = ['https://rentmap.net/', 'https://rentmap.net/about/', 'https://rentmap.net/cheapest-cities-to-rent/', 'https://rentmap.net/most-expensive-cities/', 'https://rentmap.net/best-cities-for-remote-workers/'];
   for (const entry of avgData) {
     // Land-sider får højere priority + daglig/ugentlig
     urls.push(`https://rentmap.net/countries/${landSlug(entry.country)}/`);

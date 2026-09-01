@@ -1,0 +1,44 @@
+---
+import Layout from '../layouts/Layout.astro';
+
+const title = 'Terms of Use | RentMap';
+const description = 'Terms governing use of RentMap and its rental-price data.';
+---
+
+<Layout title={title} description={description} canonical="https://rentmap.net/terms/">
+  <style>
+    :global(body) { background:#0b1020; color:#e2e8f0; overflow:auto; height:auto; min-height:100vh; }
+    .page { max-width:760px; margin:0 auto; padding:48px 20px 48px; }
+    h1 { color:#fff; font-size:clamp(28px,5vw,42px); line-height:1.1; margin-bottom:14px; }
+    h2 { color:#fff; font-size:22px; margin:34px 0 10px; }
+    p, li { color:#cbd5e1; font-size:16px; line-height:1.7; }
+    p { margin:0 0 16px; }
+    ul { padding-left:22px; margin:0 0 16px; }
+    li + li { margin-top:8px; }
+    .updated { color:#94a3b8; font-size:14px; }
+    a { color:#c4b5fd; }
+  </style>
+  <main class="page">
+    <h1>Terms of Use</h1>
+    <p class="updated">Last updated: August 2026</p>
+    <p>By using RentMap, you agree to these terms.</p>
+
+    <h2>Informational service</h2>
+    <p>RentMap provides rental-price data and links to third-party listings for research and comparison. It is not a rental agency, broker, legal adviser or financial adviser. We do not guarantee that a listing is current, accurate, lawful, available or suitable for your needs.</p>
+
+    <h2>Use the data responsibly</h2>
+    <p>Rental data can change quickly. Use RentMap as a starting point and verify every price, property detail, landlord identity and contract term directly with the original listing provider before acting.</p>
+
+    <h2>External listings</h2>
+    <p>Links from RentMap may take you to third-party sites. Those sites control their own content, availability and terms. RentMap is not responsible for third-party websites, listings or transactions.</p>
+
+    <h2>Submitted listings</h2>
+    <p>If you submit a listing or price, you confirm that you have the right to share the information and that it is accurate to the best of your knowledge. We may review, edit, decline or remove submissions at our discretion. Do not submit sensitive personal information.</p>
+
+    <h2>Acceptable use</h2>
+    <p>You may use RentMap for personal or internal research. You may not interfere with the service, misuse the submission process, scrape the site at a harmful rate, or reproduce substantial parts of the dataset without prior written permission.</p>
+
+    <h2>Changes and contact</h2>
+    <p>We may update these terms as RentMap develops. For questions, contact <a href="mailto:kontakt@lejel.dk">kontakt@lejel.dk</a>.</p>
+  </main>
+</Layout>
