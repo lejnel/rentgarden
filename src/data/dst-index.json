@@ -2,7 +2,7 @@
   "source": "Danmarks Statistik",
   "table": "HUS1",
   "url": "https://www.statistikbanken.dk/HUS1",
-  "updated": "2026-08-24",
+  "updated": "2026-08-31",
   "note": "Huslejeindeks for boliger (indeks 2015=100). qoq=ændring vs forrige kvartal, yoy=ændring vs samme kvartal året før (procentpoint).",
   "all": {
     "label": "Hele landet",

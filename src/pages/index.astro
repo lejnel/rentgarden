@@ -415,6 +415,7 @@ import Layout from '../layouts/Layout.astro';
       <option value="ARS">🇦🇷 ARS</option>
       <option value="KZT">🇰🇿 KZT</option>
       <option value="NGN">🇳🇬 NGN</option>
+      <option value="BRL">🇧🇷 BRL</option>
       <option value="TRY">🇹🇷 TRY</option>
       <option value="PGK">🇵🇬 PGK</option>
       <option value="KRW">🇰🇷 KRW</option>
@@ -509,7 +510,7 @@ import Layout from '../layouts/Layout.astro';
             <label style="font-size:11px;color:#8899b4;text-transform:uppercase;">Currency</label>
             <select id="popCurrency" style="width:100%;padding:8px;border-radius:6px;border:1px solid rgba(255,255,255,0.1);background:rgba(0,0,0,0.3);color:#e2e8f0;font-size:13px;font-family:inherit;outline:none;">
               <option value="DKK">DKK</option><option value="EUR" selected>EUR</option>
-              <option value="USD">USD</option><option value="GBP">GBP</option>
+              <option value="USD">USD</option><option value="BRL">BRL</option><option value="GBP">GBP</option>
               <option value="INR">INR</option><option value="CNY">CNY</option>
               <option value="SEK">SEK</option><option value="NOK">NOK</option>
             </select>
@@ -650,9 +651,9 @@ import Layout from '../layouts/Layout.astro';
     
     // Exchange rates to USD (approximate)
     const ratesToUSD = {
-      DKK: 0.147, EUR: 1.10, USD: 1, GBP: 1.27, SEK: 0.096, NOK: 0.094, INR: 0.012, CNY: 0.14, VND: 0.000041, THB: 0.028, PHP: 0.018, MYR: 0.215, CAD: 0.735, ZAR: 0.055, COP: 0.00032, ARS: 0.00067, KZT: 0.00213, NGN: 0.00065, IDR: 0.000065, TRY: 0.0278, PLN: 0.25, PGK: 0.263, KRW: 0.00075, JPY: 0.0067, UAH: 0.0224, MAD: 0.108
+      DKK: 0.147, EUR: 1.10, USD: 1, GBP: 1.27, SEK: 0.096, NOK: 0.094, INR: 0.012, CNY: 0.14, VND: 0.000041, THB: 0.028, PHP: 0.018, MYR: 0.215, CAD: 0.735, ZAR: 0.055, COP: 0.00032, ARS: 0.00067, KZT: 0.00213, NGN: 0.00065, IDR: 0.000065, BRL: 0.1925, TRY: 0.0278, PLN: 0.25, PGK: 0.263, KRW: 0.00075, JPY: 0.0067, UAH: 0.0224, MAD: 0.108
     };
-    const currencySymbols = ({DKK:'kr',EUR:'€',USD:'$',GBP:'£',SEK:'kr',NOK:'kr',INR:'₹',CNY:'¥',VND:'₫',THB:'฿',PHP:'₱',MYR:'RM',CAD:'CA$',ZAR:'R',COP:'$',ARS:'$',KZT:'₸',NGN:'₦',IDR:'Rp',TRY:'₺',PLN:'zł',PGK:'K',KRW:'₩',JPY:'¥',UAH:'₴',MAD:'MAD'})[displayCurrency] || displayCurrency;
+    const currencySymbols = ({DKK:'kr',EUR:'€',USD:'$',GBP:'£',SEK:'kr',NOK:'kr',INR:'₹',CNY:'¥',VND:'₫',THB:'฿',PHP:'₱',MYR:'RM',CAD:'CA$',ZAR:'R',COP:'$',ARS:'$',KZT:'₸',NGN:'₦',IDR:'Rp',BRL:'R$',TRY:'₺',PLN:'zł',PGK:'K',KRW:'₩',JPY:'¥',UAH:'₴',MAD:'MAD'})[displayCurrency] || displayCurrency;
     
     function convertPrice(price, fromCurrency, toCurrency) {
       if (fromCurrency === toCurrency) return price;
@@ -662,7 +663,7 @@ import Layout from '../layouts/Layout.astro';
     
     function changeCurrency() {
       displayCurrency = document.getElementById('currencySelect').value;
-      const sym = ({DKK:'kr',EUR:'€',USD:'$',GBP:'£',SEK:'kr',NOK:'kr',INR:'₹',CNY:'¥',VND:'₫',THB:'฿',PHP:'₱',MYR:'RM',CAD:'CA$',ZAR:'R',COP:'$',ARS:'$',KZT:'₸',NGN:'₦',IDR:'Rp',TRY:'₺',PLN:'zł',PGK:'K',KRW:'₩',JPY:'¥'})[displayCurrency] || displayCurrency;
+      const sym = ({DKK:'kr',EUR:'€',USD:'$',GBP:'£',SEK:'kr',NOK:'kr',INR:'₹',CNY:'¥',VND:'₫',THB:'฿',PHP:'₱',MYR:'RM',CAD:'CA$',ZAR:'R',COP:'$',ARS:'$',KZT:'₸',NGN:'₦',IDR:'Rp',BRL:'R$',TRY:'₺',PLN:'zł',PGK:'K',KRW:'₩',JPY:'¥'})[displayCurrency] || displayCurrency;
       const t1 = Math.round(convertPrice(15, 'USD', displayCurrency));
       const t2 = Math.round(convertPrice(22, 'USD', displayCurrency));
       const t3 = Math.round(convertPrice(30, 'USD', displayCurrency));
@@ -691,7 +692,7 @@ import Layout from '../layouts/Layout.astro';
     function updateAvgLegend() {
       const leg = document.getElementById('avgLegend');
       if (!leg) return;
-      const sym = ({DKK:'kr',EUR:'€',USD:'$',GBP:'£',SEK:'kr',NOK:'kr',INR:'₹',CNY:'¥',VND:'₫',THB:'฿',PHP:'₱',MYR:'RM',CAD:'CA$',ZAR:'R',COP:'$',ARS:'$',KZT:'₸',NGN:'₦',IDR:'Rp',TRY:'₺',PLN:'zł',PGK:'K',KRW:'₩',JPY:'¥'})[displayCurrency] || displayCurrency;
+      const sym = ({DKK:'kr',EUR:'€',USD:'$',GBP:'£',SEK:'kr',NOK:'kr',INR:'₹',CNY:'¥',VND:'₫',THB:'฿',PHP:'₱',MYR:'RM',CAD:'CA$',ZAR:'R',COP:'$',ARS:'$',KZT:'₸',NGN:'₦',IDR:'Rp',BRL:'R$',TRY:'₺',PLN:'zł',PGK:'K',KRW:'₩',JPY:'¥'})[displayCurrency] || displayCurrency;
       const levels = [700, 1200, 1800, 2600, 4000];
       const labels = levels.map(u => Math.round(convertPrice(u, 'USD', displayCurrency)));
       const rows = leg.querySelectorAll('.legend-row span');
@@ -803,7 +804,7 @@ import Layout from '../layouts/Layout.astro';
 
     function formatPrice(price, currency) {
       if (!price) return '—';
-      const symbols = { DKK: 'kr', EUR: '€', USD: '$', GBP: '£', SEK: 'kr', NOK: 'kr', INR: '₹', CNY: '¥', VND: '₫', THB: '฿', PHP: '₱', MYR: 'RM', CAD: 'CA$', ZAR: 'R', COP: '$', ARS: '$', KZT: '₸', NGN: '₦', IDR: 'Rp' };
+      const symbols = { DKK: 'kr', EUR: '€', USD: '$', GBP: '£', SEK: 'kr', NOK: 'kr', INR: '₹', CNY: '¥', VND: '₫', THB: '฿', PHP: '₱', MYR: 'RM', CAD: 'CA$', ZAR: 'R', COP: '$', ARS: '$', KZT: '₸', NGN: '₦', IDR: 'Rp', BRL: 'R$' };
       const converted = convertPrice(price, currency || 'DKK', displayCurrency);
       const sym = symbols[displayCurrency] || displayCurrency;
       return new Intl.NumberFormat('en', { maximumFractionDigits: 0 }).format(converted) + ' ' + sym;
@@ -1787,7 +1788,7 @@ import Layout from '../layouts/Layout.astro';
               const r1 = props.rent1;
               const r2 = props.rent2;
               const r3 = props.rent3;
-              const sym = ({DKK:'kr',EUR:'€',USD:'$',GBP:'£',SEK:'kr',NOK:'kr',INR:'₹',CNY:'¥',VND:'₫',THB:'฿',PHP:'₱',MYR:'RM',CAD:'CA$',ZAR:'R',COP:'$',ARS:'$',KZT:'₸',NGN:'₦',IDR:'Rp',TRY:'₺',PLN:'zł',PGK:'K',KRW:'₩',JPY:'¥'})[displayCurrency] || displayCurrency;
+              const sym = ({DKK:'kr',EUR:'€',USD:'$',GBP:'£',SEK:'kr',NOK:'kr',INR:'₹',CNY:'¥',VND:'₫',THB:'฿',PHP:'₱',MYR:'RM',CAD:'CA$',ZAR:'R',COP:'$',ARS:'$',KZT:'₸',NGN:'₦',IDR:'Rp',BRL:'R$',TRY:'₺',PLN:'zł',PGK:'K',KRW:'₩',JPY:'¥'})[displayCurrency] || displayCurrency;
               const f = (usd) => usd ? convertPrice(usd, 'USD', displayCurrency).toLocaleString('en-US') : '—';
               tooltip.innerHTML = `<b>${props.city || ''}</b> · avg <b>${sym}${f(avg)}/mo</b><br><span style="font-size:11px;opacity:0.85;">1-bed ${sym}${f(r1)} · 2-bed ${sym}${f(r2)} · 3-bed ${sym}${f(r3)}</span>`;
             } else if (props.isCluster) {
