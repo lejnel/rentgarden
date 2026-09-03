@@ -26,3 +26,5 @@ CREATE INDEX IF NOT EXISTS idx_prices_lat_lng ON prices(lat, lng);
 CREATE INDEX IF NOT EXISTS idx_prices_country ON prices(country);
 CREATE INDEX IF NOT EXISTS idx_prices_dates ON prices(listing_date, submitted_at);
 CREATE INDEX IF NOT EXISTS idx_prices_visibility_dates ON prices(hidden, listing_date, submitted_at);
+CREATE INDEX IF NOT EXISTS idx_prices_source_url ON prices(source_url);
+CREATE INDEX IF NOT EXISTS idx_prices_source_site ON prices(source_site);

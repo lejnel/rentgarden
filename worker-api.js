@@ -98,12 +98,15 @@ export default {
     context.waitUntil(Promise.all([
       db.prepare('CREATE INDEX IF NOT EXISTS idx_prices_dates ON prices(listing_date, submitted_at)').run(),
       db.prepare('CREATE INDEX IF NOT EXISTS idx_prices_visibility_dates ON prices(hidden, listing_date, submitted_at)').run(),
+      db.prepare('CREATE INDEX IF NOT EXISTS idx_prices_source_url ON prices(source_url)').run(),
+      db.prepare('CREATE INDEX IF NOT EXISTS idx_prices_source_site ON prices(source_site)').run(),
     ]));
     
     try {
       // GET /
       if (request.method === 'GET') {
         const year = url.searchParams.get('year');
+        const sourceSite = url.searchParams.get('source_site');
       
         // Cache public GET-svar i Cloudflare Cache API (6 timer; historiske år 12 timer)
         // → max 4 D1-kald pr. dag pr. URL (data opdateres kun 1× dagligt via cron)
@@ -114,17 +117,18 @@ export default {
           // (?cb, ?utm_*, ?fbclid osv. fra bots/værktøjer skaber ellers ÉT
           // D1-scan pr. variant) — kun public + year bestemmer dataene.
           const base = `${url.origin}${url.pathname === '/' ? '/' : url.pathname}`;
+          const sourceKey = sourceSite ? `&source_site=${encodeURIComponent(sourceSite)}` : '';
           const cacheKey = new Request(
-            year ? `${base}?public=1&v=${PUBLIC_CACHE_VERSION}&year=${year}` : `${base}?public=1&v=${PUBLIC_CACHE_VERSION}`,
+            year ? `${base}?public=1&v=${PUBLIC_CACHE_VERSION}${sourceKey}&year=${year}` : `${base}?public=1&v=${PUBLIC_CACHE_VERSION}${sourceKey}`,
             { method: 'GET' }
           );
           const cached = await cache.match(cacheKey);
           if (cached) {
             return cached;
           }
-          if (!year) await enforceActiveListingCap(db);
+          if (!year && !sourceSite) await enforceActiveListingCap(db);
           const ttl = year ? 43200 : 21600;
-          const resp = await buildGetResponse(db, publicView, year);
+          const resp = await buildGetResponse(db, publicView, year, sourceSite);
           resp.headers.set('Cache-Control', `public, max-age=${ttl}`);
           resp.headers.set('CF-Cache-Status', 'HIT-MISS');
           context.waitUntil(cache.put(cacheKey, resp.clone()));
@@ -177,7 +181,7 @@ export default {
         }
       }
 
-      async function buildGetResponse(db, publicView, year) {
+      async function buildGetResponse(db, publicView, year, sourceSite = null) {
         let whereClause, params;
         if (year) {
           // Show all listings from a specific year (historical browsing)
@@ -189,6 +193,10 @@ export default {
           params = [];
           if (publicView) whereClause += ' AND hidden = 0';
         }
+        if (sourceSite) {
+          whereClause += ' AND source_site = ?';
+          params.push(sourceSite);
+        }
       
         const priceSelect = publicView
           ? `id, city, country, lat, lng, price_total, price_per_m2, sqm, rooms, type, source_url, source_site, listing_date, currency, CAST(substr(COALESCE(listing_date, submitted_at), 1, 4) AS INTEGER) as listing_year`
@@ -198,6 +206,9 @@ export default {
           FROM prices WHERE verified = 1 ${whereClause}
           ORDER BY submitted_at DESC LIMIT 5000
         `).bind(...params).all();
+
+        // Scrapers only need source URLs for deduplication; skip the second city aggregate query.
+        if (sourceSite) return new Response(JSON.stringify({ prices, cities: [] }), { headers });
       
         const { results: cities } = await db.prepare(`
           SELECT city, country, AVG(price_per_m2) as avg_price_per_m2,
