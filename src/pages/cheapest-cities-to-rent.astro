@@ -18,8 +18,8 @@ const top10 = sorted.slice(0, 10);
 const cheapest = top10[0];
 const top10avg = Math.round(top10.reduce((s, c) => s + c.avg, 0) / top10.length);
 
-const title = '10 Cheapest Cities to Rent in 2026 (Real Data) | RentMap';
-const description = `The 10 cheapest cities to rent in 2026: from $${cheapest.avg.toLocaleString('en-US')}/mo in ${cheapest.city} to $${top10[9].avg.toLocaleString('en-US')}/mo in ${top10[9].city}. Real listings, updated daily — compare on RentMap.`;
+const title = '10 Cheapest Cities to Rent in 2026 — Average Rent | RentMap';
+const description = `Compare average monthly apartment rent in the 10 cheapest cities for 2026: from $${cheapest.avg.toLocaleString('en-US')}/mo in ${cheapest.city} to $${top10[9].avg.toLocaleString('en-US')}/mo in ${top10[9].city}. Real listings, updated daily on RentMap.`;
 const pageUrl = 'https://rentmap.net/cheapest-cities-to-rent/';
 ---
 <Layout title={title} description={description} canonical={pageUrl}>
