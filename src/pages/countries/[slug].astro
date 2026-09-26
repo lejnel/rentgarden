@@ -35,7 +35,7 @@ const description = `Average rent in ${country} 2026: from $${cheap.avg.toLocale
 const pageUrl = `https://rentmap.net/countries/${Astro.params.slug}/`;
 ---
 
-<Layout title={title} description={description} canonical={pageUrl}>
+<Layout title={title} description={description} canonical={pageUrl} pageType="country">
   <script type="application/ld+json" set:html={JSON.stringify({
     '@context': 'https://schema.org',
     '@type': 'FAQPage',
@@ -90,60 +90,40 @@ const pageUrl = `https://rentmap.net/countries/${Astro.params.slug}/`;
       }
     ]
   })}></script>
-  <style>
-    :global(body) { background:#0b1020; color:#e2e8f0; overflow:auto; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif; }
-    :global(.layout){ max-width:820px; margin:0 auto; padding:32px 20px 80px; }
-    h1{ font-size:26px; font-weight:800; color:#fff; margin-bottom:6px; }
-    .meta{ color:#94a3b8; font-size:14px; margin-bottom:24px; }
-    .hero{ display:flex; gap:24px; align-items:center; margin:24px 0 32px; padding:18px 20px;
-      border:1px solid rgba(255,255,255,0.1); border-radius:14px; background:rgba(255,255,255,0.04); }
-    .hero .big{ font-size:30px; font-weight:800; color:#a78bfa; }
-    .hero .week{ font-size:14px; color:#a3e635; font-weight:700; margin-left:10px; }
-    .hero .lab{ font-size:12px; color:#94a3b8; text-transform:uppercase; letter-spacing:0.5px; }
-    .dst{ margin:0 0 26px; padding:16px 18px; border:1px solid rgba(74,222,128,0.25);
-      border-radius:14px; background:rgba(74,222,128,0.05); }
-    .dst-title{ font-size:13px; color:#4ade80; font-weight:700; margin-bottom:12px; }
-    .dst-row{ display:flex; align-items:center; gap:18px; flex-wrap:wrap; }
-    .dst-big{ font-size:24px; font-weight:800; color:#fff; }
-    .dst-base{ font-size:12px; color:#94a3b8; font-weight:500; }
-    .dst-sub{ font-size:11px; color:#94a3b8; }
-    .dst-change{ text-align:right; }
-    .dst-pct{ font-size:17px; font-weight:800; color:#4ade80; }
-    .dst-pct-q{ color:#a3e635; }
-    .dst-src{ margin-top:10px; font-size:11px; color:#64748b; }
-    .dst-src a{ color:#4ade80; text-decoration:none; }
-    .row{ display:flex; justify-content:space-between; gap:12px; padding:12px 4px;
-      border-bottom:1px solid rgba(255,255,255,0.06); text-decoration:none; color:inherit; }
-    .row:hover{ color:#a78bfa; }
-    .row .name{ font-weight:600; }
-    .row .price{ color:#94a3b8; font-size:13px; text-align:right; }
-    .cta{ margin-top:32px; text-align:center; }
-    .cta a{ display:inline-block; background:#7c3aed; color:#fff; padding:12px 22px; border-radius:12px;
-      text-decoration:none; font-weight:700; }
-    .others{ margin-top:28px; }
-    .others h2{ font-size:15px; color:#94a3b8; font-weight:600; margin-bottom:8px; }
-    .others a{ color:#a78bfa; text-decoration:none; font-size:13px; margin-right:10px; line-height:1.9; }
-  </style>
+  <main class="layout">
+    <header class="topbar"><a class="brand" href="/">⌂ RentMap</a><a href="/">Explore the globe ↗</a></header>
+    <nav class="breadcrumbs" aria-label="Breadcrumb"><a href="/">Home</a><span aria-hidden="true">/</span><span aria-current="page">{country}</span></nav>
+    <p class="eyebrow">Find a place that feels like home</p>
+    <h1>Rent prices in <span>{country}</span></h1>
+    <div class="meta">Compare {cities.length} {cities.length === 1 ? 'city' : 'cities'} at a glance and find a starting point for your budget.</div>
 
-  <div class="layout">
-    <h1>Average Rent in {country}</h1>
-    <div class="meta">2026 · {cities.length} cities · based on real listings on RentMap</div>
-
-    <div class="hero">
-      <div><div class="big">{usd(avgAll)}<span class="week">≈ {usd(week(avgAll))}/week</span></div><div class="lab">average monthly rent</div></div>
-      <div style="flex:1"></div>
-      <div style="text-align:right"><div class="big" style="color:#4ade80">{usd(cheap.avg)}</div><div class="lab">cheapest: {cheap.city}</div></div>
-    </div>
+    <p class="currency-note">All prices in US dollars · Monthly averages across tracked cities</p>
+    <section class="hero" aria-label="Rent overview">
+      <div><p class="lab">Average monthly rent</p><p class="big">{usd(avgAll)}<small> / month</small></p><p class="week">Approximately {usd(week(avgAll))} per week</p></div>
+      <a class="affordable" href={`/rent-prices/${bySlug(cheap.city, country)}/`}><p class="lab">Lowest city average in our data</p><p class="affordable-price">{usd(cheap.avg)}<small> / month</small></p><p>{cheap.city} <span aria-hidden="true">→</span></p></a>
+    </section>
+    <section class="city-section" aria-labelledby="cities-title">
+      <p class="eyebrow">A closer look</p><h2 id="cities-title">Compare cities in {country}</h2>
+      <p class="section-copy">From lowest to highest average rent. Choose a city to explore the details.</p>
+      <div class="city-grid">{sorted.filter(c => c.avg).map(c => (
+        <a href={`/rent-prices/${bySlug(c.city, country)}/`} class="city-card">
+          <h3>{c.city}<span aria-hidden="true">↗</span></h3>
+          <p class="city-price">{usd(c.avg)}<small> / month</small></p><p class="weekly">≈ {usd(week(c.avg))} per week</p>
+          <div class="room-prices"><span>1 bedroom <strong>{usd(c.rent1)}</strong></span><span>2 bedrooms <strong>{usd(c.rent2)}</strong></span></div>
+        </a>
+      ))}</div>
+      <p class="source-note">Average rent data: GlobalPropertyGuide. Prices vary by neighbourhood and property. <a href="/about/">About the data →</a></p>
+    </section>
 
     {country === 'Denmark' && dstData.all && (
       <div class="dst">
-        <div class="dst-title">📈 Rent development — official statistics (Denmark)</div>
+        <div class="dst-title">Rent trends · Official statistics for Denmark</div>
         <div class="dst-row">
           <div>
             <div class="dst-big">{dstData.all.index}<span class="dst-base"> (index 2015=100, {dstData.all.period})</span></div>
             <div class="dst-sub">Rent index for dwellings · whole country</div>
           </div>
-          <div style="flex:1"></div>
+
           <div class="dst-change">
             <div class="dst-sub">Last year</div>
             <div class="dst-pct">+{(dstData.all.yoy * 100).toFixed(1)}%</div>
@@ -157,63 +137,23 @@ const pageUrl = `https://rentmap.net/countries/${Astro.params.slug}/`;
       </div>
     )}
 
-    <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:16px;padding:24px;margin-bottom:24px;">
-      <h2 style="font-size:18px;font-weight:700;color:#fff;margin-bottom:16px;">Frequently Asked Questions</h2>
-      <div style="margin-bottom:16px;">
-        <div style="font-size:15px;font-weight:600;color:#e2e8f0;margin-bottom:8px;">What is the average rent in {country}?</div>
-        <div style="font-size:14px;color:#94a3b8;line-height:1.6;">The average monthly rent in {country} is {usd(avgAll)}/month (≈{usd(week(avgAll))}/week), based on real listings across {cities.length} cities.</div>
-      </div>
-      <div style="margin-bottom:16px;">
-        <div style="font-size:15px;font-weight:600;color:#e2e8f0;margin-bottom:8px;">Which city in {country} has the cheapest rent?</div>
-        <div style="font-size:14px;color:#94a3b8;line-height:1.6;">{cheap.city} has the most affordable average rent in {country} at {usd(cheap.avg)}/month.</div>
-      </div>
-      <div>
-        <div style="font-size:15px;font-weight:600;color:#e2e8f0;margin-bottom:8px;">Is {country} expensive to rent?</div>
-        <div style="font-size:14px;color:#94a3b8;line-height:1.6;">{country} has an average rent of {usd(avgAll)}/month, which is {avgAll > 2000 ? 'above' : avgAll > 1000 ? 'around' : 'below'} the global average. Rents vary significantly by city — from {usd(cheap.avg)} in {cheap.city} to {usd(expensive.avg)} in {expensive.city}.</div>
-      </div>
-    </div>
+    <section class="faq-panel">
+      <h2>Frequently Asked Questions</h2>
+      <details><summary>What is the average rent in {country}?</summary><p>The average monthly rent in {country} is {usd(avgAll)}/month (≈{usd(week(avgAll))}/week), based on real listings across {cities.length} cities.</p></details>
+      <details><summary>Which city in {country} has the cheapest rent?</summary><p>{cheap.city} has the most affordable average rent in {country} at {usd(cheap.avg)}/month.</p></details>
+      <details><summary>Is {country} expensive to rent?</summary><p>{country} has an average rent of {usd(avgAll)}/month, which is {avgAll > 2000 ? 'above' : avgAll > 1000 ? 'around' : 'below'} the global average. Rents vary significantly by city — from {usd(cheap.avg)} in {cheap.city} to {usd(expensive.avg)} in {expensive.city}.</p></details>
+    </section>
 
-    <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:16px;padding:24px;margin-bottom:24px;">
-      <h2 style="font-size:18px;font-weight:700;color:#fff;margin-bottom:16px;">Renting in {country} as an expat</h2>
-      <div style="margin-bottom:16px;">
-        <div style="font-size:15px;font-weight:600;color:#e2e8f0;margin-bottom:8px;">How much is rent in {country} for expats?</div>
-        <div style="font-size:14px;color:#94a3b8;line-height:1.6;">In our data, the average rent in {country} is {usd(avgAll)}/month (≈{usd(week(avgAll))}/week) — from {usd(cheap.avg)}/month in {cheap.city} to {usd(expensive.avg)}/month in {expensive.city}. You can compare real listings on the globe and jump to any city's pricing page.</div>
-      </div>
-      <div style="margin-bottom:16px;">
-        <div style="font-size:15px;font-weight:600;color:#e2e8f0;margin-bottom:8px;">How does {country} compare to other countries?</div>
-        <div style="font-size:14px;color:#94a3b8;line-height:1.6;">Across our tracked cities worldwide the average rent is {usd(_globalAvg)}/month — {country} is <b style="color:#a3e635;">{Math.abs(_pct)}% {_pct > 0 ? 'above' : _pct < 0 ? 'below' : 'at'}</b> that level. Useful context when negotiating or budgeting.</div>
-      </div>
-      <div style="margin-bottom:16px;">
-        <div style="font-size:15px;font-weight:600;color:#e2e8f0;margin-bottom:8px;">What do I need to rent an apartment in {country}?</div>
-        <div style="font-size:14px;color:#94a3b8;line-height:1.6;">Landlords typically require a passport or ID, proof of income (payslips or employment contract) and a deposit. Some ask for references or a guarantor — confirm the required documents before you view a place.</div>
-      </div>
-      <div style="margin-bottom:16px;">
-        <div style="font-size:15px;font-weight:600;color:#e2e8f0;margin-bottom:8px;">Are utilities included in the rent?</div>
-        <div style="font-size:14px;color:#94a3b8;line-height:1.6;">Often not — water, heating, electricity and internet are frequently billed separately after move-in. Always confirm with the landlord exactly what is included and what utilities typically cost per month.</div>
-      </div>
-      <div>
-        <div style="font-size:15px;font-weight:600;color:#e2e8f0;margin-bottom:8px;">How much deposit do I need?</div>
-        <div style="font-size:14px;color:#94a3b8;line-height:1.6;">A deposit of one to three months' rent is common in most countries, and the first month is usually paid upfront. Budget for this before you move so the paperwork is not a surprise.</div>
-      </div>
-    </div>
+    <section class="faq-panel">
+      <h2>Renting in {country} as an expat</h2>
+      <details><summary>How much is rent in {country} for expats?</summary><p>In our data, the average rent in {country} is {usd(avgAll)}/month (≈{usd(week(avgAll))}/week) — from {usd(cheap.avg)}/month in {cheap.city} to {usd(expensive.avg)}/month in {expensive.city}. You can compare real listings on the globe and jump to any city's pricing page.</p></details>
+      <details><summary>How does {country} compare to other countries?</summary><p>Across our tracked cities worldwide the average rent is {usd(_globalAvg)}/month — {country} is <b>{Math.abs(_pct)}% {_pct > 0 ? 'above' : _pct < 0 ? 'below' : 'at'}</b> that level. Useful context when negotiating or budgeting.</p></details>
+      <details><summary>What do I need to rent an apartment in {country}?</summary><p>Landlords typically require a passport or ID, proof of income (payslips or employment contract) and a deposit. Some ask for references or a guarantor — confirm the required documents before you view a place.</p></details>
+      <details><summary>Are utilities included in the rent?</summary><p>Often not — water, heating, electricity and internet are frequently billed separately after move-in. Always confirm with the landlord exactly what is included and what utilities typically cost per month.</p></details>
+      <details><summary>How much deposit do I need?</summary><p>A deposit of one to three months' rent is common in most countries, and the first month is usually paid upfront. Budget for this before you move so the paperwork is not a surprise.</p></details>
+    </section>
 
-    <p style="color:#cbd5e1; line-height:1.6; margin-bottom:20px;">
-      What does a rental home cost in {country} in 2026? {sorted.length > 1
-        ? `In ${country}, the average monthly rent varies from ${usd(cheap.avg)}/month in ${cheap.city} to ${usd(expensive.avg)}/month in ${expensive.city}.`
-        : `The average monthly rent in ${country} is ${usd(avgAll)}/month.`}
-      Below are the concrete prices per city — and you can zoom in on the globe itself to see real listings with address and a link to the original ad.
-    </p>
-
-    <div class="yours">
-      {sorted.filter(c => c.avg).map(c => (
-        <a href={`/rent-prices/${bySlug(c.city, country)}/`} class="row">
-          <span class="name">{c.city}</span>
-          <span class="price">{usd(c.avg)}/mo <span class="week-sub">≈ {usd(week(c.avg))}/wk</span> · 1-bed {usd(c.rent1)} · 2-bed {usd(c.rent2)}</span>
-        </a>
-      ))}
-    </div>
-
-    <div class="cta"><a href="/">See the listings on the globe 🌍</a></div>
+    <div class="cta"><a href="/">Explore rental listings ↗</a></div>
 
     <div class="others">
       <h2>Other countries</h2>
@@ -221,5 +161,65 @@ const pageUrl = `https://rentmap.net/countries/${Astro.params.slug}/`;
         <a href={`/countries/${landSlug(e.country)}/`}>{e.country} · {usd(Math.round(e.cities.reduce((s, c) => s + (c.avg || 0), 0) / e.cities.length))}</a>
       ))}
     </div>
-  </div>
+  </main>
 </Layout>
+
+<style>
+  *,*::before,*::after { box-sizing:border-box; }
+  h1,h2,h3,p { margin:0; }
+  .layout { max-width:1040px; margin:0 auto; padding:0 32px 64px; color:#223d37; line-height:1.6; }
+  a { color:#25634f; text-decoration:none; }
+  a:hover { text-decoration:underline; }
+  a:focus-visible,summary:focus-visible { outline:3px solid #277660; outline-offset:5px; border-radius:4px; }
+  .topbar { display:flex; justify-content:space-between; align-items:center; gap:20px; padding:24px 0; border-bottom:1px solid #dfe7e1; font-size:14px; font-weight:600; }
+  .brand { font-size:22px; letter-spacing:-.6px; font-weight:750; }
+  .breadcrumbs { display:flex; flex-wrap:wrap; gap:10px; margin:26px 0 36px; font-size:13px; color:#5f706b; }
+  .eyebrow { font-size:11px; text-transform:uppercase; letter-spacing:1.6px; font-weight:750; color:#25634f; margin-bottom:10px; }
+  h1 { font-size:clamp(32px,5vw,52px); line-height:1.15; letter-spacing:-1.8px; margin-bottom:18px; }
+  h1 span { color:#25634f; }
+  h2 { font-size:24px; line-height:1.3; letter-spacing:-.5px; }
+  .meta,.section-copy { color:#5f706b; font-size:16px; max-width:650px; }
+  .currency-note,.source-note { color:#5f706b; font-size:12px; margin-top:18px; }
+  .hero { display:grid; grid-template-columns:1.3fr 1fr; gap:24px; align-items:center; background:white; border:1px solid #dde6df; border-radius:22px; padding:30px; margin:28px 0 38px; }
+  .lab { font-size:14px; color:#5f706b; }
+  .big { font-size:48px; line-height:1.4; font-weight:750; letter-spacing:-1.6px; }
+  small { font-size:13px; font-weight:400; letter-spacing:0; color:#5f706b; white-space:nowrap; }
+  .week,.weekly { font-size:13px; color:#5f706b; }
+  .affordable { display:block; background:#edf4eb; border-radius:14px; padding:20px; }
+  .affordable-price { font-size:30px; font-weight:700; }
+  .affordable > p:last-child { font-size:14px; margin-top:4px; }
+  .city-section { margin-bottom:28px; }
+  .section-copy { font-size:14px; margin:10px 0 20px; }
+  .city-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:14px; }
+  .city-card { background:#fff; border:1px solid #dde6df; padding:22px; border-radius:16px; color:#223d37; }
+  .city-card:hover { background:#f0f6ed; border-color:#a3bcaa; text-decoration:none; }
+  .city-card h3 { display:flex; justify-content:space-between; gap:10px; font-size:17px; margin-bottom:14px; }
+  .city-card h3 span { color:#25634f; }
+  .city-price { font-size:28px; font-weight:700; }
+  .room-prices { border-top:1px solid #e4eae4; margin-top:18px; padding-top:12px; display:grid; gap:5px; font-size:12px; color:#5f706b; }
+  .room-prices span { display:flex; justify-content:space-between; gap:12px; }
+  .room-prices strong { color:#223d37; }
+  .source-note a { text-decoration:underline; }
+  .dst,.faq-panel { background:#fff; border:1px solid #dde6df; border-radius:22px; padding:30px; margin-bottom:24px; }
+  .dst-title { font-size:18px; font-weight:700; margin-bottom:18px; }
+  .dst-row { display:flex; align-items:center; gap:32px; flex-wrap:wrap; }
+  .dst-big { font-size:28px; font-weight:700; }
+  .dst-base,.dst-sub,.dst-src { font-size:12px; color:#5f706b; font-weight:400; }
+  .dst-pct { font-size:24px; font-weight:700; }
+  .dst-src { margin-top:18px; }
+  .dst-src a { text-decoration:underline; }
+  .faq-panel h2 { margin-bottom:20px; }
+  details { border-top:1px solid #e4eae4; padding:18px 0; }
+  details:last-child { padding-bottom:0; }
+  summary { cursor:pointer; font-size:15px; font-weight:600; }
+  details p { color:#5f706b; font-size:14px; margin-top:12px; }
+  .cta { background:#eaf2e9; padding:28px; text-align:center; border-radius:18px; margin:28px 0 38px; }
+  .cta a { display:inline-block; background:#25634f; color:#fff; padding:13px 22px; border-radius:10px; font-weight:600; font-size:14px; }
+  .cta a:hover { background:#194c3c; text-decoration:none; }
+  .others { display:flex; gap:10px; flex-wrap:wrap; }
+  .others h2 { width:100%; margin-bottom:10px; }
+  .others a { background:#fff; border:1px solid #dde6df; padding:10px 14px; border-radius:10px; font-size:13px; }
+  .others a:hover { background:#edf4eb; }
+  @media(max-width:800px) { .city-grid { grid-template-columns:repeat(2,minmax(0,1fr)); } }
+  @media(max-width:540px) { .layout { padding:0 20px 40px; } .topbar { font-size:12px; } .hero { grid-template-columns:1fr; padding:22px; gap:20px; } .big { font-size:40px; } .city-grid { grid-template-columns:1fr; } .dst,.faq-panel { padding:22px; border-radius:16px; } .dst-row { gap:18px; } .dst-row > div:first-child { width:100%; } .breadcrumbs { margin-bottom:28px; } h2 { font-size:21px; } }
+</style>

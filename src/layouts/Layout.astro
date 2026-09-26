@@ -74,7 +74,7 @@ const { title = 'RentMap — Real Rent Prices Across 25 Countries on a 3D Globe'
   </style>
   <slot name="head" />
 </head>
-<body class={pageType === 'globe' ? 'globe-page' : pageType === 'city' ? 'city-layout' : undefined}>
+<body class={pageType === 'globe' ? 'globe-page' : ['city', 'country'].includes(pageType) ? 'city-layout' : undefined}>
   <slot />
   <footer class="site-footer">
     <a href="/">RentMap</a>
