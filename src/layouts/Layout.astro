@@ -53,6 +53,10 @@ const { title = 'RentMap — Real Rent Prices Across 25 Countries on a 3D Globe'
       height: 100vh;
       width: 100vw;
     }
+    body.city-layout { background:#f8faf7; color:#223d37; overflow:auto; height:auto; min-height:100vh; width:100%; }
+    .city-layout .site-footer { border-top:1px solid #dfe7e1; color:#5f706b; background:#f8faf7; }
+    .city-layout .site-footer a { color:#25634f; }
+    .city-layout .site-footer a:focus-visible { outline:3px solid #277660; outline-offset:4px; }
     .site-footer {
       display:flex; justify-content:center; flex-wrap:wrap; gap:8px 14px;
       padding:22px 20px; color:#94a3b8; font-size:12px; line-height:1.5;
@@ -70,7 +74,7 @@ const { title = 'RentMap — Real Rent Prices Across 25 Countries on a 3D Globe'
   </style>
   <slot name="head" />
 </head>
-<body class={pageType === 'globe' ? 'globe-page' : undefined}>
+<body class={pageType === 'globe' ? 'globe-page' : pageType === 'city' ? 'city-layout' : undefined}>
   <slot />
   <footer class="site-footer">
     <a href="/">RentMap</a>
