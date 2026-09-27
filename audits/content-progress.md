@@ -2,7 +2,8 @@
 Target decision: 4 October 2026. Plan: ../ADSENSE_WEEK_PLAN.md.
 Completed: seven-day plan prepared; existing globe homepage, full sitemap and ad-disable safeguards retained. Day 1 morning route/content inventory recorded in audits/route-inventory.md.
 Completed: Day 1 evening — reviewed the snapshot history, listing schema/handlers and public source methodology; created audits/source-ledger.md with known evidence and explicit unknowns.
-Next: Day 2 morning — investigate conflicting Cairo, Munich and Metro Manila records using recoverable source evidence; do not reconcile by inference.
+Completed: Day 2 morning — compared Cairo, Munich and Metro Manila records with current Global Property Guide city datasets. Cairo and Metro Manila triplets exactly match current district/geographic variants, but the stored import lacks those labels and dates; Munich remains unresolved. No numeric data was changed.
+Next: Day 2 evening — investigate Barcelona, Dubai and Abu Dhabi records using recoverable source evidence; do not reconcile by inference.
 Blockers: provenance gaps and six conflicting city identities remain unresolved; no claim of AdSense readiness.
 Evidence: audits/route-inventory.md; audits/source-ledger.md; audits/site-quality.json; ADSENSE_READINESS.md records the current baseline.
 

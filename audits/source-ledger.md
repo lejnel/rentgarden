@@ -20,3 +20,15 @@ This ledger records what the current repository can prove. Missing metadata rema
 ## Readiness consequence
 
 The ledger improves traceability but does not clear the provenance gate. Next action: inspect the original snapshot source/export outside this checkout if available, or preserve the snapshot as an explicitly unverified historical reference and resolve the six duplicate identities before treating any headline as reliable.
+
+## Day 2 morning — Cairo, Munich and Metro Manila
+
+The current Global Property Guide city pages provide useful comparison evidence, but do not reconstruct the imported rows' historical provenance. The live pages are updated datasets and their district labels, currencies and observation periods are not present in `public/avg-rent.json`.
+
+| Identity | Stored conflicting rows | Recoverable source evidence | Decision |
+|---|---|---|---|
+| Cairo, Egypt | `$740/$1,020/$1,020`; `$680/$830/$1,110` | GPG's current Egypt page shows the first triplet under New Cairo and the second under 6th of October, while its Cairo all-locations series is different. [Source](https://www.globalpropertyguide.com/middle-east/egypt/rental-yields) | Do not merge or relabel. The exact match suggests a possible historical district export, but the missing date and district field make that inference non-verifiable. |
+| Munich, Germany | `$1,508/$2,041/$2,772`; `$1,484/$1,913/$2,296` | GPG's current Germany page distinguishes District of Munich, named districts and Munich all locations, with different current figures and EUR labels. [Source](https://www.globalpropertyguide.com/europe/germany/rental-yields) | Unresolved. No source row can be tied to either stored triplet without the original export/date/currency basis. |
+| Metro Manila, Philippines | `$840/$1,680/$3,570`; `$660/$1,470/$2,790`; `$420/$840/$1,600` | GPG's current Philippines page shows the first triplet for Taguig City, the second for Metro Manila all locations, and the third for Metro Manila (Manila City). [Source](https://www.globalpropertyguide.com/asia/philippines/rental-yields) | Do not collapse. The exact matches expose likely geographic variants, but the import did not retain those labels or the observation date, so the public city headline remains an unresolved first-record presentation. |
+
+This review strengthens the explanation of why duplicates exist but does not clear the material-claims gate. No numeric data was changed: the three city pages already show all variants and warn that the headline is not reconciled. Required remediation remains either recovery of the original export with dates/labels/rights or removal of these snapshot figures from reliable headline use.
