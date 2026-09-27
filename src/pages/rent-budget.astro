@@ -1,0 +1,41 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Nav from '../components/EditorialNav.astro';
+import '../styles/editorial.css';
+---
+<Layout title="Rental budget calculator — monthly costs and move-in cash | RentMap" description="Calculate housing costs, money left after rent and bills, and upfront moving cash using your own figures. Includes transparent formulas and a worked example." canonical="https://rentmap.net/rent-budget/">
+<main class="editorial"><Nav /><header><p class="eyebrow">A practical moving tool</p><h1>What will this rental really cost?</h1><p class="intro">Put rent, bills and the move itself in one place. Use your own figures in a single currency. The calculator runs in your browser and does not submit or store your entries.</p></header>
+<section class="panel"><h2>Your rental budget</h2><p class="small">Prefilled numbers are a hypothetical example. Replace them with amounts from your listing, quotes and budget. Enter 0 for costs that do not apply.</p>
+<form id="budget-form" class="grid" onsubmit="return false">
+<label>Monthly take-home income<input id="income" type="number" min="0" max="100000000" step="0.01" value="3000" required /></label>
+<label>Monthly rent<input id="rent" type="number" min="0" max="100000000" step="0.01" value="1000" required /></label>
+<label>Monthly utilities and internet<input id="utilities" type="number" min="0" max="100000000" step="0.01" value="200" required /></label>
+<label>Monthly transport<input id="transport" type="number" min="0" max="100000000" step="0.01" value="150" required /></label>
+<label>Other monthly spending and savings<input id="other" type="number" min="0" max="100000000" step="0.01" value="900" required /></label>
+<label>Refundable deposit amount<input id="deposit" type="number" min="0" max="100000000" step="0.01" value="2000" required /></label>
+<label>Moving and setup expenses<input id="moving" type="number" min="0" max="100000000" step="0.01" value="500" required /></label>
+<label>Months of rent payable before moving<input id="advance" type="number" min="0" max="24" step="1" value="1" required /></label>
+</form><div id="budget-results" class="grid tint panel" aria-live="polite"><div>Monthly planned outgoings<output id="monthly">2,250.00</output></div><div>Remaining each month<output id="remaining">750.00</output></div><div>Upfront cash needed<output id="upfront">3,500.00</output></div><div>Rent + utilities / take-home income<output id="share">40.0%</output></div></div><p id="budget-message">All amounts use the currency you entered. This is a planning calculation, not an affordability decision.</p><noscript><p>The interactive calculation needs JavaScript. The worked example and formulas below remain available.</p></noscript></section>
+<section class="panel"><h2>How the numbers are calculated</h2><ul><li><strong>Monthly planned outgoings:</strong> rent + utilities + transport + other spending and savings.</li><li><strong>Remaining each month:</strong> take-home income − monthly planned outgoings. A negative result means the entered commitments exceed the entered income.</li><li><strong>Upfront cash:</strong> refundable deposit + moving expenses + rent × months payable before moving. The advance rent is a timing requirement, not an extra recurring cost; do not add it again to an annual expense total.</li><li><strong>Housing share:</strong> (rent + utilities) ÷ take-home income × 100. It is not calculated if income is zero. We do not use a fixed percentage to declare a home affordable.</li></ul></section>
+<section><h2>A worked example</h2><p>With take-home income of 3,000, rent of 1,000, bills of 200, transport of 150 and other spending and savings of 900, monthly outgoings are 2,250. That leaves 750. A deposit of 2,000, setup costs of 500 and one month's rent in advance require 3,500 before moving.</p><p>The deposit is shown separately because it may be returned under the rental agreement. It is still money you cannot use during the tenancy. The calculator does not predict deductions, future rent increases, exchange rates or income changes.</p></section>
+<section class="panel"><h2>Use it to compare two homes</h2><p>First calculate the home with lower advertised rent. Write down its monthly outgoings and upfront cash. Then change the rent, bills and transport to match the second home. Keep other spending consistent so you compare the same household budget.</p><p>Try a second scenario with the highest utility estimate you have received, or add an amount for irregular expenses under other spending. If a cost is unknown, a zero entry means it is excluded, not that it is free. Ask the provider for evidence before relying on an estimate.</p><p>For a shared home, enter only your share of every figure, including income. Avoid entering the whole home's rent alongside only your own income unless you intend to pay the full rent.</p><a href="/best-cities-for-remote-workers/">Build a shortlist and check the missing details →</a></section>
+</main></Layout>
+<script>
+const form = document.querySelector<HTMLFormElement>('#budget-form')!;
+const ids = ['income','rent','utilities','transport','other','deposit','moving','advance'];
+function updateBudget() {
+ const inputs = ids.map(id => document.getElementById(id) as HTMLInputElement);
+ const valid = inputs.every(input => input.validity.valid && input.value !== '' && Number.isFinite(input.valueAsNumber));
+ const message = document.getElementById('budget-message')!;
+ if (!valid) { ['monthly','remaining','upfront','share'].forEach(id => document.getElementById(id)!.textContent = '—'); message.textContent = 'Enter a valid non-negative amount in each field. Advance rent must be a whole number from 0 to 24 months.'; return; }
+ const [income,rent,utilities,transport,other,deposit,moving,advance] = inputs.map(input => input.valueAsNumber);
+ const monthly = rent + utilities + transport + other;
+ const format = (n:number) => n.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2});
+ document.getElementById('monthly')!.textContent = format(monthly);
+ document.getElementById('remaining')!.textContent = format(income-monthly);
+ document.getElementById('upfront')!.textContent = format(deposit+moving+rent*advance);
+ document.getElementById('share')!.textContent = income > 0 ? ((rent+utilities)/income*100).toFixed(1)+'%' : 'Not calculated';
+ message.textContent = income-monthly < 0 ? 'Your entered monthly commitments exceed your entered take-home income. Revisit the figures before making a commitment.' : 'All amounts use the currency you entered. This is a planning calculation, not an affordability decision.';
+}
+form.addEventListener('input', updateBudget); updateBudget();
+</script>

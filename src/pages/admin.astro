@@ -3,9 +3,8 @@
 import Layout from '../layouts/Layout.astro';
 ---
 
-<Layout>
+<Layout title="Administration | RentMap" canonical="https://rentmap.net/admin/" noindex={true}>
   <slot name="head">
-    <meta name="robots" content="noindex, nofollow">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
       * { box-sizing: border-box; }

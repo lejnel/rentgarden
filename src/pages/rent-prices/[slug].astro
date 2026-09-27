@@ -5,9 +5,12 @@
 // NB: getStaticPaths står FØR imports for at undgå Astro/Vite CJS-hoisting-fejl
 export async function getStaticPaths() {
   const paths = [];
+  const seen = new Set();
   for (const entry of avgData) {
     for (const city of entry.cities) {
       const slug = `${city.city.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')}-${entry.country.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`;
+      if (seen.has(slug)) continue;
+      seen.add(slug);
       paths.push({ params: { slug }, props: { city, country: entry.country } });
     }
   }
@@ -19,6 +22,7 @@ import avgData from '../../../public/avg-rent.json';
 import dstData from '../../data/dst-index.json';
 
 const { city, country } = Astro.props;
+const variants = avgData.find(entry => entry.country === country).cities.filter(c => c.city === city.city);
 const { city: cityName, rent1, rent2, rent3, avg } = city;
 const slugify = value => value.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
 const countryPath = `/countries/${slugify(country)}/`;
@@ -29,8 +33,8 @@ const otherCities = avgData.flatMap(entry => entry.cities.map(c => ({ ...c, coun
   .slice(0, 9);
 const week = n => Math.round(n * 12 / 52); // måned → uge
 
-const title = `Rent Prices in ${cityName}, ${country} 2026: Average $${avg.toLocaleString('en-US')}/mo | RentMap`;
-const description = `Rent prices in ${cityName}, ${country} 2026: average rent is $${avg.toLocaleString('en-US')}/mo (≈$${week(avg).toLocaleString('en-US')}/wk). 1-bed $${rent1.toLocaleString('en-US')} · 2-bed $${rent2.toLocaleString('en-US')} · 3-bed $${rent3.toLocaleString('en-US')}. Updated daily from real rental listings.`;
+const title = `Rent snapshot for ${cityName}, ${country}: Average $${avg.toLocaleString('en-US')}/mo | RentMap`;
+const description = `Stored rent reference for ${cityName}, ${country}: average rent is $${avg.toLocaleString('en-US')}/mo (≈$${week(avg).toLocaleString('en-US')}/wk). 1-bed $${rent1.toLocaleString('en-US')} · 2-bed $${rent2.toLocaleString('en-US')} · 3-bed $${rent3.toLocaleString('en-US')}. Stored USD snapshot; observation dates are unavailable.`;
 const pageUrl = `https://rentmap.net/rent-prices/${Astro.params.slug}/`;
 
 // DST-huslejeindeks for danske byer (region-niveau, officiel statistik)
@@ -40,7 +44,7 @@ const dstEntry = country === 'Denmark'
   : null;
 ---
 
-<Layout title={title} description={description} canonical={pageUrl} pageType="city">
+<Layout title={title} description={description} canonical={pageUrl} noindex={true} pageType="city">
   <script type="application/ld+json" set:html={JSON.stringify({
       '@context': 'https://schema.org',
       '@type': 'WebPage',
@@ -65,7 +69,7 @@ const dstEntry = country === 'Denmark'
         name: `What is the average rent in ${cityName}?`,
         acceptedAnswer: {
           '@type': 'Answer',
-          text: `The average monthly rent in ${cityName}, ${country} is $${avg.toLocaleString('en-US')}/month (≈$${week(avg).toLocaleString('en-US')}/week).`
+          text: `The stored combined monthly reference for ${cityName}, ${country} is $${avg.toLocaleString('en-US')}/month (≈$${week(avg).toLocaleString('en-US')}/week).`
         }
       },
       {
@@ -73,7 +77,7 @@ const dstEntry = country === 'Denmark'
         name: `How much is a 1-bedroom apartment in ${cityName}?`,
         acceptedAnswer: {
           '@type': 'Answer',
-          text: `A 1-bedroom apartment in ${cityName} costs an average of $${rent1.toLocaleString('en-US')}/month ($${week(rent1).toLocaleString('en-US')}/week).`
+          text: `A 1-bedroom apartment in ${cityName} has a stored reference of $${rent1.toLocaleString('en-US')}/month ($${week(rent1).toLocaleString('en-US')}/week).`
         }
       },
       {
@@ -90,7 +94,7 @@ const dstEntry = country === 'Denmark'
   <main id="main-content" class="city-page">
     <header class="topbar">
       <a class="brand" href="/" aria-label="RentMap home"><span class="brand-mark" aria-hidden="true">⌂</span> RentMap</a>
-      <a class="back-link" href="/">Explore the globe <span aria-hidden="true">↗</span></a>
+      <a class="back-link" href="/map/">Explore the globe <span aria-hidden="true">↗</span></a>
     </header>
     <div class="page-content">
       <nav class="breadcrumbs" aria-label="Breadcrumb">
@@ -100,13 +104,14 @@ const dstEntry = country === 'Denmark'
         <p class="eyebrow">A place to call home</p>
         <h1 id="city-title">Rent prices in <span>{cityName}</span></h1>
         <p class="intro-copy">Get a feel for renting in {cityName}, {country}. Compare home sizes and find a starting point for your budget.</p>
-        <p class="currency-note">All prices in US dollars · Monthly averages</p>
+        <p class="currency-note">Stored prices in US dollars · Observation dates unavailable</p>
       </section>
 
+      {variants.length > 1 && <section class="panel"><h2>Multiple records need verification</h2><p class="analysis-copy">The import contains {variants.length} different records for {cityName} without dates or district labels. The headline below shows the first imported record, not a resolved city average. Do not treat these conflicting values as a current quote.</p><ul>{variants.map((v,i) => <li>Record {i+1}: 1 bedroom {usd(v.rent1)}, 2 bedrooms {usd(v.rent2)}, 3 bedrooms {usd(v.rent3)} per month.</li>)}</ul></section>}
       <section class="rent-panel" aria-labelledby="average-title">
         <div class="average">
           <div>
-            <h2 id="average-title">Average monthly rent</h2>
+            <h2 id="average-title">Combined monthly reference</h2>
             <p class="headline-price">{usd(avg)}<span> / month</span></p>
             <p class="weekly">Approximately {usd(week(avg))} per week</p>
           </div>
@@ -121,7 +126,7 @@ const dstEntry = country === 'Denmark'
             </article>
           ))}
         </div>
-        <p class="source-note">Average rent data: GlobalPropertyGuide. Actual rents vary by location and property. <a href="/about/">About the data →</a></p>
+        <p class="source-note">Stored snapshot attributed to GlobalPropertyGuide; source observation and exchange-rate dates were not recorded. Actual rents vary by location and property. <a href="/about/">About the data →</a></p>
       </section>
 
       {dstEntry && (
@@ -137,16 +142,23 @@ const dstEntry = country === 'Denmark'
         </section>
       )}
 
+      <section class="panel" aria-labelledby="comparison-title"><p class="eyebrow">Compare home sizes</p><h2 id="comparison-title">What changes with an extra bedroom?</h2>
+        <p class="analysis-copy">The two-bedroom reference is {usd(Math.abs(rent2-rent1))} {rent2 >= rent1 ? 'higher' : 'lower'} per month than the one-bedroom figure in {cityName}. Over twelve months, that difference is {usd(Math.abs(rent2-rent1)*12)} before utilities or other charges.</p>
+        <p class="analysis-copy">If two people split the two-bedroom rent equally, the rent-only share would be {usd(Math.round(rent2/2))} per person per month. This is an illustrative split of the stored figure, not an available room offer, and excludes bills.</p>
+        {(rent2 < rent1 || rent3 < rent2) && <p class="analysis-copy">Data caution: a larger bedroom category is cheaper than a smaller one in this record. The source samples are unavailable, so we cannot establish why. Verify the figures against current comparable listings.</p>}
+        <p class="analysis-copy">The combined figure gives the bedroom categories equal weight. It is not a measured average of all homes in {cityName}. The stored import lacks observation dates and sample sizes. <a href="/about/">Read the methodology</a> and <a href="/rent-budget/">calculate a budget using a current listing</a>.</p>
+      </section>
+
       <section class="explore-panel" aria-labelledby="explore-title">
         <div><p class="eyebrow">From averages to actual homes</p><h2 id="explore-title">See what’s out there</h2><p>Explore rental listings on the globe, compare prices, and open the original ads for more details.</p></div>
-        <a class="button" href="/">Explore rental listings <span aria-hidden="true">↗</span></a>
+        <a class="button" href="/map/">Explore rental listings <span aria-hidden="true">↗</span></a>
       </section>
 
       <section class="panel faq" aria-labelledby="faq-title">
         <p class="eyebrow">A little more local knowledge</p>
         <h2 id="faq-title">Your renting questions, answered</h2>
-        <details open><summary>What is the average rent in {cityName}?</summary><p>The average monthly rent in {cityName}, {country} is {usd(avg)} per month (approximately {usd(week(avg))} per week).</p></details>
-        <details><summary>How much is a 1-bedroom apartment in {cityName}?</summary><p>A 1-bedroom apartment in {cityName} costs an average of {usd(rent1)} per month (approximately {usd(week(rent1))} per week).</p></details>
+        <details open><summary>What is the average rent in {cityName}?</summary><p>The stored combined monthly reference for {cityName}, {country} is {usd(avg)} per month (approximately {usd(week(avg))} per week).</p></details>
+        <details><summary>How much is a 1-bedroom apartment in {cityName}?</summary><p>A 1-bedroom apartment in {cityName} has a stored reference of {usd(rent1)} per month (approximately {usd(week(rent1))} per week).</p></details>
         <details><summary>What should I keep in mind when comparing rents?</summary><p>These averages are a starting point for your search. The neighbourhood, property size, condition, and included bills can all affect the price. Check the original listing for the full costs and terms.</p></details>
       </section>
 
@@ -203,6 +215,7 @@ const dstEntry = country === 'Denmark'
   .explore-panel p:last-child { max-width:530px; font-size:14px; color:var(--muted); margin-top:12px; }
   .button { display:inline-flex; align-items:center; justify-content:center; gap:16px; background:var(--green); color:#fff; padding:13px 20px; border-radius:10px; font-size:14px; font-weight:600; flex-shrink:0; }
   .button:hover { background:#194c3c; text-decoration:none; }
+  .analysis-copy { margin-top:14px; font-size:14px; color:var(--muted); }
   .faq h2 { margin-bottom:20px; }
   details { border-top:1px solid #e4eae4; padding:18px 0; }
   details:last-child { padding-bottom:0; }

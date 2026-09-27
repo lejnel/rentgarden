@@ -1,0 +1,2027 @@
+---
+// src/pages/index.astro — RentGarden main globe page
+import Layout from '../layouts/Layout.astro';
+---
+
+<Layout pageType="globe" title="Rental listing map | RentMap" description="Explore listing locations and open original rental ads. Coverage and availability vary by source." canonical="https://rentmap.net/map/" noindex={true}>
+  <noscript><p style="position:fixed;z-index:9999;background:white;color:#223d37;padding:20px">The interactive map requires JavaScript. <a href="/">Explore RentMap</a> or use our <a href="/rent-budget/">rental budget guide</a>.</p></noscript>
+  <slot name="head">
+    <link rel="preconnect" href="https://cesium.com">
+    <link rel="preconnect" href="https://services.arcgisonline.com">
+    <link rel="stylesheet" href="https://cesium.com/downloads/cesiumjs/releases/1.125/Build/Cesium/Widgets/widgets.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+    <style>
+      #cesiumContainer {
+        position: fixed; inset: 0;
+      }
+      
+      /* Hide Cesium credit/branding — keep attribution but minimal */
+      .cesium-viewer-bottom { display: none !important; }
+      .cesium-viewer-toolbar { display: none !important; }
+      .cesium-viewer-fullscreenContainer { display: none !important; }
+      .cesium-viewer-geocoderContainer { display: none !important; }
+      
+      /* ---- Year pills ---- */
+      .year-pills {
+        position:fixed; top:62px; left:50%; transform:translateX(-50%); z-index:1500;
+        display:flex; gap:8px; flex-wrap:wrap; justify-content:center;
+      }
+      .year-pill {
+        padding:6px 16px; border-radius:20px; border:1px solid rgba(255,255,255,0.2);
+        background:rgba(15,23,42,0.85); color:rgba(255,255,255,0.7); cursor:pointer;
+        font-size:13px; font-weight:500; backdrop-filter:blur(8px);
+        transition:all 0.2s;
+      }
+      .year-pill:hover { border-color:rgba(255,255,255,0.4); color:#fff; }
+      .year-pill.active { background:var(--accent); border-color:var(--accent); color:#fff; }
+
+      /* ---- Type pills (under currency selector) ---- */
+      .type-pills {
+        position:fixed; top:64px; left:20px; z-index:1500;
+        display:flex; gap:6px; flex-wrap:wrap;
+        max-width: 260px;
+      }
+      .type-pill {
+        padding:8px 12px; border-radius:10px; border:1px solid rgba(255,255,255,0.12);
+        background: rgba(10,14,23,0.9); color:#e2e8f0; cursor:pointer;
+        font-size:13px; font-weight:500; backdrop-filter:blur(12px);
+        transition:all 0.2s; font-family: inherit;
+      }
+      .type-pill:hover { border-color:rgba(255,255,255,0.3); color:#fff; }
+      .type-pill.active { background:var(--accent); border-color:var(--accent); color:#fff; }
+
+      /* ---- Legend ---- */
+      .legend {
+        position: fixed; bottom: 24px; left: 24px; z-index: 1000;
+        background: rgba(10,14,23,0.9); backdrop-filter: blur(12px);
+        border: 1px solid rgba(255,255,255,0.1); border-radius: 14px;
+        padding: 14px 18px; font-size: 12px; color: #8899b4;
+        font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+      }
+      .legend-title { font-weight:600; margin-bottom:6px; color:#e2e8f0; font-size:13px; }
+      .legend-row { display:flex; align-items:center; gap:8px; margin-top:4px; }
+      .legend-dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
+      .avg-legend { bottom: 24px; left: 190px; border-color: rgba(34,197,94,0.35); }
+      .legend-note { margin-top:8px; font-size:10px; color:#64748b; border-top:1px solid rgba(255,255,255,0.08); padding-top:6px; }
+      
+      /* ---- Search ---- */
+      .search-bar {
+        position: fixed; top: 20px; left: 50%; transform: translateX(-50%); z-index: 1000;
+        display: flex; align-items: center; gap: 8px;
+      }
+      .search-input {
+        padding: 12px 20px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.15);
+        background: rgba(10,14,23,0.9); backdrop-filter: blur(12px);
+        color: #e2e8f0; font-size: 14px; width: 320px; outline: none;
+        font-family: inherit; transition: border-color 0.2s;
+      }
+      .search-input:focus { border-color: rgba(99,102,241,0.6); }
+      .search-input::placeholder { color: #64748b; }
+      
+      /* ---- Currency Selector ---- */
+      .currency-selector {
+        position: fixed; top: 20px; left: 20px; z-index: 1000;
+      }
+      .currency-selector select {
+        padding: 8px 12px; border-radius: 10px;
+        border: 1px solid rgba(255,255,255,0.12);
+        background: rgba(10,14,23,0.9); backdrop-filter: blur(12px);
+        color: #e2e8f0; font-size: 13px; font-family: inherit;
+        cursor: pointer; outline: none;
+      }
+      
+      /* ---- Info Panel ---- */
+      .info-panel {
+        position: fixed; bottom: -500px; left: 50%; transform: translateX(-50%);
+        width: min(90vw, 480px); z-index: 1000;
+        background: rgba(13,18,30,0.95); backdrop-filter: blur(20px);
+        border: 1px solid rgba(255,255,255,0.1); border-radius: 20px 20px 0 0;
+        padding: 28px 24px 24px;
+        transition: bottom 0.4s cubic-bezier(0.16,1,0.3,1);
+        font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+        color: #e2e8f0;
+      }
+      .info-panel.open { bottom: 0; }
+      .panel-close {
+        position: absolute; top: 12px; right: 12px; z-index: 5;
+        background: rgba(255,255,255,0.08); border: none; border-radius: 8px;
+        color: #94a3b8; font-size: 20px; line-height: 1; width: 32px; height: 32px;
+        cursor: pointer; display: flex; align-items: center; justify-content: center;
+      }
+      .panel-close:hover { background: rgba(255,255,255,0.15); color: #e2e8f0; }
+      .panel-handle { width:40px; height:4px; background:rgba(255,255,255,0.2); border-radius:4px; margin:-14px auto 16px; cursor:pointer; }
+      .panel-city { font-size:22px; font-weight:700; line-height:1.25; }
+      .panel-country { font-size:13px; color:#8899b4; margin-top:2px; }
+      :global(.panel-badges) { display:flex; gap:6px; margin-top:8px; flex-wrap:wrap; }
+      :global(.panel-badge) {
+        font-size:12px; padding:5px 12px; border-radius:999px;
+        background:rgba(255,255,255,0.10); color:#cbd5e1;
+        border:1px solid rgba(255,255,255,0.16); white-space:nowrap;
+      }
+      .panel-stats { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:16px; }
+      .stat-card { background:rgba(255,255,255,0.04); border-radius:10px; padding:12px; text-align:center; }
+      .stat-value { font-size:18px; font-weight:700; }
+      .stat-label { font-size:10px; color:#8899b4; text-transform:uppercase; letter-spacing:0.8px; margin-top:3px; }
+      .panel-listings { margin-top:14px; max-height:200px; overflow-y:auto; }
+      #panelListings {
+        max-height: 320px;
+        overflow-y: auto;
+      }
+      .panel-section-title { font-size:11px; font-weight:600; color:#64748b; text-transform:uppercase; letter-spacing:1px; margin-bottom:8px; }
+      :global(.detail-grid) {
+        display:grid; grid-template-columns:repeat(4, 1fr); gap:8px; margin-bottom:10px;
+      }
+      @media (max-width: 768px) {
+        :global(.detail-grid) { grid-template-columns:repeat(2, 1fr); }
+      }
+      :global(.d-cell) {
+        background:rgba(255,255,255,0.04); border-radius:10px;
+        padding:12px 8px; text-align:center;
+        border:1px solid rgba(255,255,255,0.06);
+      }
+      :global(.d-label) {
+        display:block; font-size:10px; color:#8899b4; text-transform:uppercase;
+        letter-spacing:0.6px; margin-bottom:6px;
+      }
+      :global(.d-val) {
+        display:block; font-size:15px; font-weight:700; color:#e2e8f0;
+        white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+      }
+      :global(.view-btn) {
+        display:block; width:100%; margin:4px 0 0; padding:11px; border-radius:8px;
+        background:linear-gradient(135deg,#6366f1,#7c3aed); color:white;
+        text-align:center; font-weight:600; cursor:pointer; border:none;
+        font-family:inherit; font-size:13px; transition:opacity 0.15s;
+      }
+      :global(.view-btn:hover) { opacity:0.88; }
+      :global(.view-btn-city) { display:block; text-decoration:none; margin-top:8px;
+        background:linear-gradient(135deg,#7c3aed,#a855f7); }
+      .res-page { color:#a78bfa; text-decoration:none; font-size:15px; font-weight:700; padding:0 6px;
+        border-radius:6px; flex-shrink:0; }
+      .res-page:hover { background:rgba(124,58,237,0.25); }
+      .detail-card { background:rgba(255,255,255,0.04); border-radius:10px; padding:4px 14px; margin-bottom:8px; }
+      .detail-row {
+        display:flex; justify-content:space-between; align-items:center;
+        padding:9px 0; border-bottom:1px solid rgba(255,255,255,0.05); font-size:13px;
+      }
+      .detail-row:last-child { border-bottom:none; }
+      .detail-label { color:#8899b4; font-size:12px; }
+      .detail-value { font-weight:600; text-align:right; }
+      :global(.listing-row) {
+        display:flex; align-items:center; gap:10px; padding:10px; border-radius:8px;
+        background:rgba(255,255,255,0.02); margin-bottom:4px; cursor:pointer;
+        transition:background 0.15s; font-size:13px;
+      }
+      :global(.listing-row:hover) { background:rgba(255,255,255,0.05); }
+      :global(.listing-type) { font-size:16px; width:22px; text-align:center; }
+      :global(.listing-price) { font-weight:700; white-space:nowrap; }
+      :global(.listing-source) { font-size:10px; color:#64748b; }
+      :global(.listing-arrow) { color:#6366f1; margin-left:auto; }
+      .panel-footer { margin-top:14px; text-align:center; font-size:11px; color:#64748b; }
+      .panel-add-link {
+        display:inline-flex; align-items:center; gap:5px; margin-top:8px;
+        color:#a5b4fc; font-size:12px; font-weight:600; text-decoration:none;
+        background:none; border:0; cursor:pointer; font-family:inherit;
+      }
+      .panel-add-link:hover { color:#c4b5fd; text-decoration:underline; }
+      
+      /* ---- FAB ---- */
+      .fab {
+        position:fixed; bottom:28px; right:28px; z-index:2000;
+        min-width:178px; height:52px; padding:0 18px; border-radius:26px;
+        border:none; cursor:pointer; gap:8px;
+        background:linear-gradient(135deg, #4f46e5, #7c3aed);
+        color:white; font-size:14px; font-weight:700;
+        box-shadow:0 4px 24px rgba(99,102,241,0.4);
+        transition:all 0.2s; display:flex; align-items:center; justify-content:center;
+        font-family:inherit;
+      }
+      .fab-plus { font-size:23px; font-weight:400; line-height:1; }
+      .fab:hover { transform:translateY(-2px); box-shadow:0 6px 32px rgba(99,102,241,0.6); }
+      
+      /* ---- Popup ---- */
+      .popup-overlay {
+        position:fixed; inset:0; z-index:3000; background:rgba(0,0,0,0.7);
+        display:flex; align-items:center; justify-content:center;
+      }
+      .popup-overlay.hidden { display:none; }
+      .popup-card {
+        background:#131a2b; border:1px solid rgba(255,255,255,0.1);
+        border-radius:16px; padding:24px; width:420px; max-width:95vw;
+        max-height:90vh; overflow-y:auto;
+      }
+      
+      /* ---- Mobile optimizations ---- */
+      @media (max-width: 768px) {
+        /* Year pills move below currency selector to avoid overlap */
+        .year-pills {
+          top: 68px; left: 12px; right: 12px; transform: none;
+          justify-content: flex-start;
+        }
+        /* Type pills scroll horizontally instead of wrapping 3 rows */
+        .type-pills {
+          top: 112px; left: 12px; right: 12px; max-width: none;
+          flex-wrap: nowrap; overflow-x: auto;
+          -webkit-overflow-scrolling: touch;
+          padding-bottom: 4px;
+          scrollbar-width: none;
+        }
+        .type-pills::-webkit-scrollbar { display: none; }
+        /* Admin link hidden on mobile (footer link exists) */
+        .admin-link { display: none; }
+        /* Legend becomes a compact horizontal strip at the bottom */
+        .legend {
+          bottom: 16px; left: 12px; right: auto;
+          padding: 8px 12px; border-radius: 10px;
+          display: flex; align-items: center; gap: 10px;
+        }
+        .legend-title { display: none; }
+        .legend-row { margin-top: 0; gap: 4px; font-size: 11px; }
+        /* Info panel: keep it from covering the whole screen */
+        .info-panel {
+          width: 100vw; max-height: 65vh; overflow-y: auto;
+          border-radius: 20px 20px 0 0; padding: 22px 16px 16px;
+        }
+        /* FAB slightly smaller and clear of the legend */
+        .fab {
+          bottom: 16px; right: 16px; min-width:0; width:auto; height:48px;
+          padding:0 15px; border-radius:24px; font-size:13px;
+        }
+        /* Popup card more compact on mobile */
+        .popup-card { padding: 16px; }
+        /* Currency selector stays top-left but smaller */
+        .currency-selector select { padding: 7px 10px; font-size: 12px; }
+      }
+      
+      /* ---- HTML Pills ---- */
+      .html-pill {
+        position: absolute;
+        padding: 5px 14px;
+        border-radius: 20px;
+        border: 2.5px solid white;
+        color: white;
+        font: bold 14px -apple-system, BlinkMacSystemFont, sans-serif;
+        white-space: nowrap;
+        pointer-events: auto;
+        cursor: pointer;
+        transform: translate(-50%, -50%);
+        text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+        box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+        transition: opacity 0.2s;
+      }
+      .html-pill:hover {
+        filter: brightness(1.15);
+        box-shadow: 0 4px 16px rgba(0,0,0,0.5);
+        z-index: 10;
+      }
+      
+      /* ---- Tooltip ---- */
+      .hover-tooltip {
+        position:fixed; pointer-events:none; z-index:1500;
+        background:rgba(13,18,30,0.95); border:1px solid rgba(255,255,255,0.15);
+        border-radius:8px; padding:6px 10px; font-size:12px; color:#e2e8f0;
+        font-family:-apple-system,BlinkMacSystemFont,sans-serif;
+        box-shadow:0 4px 16px rgba(0,0,0,0.5);
+        opacity:0; transition:opacity 0.15s;
+      }
+      .hover-tooltip.visible { opacity:1; }
+
+      /* ---- Zoom-kontroller (Google Earth/Maps-stil) ---- */
+      /* Placeret OVER "Add your listing"-FAB'en (nederst-højre) så de ikke overlapper */
+      .map-controls {
+        position:fixed; bottom:96px; right:28px; z-index:1400;
+        display:flex; flex-direction:column; gap:8px;
+        touch-action:none;
+      }
+      .map-ctrl-btn {
+        width:44px; height:44px; border-radius:10px;
+        border:1px solid rgba(255,255,255,0.16);
+        background:rgba(15,23,42,0.88); color:#fff;
+        font-size:22px; font-weight:600; cursor:pointer; line-height:1;
+        backdrop-filter:blur(8px); box-shadow:0 2px 8px rgba(0,0,0,0.35);
+        display:flex; align-items:center; justify-content:center;
+        transition:background 0.2s, transform 0.1s;
+        user-select:none; -webkit-user-select:none; -webkit-tap-highlight-color:transparent;
+      }
+      .map-ctrl-btn:hover { background:rgba(30,41,59,0.95); }
+      .map-ctrl-btn:active { transform:scale(0.94); }
+      @media (pointer:coarse) {
+        /* Mobil: over FAB'en (bottom:16px + 48px højde) */
+        .map-controls { bottom:80px; right:16px; }
+        .map-ctrl-btn { width:46px; height:46px; }
+      }
+      
+      /* ---- Admin link ---- */
+      .admin-link {
+        position:fixed; top:20px; right:20px; z-index:1000;
+        color:#64748b; font-size:12px; text-decoration:none;
+        font-family:-apple-system,BlinkMacSystemFont,sans-serif;
+        padding:6px 12px; border-radius:8px;
+        background:rgba(10,14,23,0.7); border:1px solid rgba(255,255,255,0.08);
+      }
+      .admin-link:hover { color:#e2e8f0; border-color:rgba(255,255,255,0.2); }
+
+      /* ---- By-søgning (radio.garden-stil) ---- */
+      .city-search {
+        position:fixed; top:14px; left:50%; transform:translateX(-50%); z-index:1600;
+      }
+      .city-search-toggle {
+        display:flex; align-items:center; gap:7px; padding:8px 18px; border-radius:20px;
+        border:1px solid rgba(255,255,255,0.2); background:rgba(15,23,42,0.88); color:#fff;
+        font-size:13px; font-weight:500; cursor:pointer; backdrop-filter:blur(8px);
+        font-family:inherit; transition:background 0.2s;
+      }
+      .city-search-toggle:hover { background:rgba(30,41,59,0.95); }
+      .city-search-drop { display:none; margin-top:8px; width:320px; }
+      .city-search.open .city-search-drop { display:block; }
+      .city-search-drop input {
+        width:100%; padding:10px 14px; border-radius:12px; border:1px solid rgba(167,139,250,0.55);
+        background:rgba(10,14,23,0.96); color:#fff; font-size:14px; outline:none; font-family:inherit;
+        backdrop-filter:blur(10px);
+      }
+      .city-search-drop input:focus { border-color:#a78bfa; box-shadow:0 0 0 3px rgba(124,58,237,0.25); }
+      .city-search-results {
+        margin-top:6px; border-radius:12px; border:1px solid rgba(255,255,255,0.12);
+        background:rgba(10,14,23,0.97); backdrop-filter:blur(12px); overflow:hidden;
+        max-height:300px; overflow-y:auto;
+      }
+      .city-search-results .res {
+        padding:9px 14px; font-size:13px; color:#e2e8f0; cursor:pointer;
+        display:flex; justify-content:space-between; gap:10px;
+      }
+      .city-search-results .res:hover, .city-search-results .res.hl { background:rgba(124,58,237,0.25); }
+      .city-search-results .res .cnt { color:#64748b; font-size:11px; white-space:nowrap; }
+      @media (pointer:coarse) {
+        .city-search { top:14px; left:auto; right:12px; transform:none; }
+        .city-search-toggle .hint { display:none; }
+        .city-search-toggle { padding:9px 12px; }
+        .city-search-drop { width:min(86vw, 340px); }
+      }
+      
+      /* Loading */
+      .loading-overlay {
+        position:fixed; inset:0; z-index:5000; background:#0a0e17;
+        display:flex; align-items:center; justify-content:center;
+        transition:opacity 0.5s; pointer-events:none;
+        font-family:-apple-system,BlinkMacSystemFont,sans-serif;
+      }
+      .loading-overlay.hidden { opacity:0; pointer-events:none; }
+      .loading-text { color:#e2e8f0; font-size:18px; font-weight:500; }
+      .loading-dots::after {
+        content:''; animation:dots 1.5s steps(4,end) infinite;
+      }
+      @keyframes dots {
+        0% { content:''; } 25% { content:'.'; } 50% { content:'..'; } 75% { content:'...'; }
+      }
+    </style>
+  </slot>
+
+  <div id="cesiumContainer"></div>
+
+  <!-- Zoom-kontroller (Google Earth/Maps-stil) — ingen 3D/lokations-knap -->
+  <div class="map-controls" id="mapControls">
+    <button class="map-ctrl-btn" onclick="mapZoom(1)" title="Zoom ind" aria-label="Zoom ind">+</button>
+    <button class="map-ctrl-btn" onclick="mapZoom(-1)" title="Zoom ud" aria-label="Zoom ud">−</button>
+    <button class="map-ctrl-btn" onclick="mapHome()" title="Nulstil visning" aria-label="Nulstil visning">⌂</button>
+  </div>
+
+  <!-- Visuelt skjult H1 for SEO (globussen er ren) -->
+  <h1 style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;margin:-1px;padding:0;border:0;">RentMap — Global Rent Prices on an Interactive Globe</h1>
+  
+  <div id="data-status" role="status" style="display:none;position:fixed;top:90px;left:16px;right:16px;z-index:2000;background:#fff;color:#223d37;padding:12px;border-radius:10px;font-size:14px"></div>
+  <!-- Loading -->
+  <div class="loading-overlay" id="loadingOverlay">
+    <div class="loading-text">RentMap 🌍<span class="loading-dots"></span></div>
+  </div>
+
+  <!-- Currency Selector -->
+  <div class="currency-selector">
+    <select id="currencySelect" onchange="changeCurrency()">
+      <option value="USD" selected>🇺🇸 USD</option>
+      <option value="EUR">🇪🇺 EUR</option>
+      <option value="DKK">🇩🇰 DKK</option>
+      <option value="UAH">🇺🇦 UAH</option>
+      <option value="MAD">🇲🇦 MAD</option>
+      <option value="GBP">🇬🇧 GBP</option>
+      <option value="SEK">🇸🇪 SEK</option>
+      <option value="NOK">🇳🇴 NOK</option>
+      <option value="INR">🇮🇳 INR</option>
+      <option value="CNY">🇨🇳 CNY</option>
+      <option value="VND">🇻🇳 VND</option>
+      <option value="THB">🇹🇭 THB</option>
+      <option value="PHP">🇵🇭 PHP</option>
+      <option value="MYR">🇲🇾 MYR</option>
+      <option value="CAD">🇨🇦 CAD</option>
+      <option value="ZAR">🇿🇦 ZAR</option>
+      <option value="COP">🇨🇴 COP</option>
+      <option value="ARS">🇦🇷 ARS</option>
+      <option value="KZT">🇰🇿 KZT</option>
+      <option value="NGN">🇳🇬 NGN</option>
+      <option value="BRL">🇧🇷 BRL</option>
+      <option value="MXN">🇲🇽 MXN</option>
+      <option value="TRY">🇹🇷 TRY</option>
+      <option value="PGK">🇵🇬 PGK</option>
+      <option value="KRW">🇰🇷 KRW</option>
+      <option value="JPY">🇯🇵 JPY</option>
+    </select>
+  </div>
+
+  <!-- HTML Pill Container (overlays on globe) -->
+  <div id="pillContainer" style="position:fixed;inset:0;pointer-events:none;z-index:100;"></div>
+
+  <!-- Clean globe — no search, just explore -->
+  
+  <!-- Year pills -->
+  <div class="year-pills" id="yearPills"></div>
+
+  <!-- City search (radio.garden style) -->
+  <div class="city-search" id="citySearch">
+    <button class="city-search-toggle" id="citySearchToggle" onclick="toggleCitySearch()" aria-label="Search city">🔍 <span class="hint">Search city</span></button>
+    <div class="city-search-drop" id="citySearchDrop">
+      <input id="citySearchInput" type="text" placeholder="Type a city… (Enter = select)" autocomplete="off" spellcheck="false">
+      <div class="city-search-results" id="citySearchResults"></div>
+    </div>
+  </div>
+
+  <!-- Type pills (top left) -->
+  <div class="type-pills" id="typePills"></div>
+
+  <!-- Legend -->
+  <div class="legend">
+    <div class="legend-title">Rent per m² / month</div>
+    <div class="legend-row"><div class="legend-dot" style="background:#22c55e"></div> <span id="legLow">0–15 $</span></div>
+    <div class="legend-row"><div class="legend-dot" style="background:#eab308"></div> <span id="legMid">15–22 $</span></div>
+    <div class="legend-row"><div class="legend-dot" style="background:#f97316"></div> <span id="legHigh">22–30 $</span></div>
+    <div class="legend-row"><div class="legend-dot" style="background:#ef4444"></div> <span id="legPremium">30+ $</span></div>
+  </div>
+
+  <!-- Avg rent overlay legend (shown only when overlay is active) -->
+  <div class="legend avg-legend" id="avgLegend" style="display:none;">
+    <div class="legend-title">Average monthly rent</div>
+    <div class="legend-row"><div class="legend-dot" style="background:#22c55e"></div> <span>≤ $700</span></div>
+    <div class="legend-row"><div class="legend-dot" style="background:#84cc16"></div> <span>$700–1.200</span></div>
+    <div class="legend-row"><div class="legend-dot" style="background:#eab308"></div> <span>$1.200–1.800</span></div>
+    <div class="legend-row"><div class="legend-dot" style="background:#f97316"></div> <span>$1.800–2.600</span></div>
+    <div class="legend-row"><div class="legend-dot" style="background:#ef4444"></div> <span>$2.600–4.000</span></div>
+    <div class="legend-row"><div class="legend-dot" style="background:#a855f7"></div> <span>$4.000+</span></div>
+    <div class="legend-note">Source: GlobalPropertyGuide</div>
+  </div>
+
+  <!-- Info Panel -->
+  <div class="info-panel" id="infoPanel">
+    <button class="panel-close" onclick="closePanel()" aria-label="Close">&times;</button>
+    <div class="panel-handle"></div>
+    <div class="panel-city" id="panelCity">Select a city</div>
+    <div class="panel-country" id="panelCountry"></div>
+    <div class="panel-stats">
+      <div class="stat-card"><div class="stat-value" id="statAvg">—</div><div class="stat-label">Price / m²</div></div>
+      <div class="stat-card"><div class="stat-value" id="statCount">—</div><div class="stat-label">Monthly rent</div></div>
+    </div>
+    <div class="panel-listings" id="panelListings">
+      <div class="panel-section-title">Recent listings</div>
+    </div>
+    <div class="panel-footer">
+      📌 Data updated periodically
+      <button class="panel-add-link" type="button" onclick="openAddPopup()">Know your rent? Add your listing →</button>
+    </div>
+  </div>
+
+  <!-- Public CTA — opens add-price popup -->
+  <button class="fab" id="fabAdd" title="Add your listing" aria-label="Add your listing" onclick="openAddPopup()"><span class="fab-plus">+</span><span>Add your listing</span></button>
+
+  <!-- Admin link -->
+  <a href="/admin" class="admin-link">⚙️ Admin</a>
+
+  <!-- Add Price Popup -->
+  <div class="popup-overlay hidden" id="popupOverlay">
+    <div class="popup-card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+        <h2 style="font-size:18px;font-weight:700;color:#e2e8f0;margin:0;">➕ Add Rent Price</h2>
+        <button onclick="closeAddPopup()" style="background:none;border:none;color:#64748b;font-size:22px;cursor:pointer;line-height:1;">&times;</button>
+      </div>
+      <form id="popupForm" onsubmit="submitPopupPrice(event)">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+          <div style="grid-column:1/-1;">
+            <label style="font-size:11px;color:#8899b4;text-transform:uppercase;">Listing URL *</label>
+            <input type="url" id="popUrl" required placeholder="https://..." style="width:100%;padding:8px;border-radius:6px;border:1px solid rgba(255,255,255,0.1);background:rgba(0,0,0,0.3);color:#e2e8f0;font-size:13px;font-family:inherit;outline:none;">
+          </div>
+          <div>
+            <label style="font-size:11px;color:#8899b4;text-transform:uppercase;">Monthly Rent *</label>
+            <input type="number" id="popPrice" required placeholder="6950" style="width:100%;padding:8px;border-radius:6px;border:1px solid rgba(255,255,255,0.1);background:rgba(0,0,0,0.3);color:#e2e8f0;font-size:13px;font-family:inherit;outline:none;">
+          </div>
+          <div>
+            <label style="font-size:11px;color:#8899b4;text-transform:uppercase;">Currency</label>
+            <select id="popCurrency" style="width:100%;padding:8px;border-radius:6px;border:1px solid rgba(255,255,255,0.1);background:rgba(0,0,0,0.3);color:#e2e8f0;font-size:13px;font-family:inherit;outline:none;">
+              <option value="DKK">DKK</option><option value="EUR" selected>EUR</option>
+              <option value="USD">USD</option><option value="BRL">BRL</option><option value="MXN">MXN</option><option value="GBP">GBP</option>
+              <option value="INR">INR</option><option value="CNY">CNY</option>
+              <option value="SEK">SEK</option><option value="NOK">NOK</option>
+            </select>
+          </div>
+          <!-- F4: Added sqm, rooms, type fields -->
+          <div>
+            <label style="font-size:11px;color:#8899b4;text-transform:uppercase;">m²</label>
+            <input type="number" id="popSqm" placeholder="65" style="width:100%;padding:8px;border-radius:6px;border:1px solid rgba(255,255,255,0.1);background:rgba(0,0,0,0.3);color:#e2e8f0;font-size:13px;font-family:inherit;outline:none;">
+          </div>
+          <div>
+            <label style="font-size:11px;color:#8899b4;text-transform:uppercase;">Rooms</label>
+            <input type="number" id="popRooms" placeholder="2" style="width:100%;padding:8px;border-radius:6px;border:1px solid rgba(255,255,255,0.1);background:rgba(0,0,0,0.3);color:#e2e8f0;font-size:13px;font-family:inherit;outline:none;">
+          </div>
+          <div>
+            <label style="font-size:11px;color:#8899b4;text-transform:uppercase;">Email *</label>
+            <input type="email" id="popEmail" required placeholder="you@example.com" style="width:100%;padding:8px;border-radius:6px;border:1px solid rgba(255,255,255,0.1);background:rgba(0,0,0,0.3);color:#e2e8f0;font-size:13px;font-family:inherit;outline:none;">
+          </div>
+          <!-- F4: Type field -->
+          <div>
+            <label style="font-size:11px;color:#8899b4;text-transform:uppercase;">Type</label>
+            <select id="popType" style="width:100%;padding:8px;border-radius:6px;border:1px solid rgba(255,255,255,0.1);background:rgba(0,0,0,0.3);color:#e2e8f0;font-size:13px;font-family:inherit;outline:none;">
+              <option value="apartment">Apartment</option><option value="house">House</option>
+              <option value="room">Room</option><option value="studio">Studio</option>
+              <option value="townhouse">Townhouse</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Mini map -->
+        <div style="margin-top:10px;">
+          <div style="display:flex;gap:6px;margin-bottom:6px;">
+            <input type="text" id="popGeoSearch" placeholder="Search city..." style="flex:1;padding:6px 10px;border-radius:4px;border:1px solid rgba(255,255,255,0.1);background:rgba(0,0,0,0.3);color:#e2e8f0;font-size:12px;font-family:inherit;outline:none;">
+            <button type="button" onclick="popupSearchCity()" style="padding:6px 10px;border-radius:4px;border:none;background:#6366f1;color:white;font-size:12px;cursor:pointer;font-family:inherit;">Find</button>
+          </div>
+          <div id="popupMap" style="height:180px;border-radius:8px;overflow:hidden;border:1px solid rgba(255,255,255,0.1);background:#1a2030;"></div>
+          <div style="font-size:10px;color:#64748b;margin-top:4px;" id="popCoordLabel">Click map to set location</div>
+        </div>
+
+        <input type="hidden" id="popLat" value="55.6761">
+        <input type="hidden" id="popLng" value="12.5683">
+        <input type="hidden" id="popCityHidden" value="Copenhagen">
+        <!-- F5: Hidden country field, set by reverse geocode -->
+        <input type="hidden" id="popCountryHidden" value="DK">
+        
+        <div id="popStatus" style="font-size:12px;margin-top:8px;display:none;"></div>
+        <button type="submit" style="width:100%;margin-top:10px;padding:10px;border-radius:8px;border:none;background:linear-gradient(135deg,#6366f1,#7c3aed);color:white;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;">Add Price</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Tooltip -->
+  <div class="hover-tooltip" id="tooltip"></div>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script type="module">
+    // We'll load Cesium from CDN for simplicity
+    // Using the ES module build via importmap or direct script
+    
+    const CESIUM_VERSION = '1.125';
+    
+    // Load Cesium CSS already done via link tag
+    // Load Cesium JS
+    async function loadCesium() {
+      return new Promise((resolve, reject) => {
+        const script = document.createElement('script');
+        script.src = `https://cesium.com/downloads/cesiumjs/releases/${CESIUM_VERSION}/Build/Cesium/Cesium.js`;
+        script.onload = () => resolve(window.Cesium);
+        script.onerror = reject;
+        document.head.appendChild(script);
+      });
+    }
+
+    let viewer;
+    let allCities = [];
+    let allPrices = [];
+    let displayCurrency = 'USD';
+    let pillMap = new WeakMap();
+    const currentYear = new Date().getFullYear();
+    let selectedYear = 0; // 0 = active (last 12 months)
+    let selectedType = 'all';
+    // Avg rent overlay (GlobalPropertyGuide data)
+    let avgOverlayActive = false;
+    let avgDataSource = null;
+    let avgDataCache = null;
+    
+    function renderTypePills() {
+      const container = document.getElementById('typePills');
+      const types = [
+        { value: 'all', label: '🌍 All' },
+        { value: 'apartment', label: '🏢 Apartment' },
+        { value: 'house', label: '🏠 House' },
+        { value: 'townhouse', label: '🏘️ Townhouse' },
+        { value: 'room', label: '🚪 Room' },
+        { value: 'studio', label: '🛋️ Studio' },
+        { value: 'commercial', label: '🏬 Commercial' },
+      ];
+      const baseStyle = 'padding:8px 12px;border-radius:10px;border:1px solid rgba(255,255,255,0.12);' +
+        'background:rgba(10,14,23,0.9);color:#e2e8f0;cursor:pointer;font-size:13px;font-weight:500;' +
+        'backdrop-filter:blur(12px);transition:all 0.2s;font-family:inherit;';
+      container.innerHTML = types.map(t =>
+        `<button class="type-pill" style="${baseStyle}${selectedType === t.value ? 'background:#6366f1;border-color:#6366f1;color:#fff;' : ''}" onclick="switchType('${t.value}')">${t.label}</button>`
+      ).join('');
+    }
+    
+    window.switchType = function(type) {
+      if (type === selectedType) return;
+      selectedType = type;
+      renderTypePills();
+      addPriceDots(Cesium, viewer);
+    };
+    
+    function renderYearPills() {
+      const container = document.getElementById('yearPills');
+      const startYear = 2026;
+      const baseStyle = 'padding:8px 12px;border-radius:10px;border:1px solid rgba(255,255,255,0.12);' +
+        'background:rgba(10,14,23,0.9);color:#e2e8f0;cursor:pointer;font-size:13px;font-weight:500;' +
+        'backdrop-filter:blur(12px);transition:all 0.2s;font-family:inherit;';
+      // Avg rent overlay-pille (ved siden af årstallene)
+      const avgStyle = avgOverlayActive
+        ? 'background:#22c55e;border-color:#22c55e;color:#fff;'
+        : 'background:rgba(34,197,94,0.12);border-color:rgba(34,197,94,0.45);color:#86efac;';
+      let html = `<button class="year-pill" style="${baseStyle}${avgStyle}" onclick="toggleAvgOverlay()" title="Show average rent by city (GlobalPropertyGuide data)">📊 Avg rent</button>`;
+      html += `<button class="year-pill" style="${baseStyle}${selectedYear === 0 ? 'background:#6366f1;border-color:#6366f1;color:#fff;' : ''}" onclick="switchYear(0)">Active</button>`;
+      for (let y = currentYear; y >= startYear; y--) {
+        html += `<button class="year-pill" style="${baseStyle}${y === selectedYear ? 'background:#6366f1;border-color:#6366f1;color:#fff;' : ''}" onclick="switchYear(${y})">${y}</button>`;
+      }
+      container.innerHTML = html;
+    }
+    
+    window.switchYear = function(year) {
+      if (year === selectedYear) return;
+      selectedYear = year;
+      renderYearPills();
+      loadData().then(() => {
+        addPriceDots(Cesium, viewer);
+      });
+    };
+    
+    // Exchange rates to USD (approximate)
+    const ratesToUSD = {
+      DKK: 0.147, EUR: 1.10, USD: 1, GBP: 1.27, SEK: 0.096, NOK: 0.094, INR: 0.012, CNY: 0.14, VND: 0.000041, THB: 0.028, PHP: 0.018, MYR: 0.215, CAD: 0.735, ZAR: 0.055, COP: 0.00032, ARS: 0.00067, KZT: 0.00213, NGN: 0.00065, IDR: 0.000065, BRL: 0.1925, TRY: 0.0278, PLN: 0.25, PGK: 0.263, KRW: 0.00075, JPY: 0.0067, UAH: 0.0224, MAD: 0.108, MXN: 0.0588
+    };
+    const currencySymbols = ({DKK:'kr',EUR:'€',USD:'$',GBP:'£',SEK:'kr',NOK:'kr',INR:'₹',CNY:'¥',VND:'₫',THB:'฿',PHP:'₱',MYR:'RM',CAD:'CA$',ZAR:'R',COP:'$',ARS:'$',KZT:'₸',NGN:'₦',IDR:'Rp',BRL:'R$',TRY:'₺',PLN:'zł',PGK:'K',KRW:'₩',JPY:'¥',UAH:'₴',MAD:'MAD',MXN:'$'})[displayCurrency] || displayCurrency;
+    
+    function convertPrice(price, fromCurrency, toCurrency) {
+      if (fromCurrency === toCurrency) return price;
+      const inUSD = price * (ratesToUSD[fromCurrency] || 1);
+      return Math.round(inUSD / (ratesToUSD[toCurrency] || 1));
+    }
+    
+    function changeCurrency() {
+      displayCurrency = document.getElementById('currencySelect').value;
+      const sym = ({DKK:'kr',EUR:'€',USD:'$',GBP:'£',SEK:'kr',NOK:'kr',INR:'₹',CNY:'¥',VND:'₫',THB:'฿',PHP:'₱',MYR:'RM',CAD:'CA$',ZAR:'R',COP:'$',ARS:'$',KZT:'₸',NGN:'₦',IDR:'Rp',BRL:'R$',TRY:'₺',PLN:'zł',PGK:'K',KRW:'₩',JPY:'¥',MXN:'$'})[displayCurrency] || displayCurrency;
+      const t1 = Math.round(convertPrice(15, 'USD', displayCurrency));
+      const t2 = Math.round(convertPrice(22, 'USD', displayCurrency));
+      const t3 = Math.round(convertPrice(30, 'USD', displayCurrency));
+      document.getElementById('legLow').textContent = `0–${t1} ${sym}`;
+      document.getElementById('legMid').textContent = `${t1}–${t2} ${sym}`;
+      document.getElementById('legHigh').textContent = `${t2}–${t3} ${sym}`;
+      document.getElementById('legPremium').textContent = `${t3}+ ${sym}`;
+      // Avg rent-legend: opdater intervaller til valgt valuta
+      updateAvgLegend();
+      // Redraw all dots with new currency
+      if (viewer) {
+        addPriceDots(Cesium, viewer);
+        // If panel is open, refresh it
+        const panel = document.getElementById('infoPanel');
+        if (panel.classList.contains('open')) {
+          if (currentPanelPrice) {
+            openPanel(currentPanelPrice);
+          } else if (currentPanelGroup) {
+            openGroupPanel(currentPanelGroup);
+          }
+        }
+      }
+    }
+
+    // Opdater avg-rent-legendens intervaller til den valgte valuta
+    function updateAvgLegend() {
+      const leg = document.getElementById('avgLegend');
+      if (!leg) return;
+      const sym = ({DKK:'kr',EUR:'€',USD:'$',GBP:'£',SEK:'kr',NOK:'kr',INR:'₹',CNY:'¥',VND:'₫',THB:'฿',PHP:'₱',MYR:'RM',CAD:'CA$',ZAR:'R',COP:'$',ARS:'$',KZT:'₸',NGN:'₦',IDR:'Rp',BRL:'R$',TRY:'₺',PLN:'zł',PGK:'K',KRW:'₩',JPY:'¥',MXN:'$'})[displayCurrency] || displayCurrency;
+      const levels = [700, 1200, 1800, 2600, 4000];
+      const labels = levels.map(u => Math.round(convertPrice(u, 'USD', displayCurrency)));
+      const rows = leg.querySelectorAll('.legend-row span');
+      if (rows.length >= 6) {
+        rows[0].textContent = `≤ ${sym}${labels[0].toLocaleString('en-US')}`;
+        rows[1].textContent = `${sym}${labels[0].toLocaleString('en-US')}–${labels[1].toLocaleString('en-US')}`;
+        rows[2].textContent = `${sym}${labels[1].toLocaleString('en-US')}–${labels[2].toLocaleString('en-US')}`;
+        rows[3].textContent = `${sym}${labels[2].toLocaleString('en-US')}–${labels[3].toLocaleString('en-US')}`;
+        rows[4].textContent = `${sym}${labels[3].toLocaleString('en-US')}–${labels[4].toLocaleString('en-US')}`;
+        rows[5].textContent = `${sym}${labels[4].toLocaleString('en-US')}+`;
+      }
+    }
+
+    // Color function based on price/m²/month — compare in USD always
+    function getColor(pricePerM2, fromCurrency) {
+      // Convert to USD for comparison
+      const inUSD = convertPrice(pricePerM2, fromCurrency || 'DKK', 'USD');
+      if (!inUSD || inUSD <= 15) return Cesium.Color.fromCssColorString('#22c55e');
+      if (inUSD <= 22) return Cesium.Color.fromCssColorString('#eab308');
+      if (inUSD <= 30) return Cesium.Color.fromCssColorString('#f97316');
+      return Cesium.Color.fromCssColorString('#ef4444');
+    }
+
+    // Farve for gennemsnitlig MÅNEDSLEJE (USD) — grøn → gul → orange → rød → lilla
+    function getAvgColor(usd) {
+      if (!usd || usd <= 700) return Cesium.Color.fromCssColorString('#22c55e');
+      if (usd <= 1200) return Cesium.Color.fromCssColorString('#84cc16');
+      if (usd <= 1800) return Cesium.Color.fromCssColorString('#eab308');
+      if (usd <= 2600) return Cesium.Color.fromCssColorString('#f97316');
+      if (usd <= 4000) return Cesium.Color.fromCssColorString('#ef4444');
+      return Cesium.Color.fromCssColorString('#a855f7');
+    }
+
+    // Indlæs avg-rent.json (cachet) — deles af overlay + by-søgning
+    async function loadAvgData() {
+      if (avgDataCache) return avgDataCache;
+      try {
+        const resp = await fetch('/avg-rent.json');
+        avgDataCache = await resp.json();
+        buildCitySlugs(); // byer med SEO-side → prik-panel + søge-genveje
+      } catch (e) {
+        console.error('Kunne ikke hente avg-rent.json:', e);
+        return null;
+      }
+      // Når avg-byerne er loadet: genbyg søgeindekset så også byer uden
+      // listings (fx Paris) kan findes
+      buildCityLookup();
+      return avgDataCache;
+    }
+
+    // Toggle: vis/skjul gennemsnitlig leje-overlay (gennemsigtige cirkler pr. by)
+    window.toggleAvgOverlay = async function() {
+      if (!viewer) return;
+      if (avgOverlayActive) {
+        // Sluk
+        if (avgDataSource) viewer.scene.primitives.remove(avgDataSource);
+        avgDataSource = null;
+        avgOverlayActive = false;
+        const leg = document.getElementById('avgLegend');
+        if (leg) leg.style.display = 'none';
+        renderYearPills();
+        return;
+      }
+      // Tænd: hent data (cachet)
+      const ad = await loadAvgData();
+      if (!ad) return;
+      // PointPrimitiveCollection via scene.primitives (dataSources er brudt)
+      if (avgDataSource) viewer.scene.primitives.remove(avgDataSource);
+      avgDataSource = viewer.scene.primitives.add(new Cesium.PointPrimitiveCollection());
+      const cities = [];
+      avgDataCache.forEach(entry => {
+        (entry.cities || []).forEach(c => cities.push(c));
+      });
+      // Radius/pixelstørrelse — skaleret efter pris så dyre byer er tydeligere
+      cities.forEach(c => {
+        const px = 26 + Math.min(c.avg || 2000, 6000) / 6000 * 34; // 26-60px
+        const pp = avgDataSource.add({
+          position: Cesium.Cartesian3.fromDegrees(c.lng, c.lat),
+          pixelSize: px,
+          color: getAvgColor(c.avg).withAlpha(0.45),
+          outlineColor: Cesium.Color.WHITE.withAlpha(0.2),
+          outlineWidth: 1,
+        });
+        // Rå data til hover-tooltip
+        pp.id = {
+          isAvg: true,
+          city: c.city,
+          avg: c.avg,
+          rent1: c.rent1,
+          rent2: c.rent2,
+          rent3: c.rent3,
+        };
+      });
+      avgOverlayActive = true;
+      const leg = document.getElementById('avgLegend');
+      if (leg) leg.style.display = 'block';
+      updateAvgLegend();
+      renderYearPills();
+    };
+
+    // Get pixel size based on count
+    function getSize(count) {
+      if (count < 10) return 6;
+      if (count < 50) return 8;
+      if (count < 200) return 10;
+      if (count < 500) return 13;
+      return 16;
+    }
+
+    function formatPrice(price, currency) {
+      if (!price) return '—';
+      const symbols = { DKK: 'kr', EUR: '€', USD: '$', GBP: '£', SEK: 'kr', NOK: 'kr', INR: '₹', CNY: '¥', VND: '₫', THB: '฿', PHP: '₱', MYR: 'RM', CAD: 'CA$', ZAR: 'R', COP: '$', ARS: '$', KZT: '₸', NGN: '₦', IDR: 'Rp', BRL: 'R$', MXN: '$' };
+      const converted = convertPrice(price, currency || 'DKK', displayCurrency);
+      const sym = symbols[displayCurrency] || displayCurrency;
+      return new Intl.NumberFormat('en', { maximumFractionDigits: 0 }).format(converted) + ' ' + sym;
+    }
+
+    async function loadData() {
+      try {
+        const apiUrl = selectedYear > 0
+          ? `https://rentgarden-api.lejnel.workers.dev?public=1&year=${selectedYear}`
+          : 'https://rentgarden-api.lejnel.workers.dev?public=1';
+        const resp = await fetch(apiUrl);
+        if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+        const data = await resp.json();
+        allCities = data.cities || [];
+        allPrices = data.prices || [];
+        const status = document.getElementById('data-status');
+        status.style.display = allPrices.length ? 'none' : 'block';
+        status.textContent = allPrices.length ? '' : 'No listings are available for this selection. Try another year or explore the budget guide from the footer.';
+        return data;
+      } catch (err) {
+        console.warn('API not available:', err.message);
+        const status = document.getElementById('data-status');
+        status.style.display = 'block';
+        status.textContent = 'The listing feed could not be loaded. Please try again later; the budget calculator and guides remain available from the footer.';
+        allCities = [];
+        allPrices = [];
+        return { cities: [], prices: [] };
+      }
+    }
+    
+    // City labels use a Google Maps/Earth-style decluttering pass:
+    // labels are ranked, limited by zoom tier, and rejected when their
+    // screen-space boxes overlap an already accepted (more important) city.
+    // This keeps labels readable instead of showing every city in a region.
+    let cityLabels = null;
+    let cityLabelMeta = [];
+    let cityLabelsLoaded = false;
+    let cityLabelUpdateQueued = false;
+
+    function cityLabelTier(cameraHeight) {
+      const mobile = isMobile || window.innerWidth < 768 ||
+        (navigator.maxTouchPoints > 0 && window.innerWidth < 1024);
+      const tiers = mobile
+        ? [
+            { min: 12000000, max: 5,  minPop: 2000000, gap: 76 },
+            { min: 6000000,  max: 8,  minPop: 1000000, gap: 66 },
+            { min: 2500000,  max: 14, minPop: 250000,  gap: 58 },
+            { min: 800000,   max: 24, minPop: 90000,  gap: 50 },
+            { min: 0,        max: 36, minPop: 90000,  gap: 44 },
+          ]
+        : [
+            { min: 12000000, max: 8,  minPop: 2000000, gap: 62 },
+            { min: 6000000,  max: 14, minPop: 1000000, gap: 54 },
+            { min: 2500000,  max: 24, minPop: 250000, gap: 46 },
+            { min: 800000,   max: 45, minPop: 90000,  gap: 38 },
+            { min: 0,        max: 80, minPop: 90000,  gap: 32 },
+          ];
+      return tiers.find(t => cameraHeight >= t.min) || tiers[tiers.length - 1];
+    }
+
+    function updateCityLabels() {
+      if (!viewer || !cityLabels || !cityLabelMeta.length) return;
+      const cameraHeight = viewer.camera.positionCartographic.height;
+      const tier = cityLabelTier(cameraHeight);
+      const canvas = viewer.scene.canvas;
+      const width = canvas.clientWidth || window.innerWidth;
+      const height = canvas.clientHeight || window.innerHeight;
+      const candidates = [];
+
+      cityLabelMeta.forEach(meta => {
+        meta.label.show = false;
+        if (meta.population < tier.minPop || cameraHeight > meta.maxDistance) return;
+        const screen = viewer.scene.cartesianToCanvasCoordinates(meta.position);
+        if (!screen || screen.x < -80 || screen.x > width + 80 || screen.y < -40 || screen.y > height + 40) return;
+
+        const textWidth = Math.max(18, meta.text.length * meta.fontSize * 0.6);
+        const halfWidth = textWidth / 2 + tier.gap;
+        const halfHeight = meta.fontSize / 2 + tier.gap * 0.42;
+        candidates.push({
+          meta,
+          left: screen.x - halfWidth,
+          right: screen.x + halfWidth,
+          top: screen.y - halfHeight,
+          bottom: screen.y + halfHeight,
+        });
+      });
+
+      // Population is the primary importance signal. Listing presence is a
+      // small tie-breaker so active cities win without overpowering major cities.
+      candidates.sort((a, b) => b.meta.priority - a.meta.priority);
+      const accepted = [];
+      for (const candidate of candidates) {
+        const overlaps = accepted.some(other =>
+          candidate.left < other.right && candidate.right > other.left &&
+          candidate.top < other.bottom && candidate.bottom > other.top
+        );
+        if (overlaps) continue;
+        candidate.meta.label.show = true;
+        accepted.push(candidate);
+        if (accepted.length >= tier.max) break;
+      }
+    }
+
+    function scheduleCityLabelUpdate() {
+      if (cityLabelUpdateQueued) return;
+      cityLabelUpdateQueued = true;
+      requestAnimationFrame(() => {
+        cityLabelUpdateQueued = false;
+        updateCityLabels();
+      });
+    }
+
+    async function loadCityLabels(Cesium, viewer) {
+      if (cityLabelsLoaded) return;
+      cityLabelsLoaded = true;
+      // Insert the collection before marker collections, then populate it
+      // asynchronously. This preserves draw order without delaying the globe.
+      cityLabels = viewer.scene.primitives.add(new Cesium.LabelCollection());
+      try {
+        const resp = await fetch('/cities90k.json');
+        if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+        const cities = await resp.json();
+        cityLabelMeta = [];
+        const listingCounts = Object.create(null);
+        allPrices.forEach(p => {
+          const key = String(p.city || '').toLowerCase();
+          if (key) listingCounts[key] = (listingCounts[key] || 0) + 1;
+        });
+        cities.forEach(c => {
+          const population = c.p || 0;
+          if (population < 90000) return;
+          const fontSize = population >= 5000000 ? 16 : population >= 1000000 ? 14 : population >= 250000 ? 12 : 10;
+          const maxDistance = population >= 5000000 ? 40000000 : population >= 1000000 ? 12000000 : population >= 250000 ? 5000000 : 3000000;
+          const position = Cesium.Cartesian3.fromDegrees(
+            c.lng,
+            c.lat,
+            population >= 1000000 ? 900 : 500,
+          );
+          const label = cityLabels.add({
+            position,
+            text: c.n,
+            font: `${population >= 1000000 ? 'bold ' : ''}${fontSize}px -apple-system, BlinkMacSystemFont, sans-serif`,
+            fillColor: Cesium.Color.fromCssColorString('#f7f9fc'),
+            outlineColor: Cesium.Color.fromCssColorString('#080b12'),
+            outlineWidth: 3,
+            style: Cesium.LabelStyle.FILL_AND_OUTLINE,
+            show: false,
+            showBackground: false,
+            // Keep depth testing enabled: labels on the far side of the
+            // globe must remain hidden behind the Earth.
+            distanceDisplayCondition: new Cesium.DistanceDisplayCondition(0, maxDistance),
+            pixelOffset: new Cesium.Cartesian2(0, -7),
+            horizontalOrigin: Cesium.HorizontalOrigin.CENTER,
+            verticalOrigin: Cesium.VerticalOrigin.BOTTOM,
+          });
+          const listingCount = listingCounts[String(c.n).toLowerCase()] || 0;
+          cityLabelMeta.push({
+            label,
+            position,
+            text: c.n,
+            fontSize,
+            population,
+            maxDistance,
+            priority: Math.log10(population + 1) * 100 + Math.min(listingCount, 500) * 0.05,
+          });
+        });
+        console.log('City labels loaded:', cityLabelMeta.length, 'decluttered candidates');
+        scheduleCityLabelUpdate();
+      } catch (err) {
+        console.warn('City labels unavailable:', err.message);
+      }
+    }
+
+    let rentDataSource = null;
+    let isMobile = false;           // mobile-first: prikker/klynger nedskaleres
+    let clusterSource = null;       // BillboardCollection for lilla klynger (antal)
+    let clusterLabelSource = null;  // LabelCollection for tallene i klyngerne
+    let entityByPriceId = {};
+    let allGroupData = [];
+    const MAX_PILLS = 100;
+    const clusterCircle = 'data:image/svg+xml;base64,' + btoa('<svg xmlns="http://www.w3.org/2000/svg" width="60" height="60"><circle cx="30" cy="30" r="26" fill="rgba(99,102,241,0.92)" stroke="white" stroke-width="3"/></svg>');
+    
+    // Build groups with deterministic jitter (shared by entities + pills)
+    function buildGroups() {
+      const usedCoords = {};
+      const groups = {};
+      allPrices.forEach(p => {
+        if (!p.lat || !p.lng) return;
+        if (selectedType !== 'all' && (p.type || 'apartment') !== selectedType) return;
+        const key = p.lat.toFixed(4) + ',' + p.lng.toFixed(4);
+        if (!groups[key]) groups[key] = [];
+        groups[key].push(p);
+      });
+      const jittered = [];
+      Object.values(groups).forEach(group => {
+        const first = group[0];
+        let lat = first.lat, lng = first.lng;
+        const cKey = lat.toFixed(4) + ',' + lng.toFixed(4);
+        const idx = usedCoords[cKey] || 0;
+        usedCoords[cKey] = idx + 1;
+        if (idx > 0) {
+          const angle = (idx * 137.508) * Math.PI / 180; // golden angle
+          const dist = 0.004 + (idx % 5) * 0.002; // ~300-800m
+          lat = lat + Math.cos(angle) * dist;
+          lng = lng + Math.sin(angle) * dist;
+        }
+        jittered.push({ group, lat, lng });
+      });
+      return jittered;
+    }
+
+    function addPriceDots(Cesium, viewer) {
+      // Fjern gamle prikker. VIKTIGT: viewer.dataSources.add er brudt på denne side
+      // (containeren accepterer ikke datasources) — vi bruger scene.primitives,
+      // samme vej som by-labels (LabelCollection) der BEVIST virker.
+      if (rentDataSource) viewer.scene.primitives.remove(rentDataSource);
+      // Clear old HTML pills
+      const container = document.getElementById('pillContainer');
+      container.innerHTML = '';
+      pillMap = new WeakMap();
+      entityByPriceId = {};
+      
+      // PointPrimitiveCollection via scene.primitives — ingen indbygget clustering
+      rentDataSource = viewer.scene.primitives.add(new Cesium.PointPrimitiveCollection());
+      // Lilla klynge-billboards (antalscirkler) — vises ved lang zoom-afstand
+      if (clusterSource) viewer.scene.primitives.remove(clusterSource);
+      clusterSource = viewer.scene.primitives.add(new Cesium.BillboardCollection());
+      clusterSource.show = false;
+      if (clusterLabelSource) viewer.scene.primitives.remove(clusterLabelSource);
+      clusterLabelSource = viewer.scene.primitives.add(new Cesium.LabelCollection());
+      clusterLabelSource.show = false;
+      
+      allGroupData = buildGroups();
+      
+      // Mobile-first (Rasmus' regel): prikker skal være små på mobil —
+      // 9px base på mobil vs 15px på desktop; mildere zoom-skala.
+      isMobile = window.innerWidth < 768 || (navigator.maxTouchPoints > 0 && window.innerWidth < 1024);
+      const DOT = isMobile
+        ? { size: 9, outline: 1.5, scale: new Cesium.NearFarScalar(30000, 3.0, 5000000, 1.15) }
+        : { size: 15, outline: 2, scale: new Cesium.NearFarScalar(30000, 5.0, 5000000, 1.5) };
+      
+      allGroupData.forEach(({ group, lat, lng }) => {
+        const first = group[0];
+        const color = getColor(first.price_per_m2 || first.price_total, first.currency || 'DKK');
+        
+        const pp = rentDataSource.add({
+          position: Cesium.Cartesian3.fromDegrees(lng, lat),
+          // Visning styres EKSPLICIT via updateVisibility() (.show) — ikke
+          // distanceDisplayCondition (upålideligt på PointPrimitives og giver
+          // overlap med pille-området)
+          pixelSize: DOT.size,
+          color: color,
+          outlineColor: Cesium.Color.WHITE,
+          outlineWidth: DOT.outline,
+          scaleByDistance: DOT.scale,
+        });
+        // Rå data på pointPrimitive.id — bruges af klik/hover-handlerne
+        pp.id = {
+          isPoint: true,
+          isGroup: group.length > 1,
+          group: group,
+          priceId: first.id,
+          lat: lat, lng: lng,
+          priceTotal: first.price_total, pricePerM2: first.price_per_m2,
+          currency: first.currency || 'DKK',
+          city: first.city, country: first.country,
+          sqm: first.sqm, rooms: first.rooms, type: first.type,
+          sourceUrl: first.source_url, sourceSite: first.source_site, listingDate: first.listing_date,
+        };
+        entityByPriceId[first.id] = pp;
+      });
+      
+      // Build pills only for what's visible in the current viewport
+      rebuildPills(viewer);
+      updateClusters();
+      buildCityLookup();
+      scheduleCityLabelUpdate();
+    }
+
+    // ---- By-søgning (radio.garden-stil) ----
+    let cityLookup = [];
+    function buildCityLookup() {
+      const seen = new Map();
+      (allGroupData || []).forEach(g => {
+        const first = g.group && g.group[0];
+        if (!first || !first.city) return;
+        const key = (first.city + '|' + (first.country || '')).toLowerCase();
+        if (!seen.has(key)) seen.set(key, { name: first.city, country: first.country || '', lat: g.lat, lng: g.lng, count: 0 });
+        seen.get(key).count += g.group.length;
+      });
+      (avgDataCache || []).forEach(entry => {
+        (entry.cities || []).forEach(c => {
+          const key = (c.city + '|' + entry.country).toLowerCase();
+          if (!seen.has(key) && c.lat) seen.set(key, { name: c.city, country: entry.country, lat: c.lat, lng: c.lng, count: 0 });
+        });
+      });
+      cityLookup = Array.from(seen.values()).sort((a, b) => b.count - a.count);
+    }
+
+    // Slug til by-sider (/rent-prices/{slug}/): matcher [slug].astro's slugify
+    function slugOf(city, country) {
+      return `${String(city || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')}-${String(country || '').toLowerCase().replace(/[^a-z0-9]+/g, '-')}`;
+    }
+    let citySlugs = null; // Set med slugs for byer der FAKTISK har en side
+    function buildCitySlugs() {
+      citySlugs = new Set();
+      (avgDataCache || []).forEach(e => (e.cities || []).forEach(c => citySlugs.add(slugOf(c.city, e.country))));
+    }
+    function escHtml(s) { return String(s || '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
+    window.toggleCitySearch = function() {
+      const el = document.getElementById('citySearch');
+      const open = el.classList.toggle('open');
+      const inp = document.getElementById('citySearchInput');
+      buildCityLookup(); // genbyg = fanger også byer når avg-data først er loadet
+      if (open) { inp.value = ''; renderCityResults(''); inp.focus(); }
+    };
+    let currentMatches = [];
+    function renderCityResults(q) {
+      const box = document.getElementById('citySearchResults');
+      const term = q.trim().toLowerCase();
+      // Ingen anbefalinger i tomt felt — kun autocomplete på det brugeren skriver
+      if (!term) {
+        currentMatches = [];
+        box.innerHTML = '';
+        return;
+      }
+      currentMatches = cityLookup
+        .filter(x => (x.name + ' ' + x.country).toLowerCase().includes(term))
+        .slice(0, 12);
+      if (!currentMatches.length) { box.innerHTML = '<div class="res" style="color:#64748b">No cities found</div>'; return; }
+      box.innerHTML = currentMatches.map((x, i) => {
+        // Byer med en SEO-side får en "page" genvej (↗) ved siden af flyve-resultatet
+        const hasPage = citySlugs && citySlugs.has(slugOf(x.name, x.country));
+        const pageLink = hasPage
+          ? `<a class="res-page" href="/rent-prices/${slugOf(x.name, x.country)}/" target="_blank" rel="noopener" onclick="event.stopPropagation()" title="Open pricing page for ${escHtml(x.name)}">↗</a>`
+          : '';
+        return `<div class="res" data-i="${i}"><span>${escHtml(x.name)}, ${escHtml(x.country)}</span>${pageLink}<span class="cnt">${x.count ? x.count + ' listings' : ''}</span></div>`;
+      }).join('');
+    }
+    window.goToCity = function(idx) {
+      const x = currentMatches[idx];
+      if (!x || !viewer) return;
+      viewer.camera.flyTo({
+        destination: Cesium.Cartesian3.fromDegrees(x.lng, x.lat, 22000),
+        duration: 1.4,
+      });
+      document.getElementById('citySearch').classList.remove('open');
+    };
+    document.addEventListener('click', (e) => {
+      const wrap = document.getElementById('citySearch');
+      if (wrap && wrap.classList.contains('open') && !wrap.contains(e.target)) wrap.classList.remove('open');
+    });
+    (function initCitySearch() {
+      const inp = document.getElementById('citySearchInput');
+      if (!inp) return;
+      inp.addEventListener('input', () => renderCityResults(inp.value));
+      inp.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          if (currentMatches.length) goToCity(0);
+        } else if (e.key === 'Escape') {
+          document.getElementById('citySearch').classList.remove('open');
+        }
+      });
+      const box = document.getElementById('citySearchResults');
+      box.addEventListener('click', (e) => {
+        const row = e.target.closest('.res');
+        if (row && row.dataset.i !== undefined) goToCity(row.dataset.i);
+      });
+    })();
+
+    // Central visningstyring: klynger > 2.000 km, prikker 80-2.000 km, pills < 80 km.
+    // Ingen overlap — prikker forsvinder helt når man zoomer ind i pille-området.
+    function updateVisibility() {
+      if (!viewer || !rentDataSource) return;
+      const camH = viewer.camera.positionCartographic.height;
+      const showDots = camH >= 80000 && camH < 2000000;
+      const showClusters = camH >= 2000000;
+      if (rentDataSource.show !== showDots) rentDataSource.show = showDots;
+      if (clusterSource && clusterSource.show !== showClusters) {
+        clusterSource.show = showClusters;
+        if (!showClusters) clusterSource.removeAll();
+      }
+      if (clusterLabelSource && clusterLabelSource.show !== showClusters) {
+        clusterLabelSource.show = showClusters;
+        if (!showClusters) clusterLabelSource.removeAll();
+      }
+      return showClusters;
+    }
+
+    // Opdater de lilla antals-klynger (screen-space): ved lang zoom-afstand samles
+    // prikker der ligger inden for ~55px på skærmen til én klynge med tal.
+    function updateClusters() {
+      if (!viewer || !clusterSource || !allGroupData.length) return;
+      const showClusters = updateVisibility();
+      // Tøm evt. gamle klynger
+      clusterSource.removeAll();
+      clusterLabelSource.removeAll();
+      if (!showClusters) return;
+      
+      const threshold = 55; // px
+      const threshold2 = threshold * threshold;
+      const clusters = [];
+      const pts = [];
+      // Konverter alle gruppe-positioner til skærmkoordinater (kun synlige)
+      for (const g of allGroupData) {
+        const pos = Cesium.Cartesian3.fromDegrees(g.lng, g.lat);
+        const wc = viewer.scene.cartesianToCanvasCoordinates(pos);
+        if (!wc) continue;
+        pts.push({ g, wc });
+      }
+      // Enkelt-pass greedy klynge (centroid)
+      for (const { g, wc } of pts) {
+        let target = null;
+        for (const c of clusters) {
+          const dx = c.x - wc.x, dy = c.y - wc.y;
+          if (dx * dx + dy * dy < threshold2) { target = c; break; }
+        }
+        if (!target) {
+          target = { x: wc.x, y: wc.y, count: 0, latSum: 0, lngSum: 0 };
+          clusters.push(target);
+        }
+        target.count++;
+        target.latSum += g.lat;
+        target.lngSum += g.lng;
+      }
+      // Lilla cirkel + antal for hver klynge
+      let maxCount = 1;
+      clusters.forEach(c => { if (c.count > maxCount) maxCount = c.count; });
+      for (const c of clusters) {
+        const lat = c.latSum / c.count;
+        const lng = c.lngSum / c.count;
+        const pos = Cesium.Cartesian3.fromDegrees(lng, lat);
+        // Mobile-first: klynger nedskaleres på mobil (36-66px desktop → 30-52px mobil)
+        const size = isMobile
+          ? 30 + Math.round((c.count / maxCount) * 22)
+          : 36 + Math.round((c.count / maxCount) * 30); // 36-66px
+        const bb = clusterSource.add({
+          position: pos,
+          image: clusterCircle,
+          width: size,
+          height: size,
+          // INGEN disableDepthTestDistance: ellers vises klyngerne gennem globussen
+          // (bagsiden) — dybdetest default (0) skjuler dem bag jorden korrekt
+        });
+        bb.id = { isCluster: true, count: c.count, lat, lng };
+        clusterLabelSource.add({
+          position: pos,
+          text: String(c.count),
+          font: 'bold 15px sans-serif',
+          fillColor: Cesium.Color.WHITE,
+          style: Cesium.LabelStyle.FILL_AND_OUTLINE,
+          outlineColor: Cesium.Color.BLACK,
+          outlineWidth: 2,
+          verticalOrigin: Cesium.VerticalOrigin.CENTER,
+          horizontalOrigin: Cesium.HorizontalOrigin.CENTER,
+          // INGEN disableDepthTestDistance (vises ikke gennem globussen)
+        });
+      }
+    }
+    
+    // Create HTML pills ONLY for listings inside the current viewport (max MAX_PILLS)
+    function rebuildPills(viewer) {
+      const container = document.getElementById('pillContainer');
+      container.innerHTML = '';
+      pillMap = new WeakMap();
+      
+      // Only build pills when close enough (<80km) — when far away the
+      // clusters are shown and pills would block their clicks (opacity 0
+      // but pointer-events:auto steals clicks from cluster billboards!)
+      const camH = viewer.camera.positionCartographic.height;
+      if (camH > 80000) return;
+      
+      const rect = viewer.camera.computeViewRectangle();
+      if (!rect) return;
+      
+      // Widen rect by 15% so pills pop in slightly before entering the screen
+      const w = (rect.east - rect.west) * 0.15;
+      const h = (rect.north - rect.south) * 0.15;
+      const cLat = (rect.north + rect.south) / 2;
+      const cLng = (rect.east + rect.west) / 2;
+      
+      // Keep only groups inside the visible rectangle (rect is in RADIANS)
+      const inView = allGroupData.filter(({ lat, lng }) => {
+        const latR = lat * Math.PI / 180;
+        const lngR = lng * Math.PI / 180;
+        return lngR >= rect.west - w && lngR <= rect.east + w &&
+               latR >= rect.south - h && latR <= rect.north + h;
+      });
+      
+      // Spread selection across the whole viewport using a grid:
+      // divide view into GRID×GRID cells, take a fair budget from each,
+      // nearest-to-center first per cell. This avoids all pills clustering
+      // in one spot while still capping the total at MAX_PILLS.
+      const GRID = 10;
+      
+      // Assign each group a grid cell index
+      const cellOf = (lat, lng) => {
+        const latR = lat * Math.PI / 180;
+        const lngR = lng * Math.PI / 180;
+        const cx = Math.min(GRID - 1, Math.max(0, Math.floor((lngR - (rect.west - w)) / ((rect.east + w) - (rect.west - w)) * GRID)));
+        const cy = Math.min(GRID - 1, Math.max(0, Math.floor(((rect.north + h) - latR) / ((rect.north + h) - (rect.south - h)) * GRID)));
+        return cy * GRID + cx;
+      };
+      
+      // Sort by distance to viewport center (closest first)
+      inView.sort((a, b) => {
+        const da = Math.pow(a.lat - cLat * 180 / Math.PI, 2) + Math.pow(a.lng - cLng * 180 / Math.PI, 2);
+        const db = Math.pow(b.lat - cLat * 180 / Math.PI, 2) + Math.pow(b.lng - cLng * 180 / Math.PI, 2);
+        return da - db;
+      });
+      
+      // Bucket groups by cell
+      const byCell = {};
+      inView.forEach(g => {
+        const cell = cellOf(g.lat, g.lng);
+        if (!byCell[cell]) byCell[cell] = [];
+        byCell[cell].push(g);
+      });
+      
+      const cellKeys = Object.keys(byCell);
+      // Fair budget per cell: spread the 100 pills evenly across all cells
+      // that have content (so one dense cluster can't eat the whole budget),
+      // but allow up to 10 per cell when few cells exist (zoomed into one city).
+      const perCellBudget = Math.max(1, Math.min(10, Math.ceil(MAX_PILLS / cellKeys.length)));
+      
+      // Round-robin over cells, nearest-first within each cell
+      const selected = [];
+      const perCell = {};
+      let ci = 0;
+      while (selected.length < MAX_PILLS && ci < cellKeys.length * perCellBudget * 2) {
+        const cell = cellKeys[ci % cellKeys.length];
+        const arr = byCell[cell];
+        if (arr.length > 0 && (perCell[cell] || 0) < perCellBudget) {
+          selected.push(arr.shift());
+          perCell[cell] = (perCell[cell] || 0) + 1;
+        }
+        ci++;
+      }
+      
+      selected.forEach(({ group, lat, lng }) => {
+        const first = group[0];
+        const color = getColor(first.price_per_m2 || first.price_total, first.currency || 'DKK');
+        
+        // Create HTML pill element with inline styles (Astro scopes CSS classes)
+        const pill = document.createElement('div');
+        pill.style.cssText = `
+          position:absolute; padding:4px 12px; border-radius:18px;
+          border:2px solid white; color:white;
+          font:bold 12px -apple-system,BlinkMacSystemFont,sans-serif;
+          white-space:nowrap; pointer-events:auto; cursor:pointer;
+          transform:translate(-50%,-50%); text-shadow:0 1px 2px rgba(0,0,0,0.3);
+          box-shadow:0 1px 4px rgba(0,0,0,0.3); transition:opacity 0.2s;
+          background:${color.toCssColorString()};
+        `;
+        pill.onmouseenter = function() { this.style.filter = 'brightness(1.15)'; this.style.boxShadow = '0 4px 16px rgba(0,0,0,0.5)'; };
+        pill.onmouseleave = function() { this.style.filter = ''; this.style.boxShadow = '0 2px 8px rgba(0,0,0,0.3)'; };
+        
+        if (group.length === 1) {
+          const p = first;
+          const priceText = formatPrice(p.price_total, p.currency);
+          pill.textContent = priceText;
+          pill.onclick = () => {
+            // Zoom in toward the listing first, then show the panel (never out)
+            const plng = lng, plat = lat;
+            const pr = p;
+            zoomInOnly(plng, plat, 0.5, 30000);
+            openPanel({
+              priceId: pr.id, lat: plat, lng: plng,
+              priceTotal: pr.price_total, pricePerM2: pr.price_per_m2,
+              currency: pr.currency || 'DKK', city: pr.city, country: pr.country,
+              sqm: pr.sqm, rooms: pr.rooms, type: pr.type,
+              sourceUrl: pr.source_url, sourceSite: pr.source_site, listingDate: pr.listing_date,
+            });
+          };
+        } else {
+          pill.textContent = group.length + '×';
+          pill.onclick = () => {
+            // Zoom in on the group first, then show the panel (never out)
+            const groupLng = lng, groupLat = lat;
+            const grp = group;
+            zoomInOnly(groupLng, groupLat, 0.3, 20000);
+            openGroupPanel(grp);
+          };
+        }
+        
+        pill._lat = lat;
+        pill._lng = lng;
+        container.appendChild(pill);
+        
+        const entity = entityByPriceId[first.id];
+        if (entity) pillMap.set(entity, pill);
+      });
+    }
+
+    let currentPanelPrice = null;
+    let currentPanelGroup = null;
+    
+    // Zoom toward a point but NEVER zoom out. If we're already closer than
+    // the factor target, zoom in a bit anyway (80% of current height) so
+    // clicking always gives some movement — but never jumps back out.
+    function zoomInOnly(lng, lat, factor, minH) {
+      if (!viewer) return;
+      const curH = viewer.camera.positionCartographic.height;
+      let target = Math.max(minH, curH * factor);
+      if (target >= curH) {
+        // Already closer than the factor target — nudge in a bit anyway
+        target = curH * 0.8;
+        if (target < minH) target = minH;
+        if (target >= curH) return; // can't get closer (already at minH)
+      }
+      viewer.camera.flyTo({
+        destination: Cesium.Cartesian3.fromDegrees(lng, lat, target),
+        duration: 1.0,
+      });
+    }
+
+    function typeIcon(type) {
+      const icons = { apartment: '🏢', house: '🏠', room: '🚪', studio: '🛋️', townhouse: '🏘️', villa: '🏡', commercial: '🏬' };
+      return icons[type] || '🏠';
+    }
+
+    async function openPanel(price) {
+      currentPanelPrice = price;
+      currentPanelGroup = null;
+      const panel = document.getElementById('infoPanel');
+      
+      // Reverse geocode to get street address
+      let address = price.city || 'Unknown';
+      try {
+        const r = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${price.lat || 0}&lon=${price.lng || 0}&format=json&zoom=18`);
+        const d = await r.json();
+        if (d && d.display_name) {
+          // Take first part of address (street level)
+          const parts = d.display_name.split(',');
+          address = parts.slice(0, 2).join(',').trim();
+        }
+      } catch(e) {}
+      
+      document.getElementById('panelCity').textContent = address;
+      document.getElementById('panelCountry').innerHTML = `
+        <div class="panel-badges">
+          <span class="panel-badge">${price.country || ''}</span>
+          <span class="panel-badge">${typeIcon(price.type)} ${price.type || 'apartment'}</span>
+        </div>
+      `;
+      // Price / m²: brug gemt price_per_m2, ellers beregn fra total/sqm. Vis "—" hvis ukendt (aldrig duplikér månedsprisen!)
+      const perM2 = price.pricePerM2 || (price.priceTotal && price.sqm ? price.priceTotal / price.sqm : null);
+      document.getElementById('statAvg').textContent = (perM2 ? formatPrice(perM2, price.currency) + '/m²' : '—');
+      document.getElementById('statCount').textContent = formatPrice(price.priceTotal || price.pricePerM2, price.currency) + ' / month';
+      
+      const listingsEl = document.getElementById('panelListings');
+      const type = price.type || 'apartment';
+      // Build detail grid: 4 cols desktop, 2 cols mobile
+      let cells = '';
+      if (price.rooms)  cells += `<div class="d-cell"><span class="d-label">Rooms</span><span class="d-val">${price.rooms}</span></div>`;
+      if (price.sqm)    cells += `<div class="d-cell"><span class="d-label">Size</span><span class="d-val">${price.sqm} m²</span></div>`;
+      if (price.listingDate) cells += `<div class="d-cell"><span class="d-label">Listed</span><span class="d-val">${price.listingDate}</span></div>`;
+      if (price.sourceSite)  cells += `<div class="d-cell"><span class="d-label">Source</span><span class="d-val">${price.sourceSite.replace(/^www\./,'')}</span></div>`;
+      
+      listingsEl.innerHTML = '<div class="panel-section-title">Listing details</div>';
+      listingsEl.innerHTML += `<div class="detail-grid">${cells}</div>`;
+      listingsEl.innerHTML += `<button class="view-btn" onclick="window.open('${price.sourceUrl}', '_blank')">View original listing →</button>`;
+      // Bridge til by-siden: hvis byen har en SEO-side (/rent-prices/{slug}/)
+      const slug = slugOf(price.city, price.country);
+      if (citySlugs && citySlugs.has(slug)) {
+        listingsEl.innerHTML += `<a class="view-btn view-btn-city" href="/rent-prices/${slug}/">📊 View ${escHtml(price.city)} pricing page →</a>`;
+      }
+      
+      panel.classList.add('open');
+    }
+
+    function openGroupPanel(groupArray) {
+      currentPanelPrice = null;
+      currentPanelGroup = groupArray;
+      const panel = document.getElementById('infoPanel');
+      
+      const first = groupArray[0];
+      const city = first.city || 'Unknown';
+      document.getElementById('panelCity').textContent = city + ' (' + groupArray.length + ' listings)';
+      document.getElementById('panelCountry').innerHTML = `
+        <div class="panel-badges">
+          <span class="panel-badge">${first.country || ''}</span>
+          <span class="panel-badge">${typeIcon(first.type)} ${first.type || 'apartment'} × ${groupArray.length}</span>
+        </div>
+      `;
+      
+      let sumPerM2 = 0;
+      let countPerM2 = 0;
+      let sumTotal = 0;
+      let countTotal = 0;
+      
+      groupArray.forEach(p => {
+        if (p.price_per_m2) {
+          sumPerM2 += p.price_per_m2;
+          countPerM2++;
+        }
+        if (p.price_total) {
+          sumTotal += p.price_total;
+          countTotal++;
+        }
+      });
+      
+      const avgPerM2 = countPerM2 > 0 ? (sumPerM2 / countPerM2) : (countTotal > 0 ? (sumTotal / countTotal) : 0);
+      const avgTotal = countTotal > 0 ? (sumTotal / countTotal) : (countPerM2 > 0 ? (sumPerM2 / countPerM2) : 0);
+      
+      document.getElementById('statAvg').textContent = formatPrice(avgPerM2, first.currency) + '/m²';
+      document.getElementById('statCount').textContent = formatPrice(avgTotal, first.currency) + ' / month';
+      
+      const listingsEl = document.getElementById('panelListings');
+      listingsEl.innerHTML = '<div class="panel-section-title">Listing details</div>';
+      
+      groupArray.forEach(p => {
+        const ptype = p.type || 'apartment';
+        listingsEl.innerHTML += `
+          <div class="listing-row" style="cursor:pointer" onclick="window.open('${p.source_url || p.sourceUrl || ''}', '_blank')">
+            <span class="listing-type">${typeIcon(ptype)}</span>
+            <span style="flex:1">
+              ${p.rooms ? p.rooms + ' rooms' : ptype}${p.sqm ? ' · ' + p.sqm + 'm²' : ''}
+              <div class="listing-source">${p.listing_date || p.listingDate || ''} · ${p.source_site || p.sourceSite || ''}</div>
+            </span>
+            <span class="listing-price">${formatPrice(p.price_total || p.price_per_m2 || p.priceTotal || p.pricePerM2, p.currency)}</span>
+            <span class="listing-arrow">→</span>
+          </div>
+        `;
+      });
+      
+      panel.classList.add('open');
+    }
+
+    function closePanel() {
+      document.getElementById('infoPanel').classList.remove('open');
+    }
+    
+    // Swipe down on the info panel to close it (mobile)
+    let panelTouchStart = null;
+    document.addEventListener('touchstart', function(e) {
+      const panel = document.getElementById('infoPanel');
+      if (panel.classList.contains('open') && panel.contains(e.target)) {
+        panelTouchStart = { y: e.touches[0].clientY, x: e.touches[0].clientX };
+      }
+    }, { passive: true });
+    document.addEventListener('touchmove', function(e) {
+      if (!panelTouchStart) return;
+      const dy = e.touches[0].clientY - panelTouchStart.y;
+      const dx = Math.abs(e.touches[0].clientX - panelTouchStart.x);
+      if (dy > 0 && dy > dx) {
+        const panel = document.getElementById('infoPanel');
+        // Drag the panel down with the finger
+        panel.style.transform = 'translateX(-50%) translateY(' + Math.min(dy, 200) + 'px)';
+        panel.style.transition = 'none';
+      }
+    }, { passive: true });
+    document.addEventListener('touchend', function() {
+      if (!panelTouchStart) return;
+      const panel = document.getElementById('infoPanel');
+      const transform = panel.style.transform;
+      panel.style.transition = '';
+      panel.style.transform = '';
+      panelTouchStart = null;
+      // If dragged more than 120px, close the panel
+      const dy = transform ? parseFloat(transform.match(/translateY\(([\d.]+)px\)/)?.[1] || '0') : 0;
+      if (dy > 120) closePanel();
+    }, { passive: true });
+
+    async function init() {
+      try {
+        const Cesium = await loadCesium();
+        
+        // No Cesium ion token needed — ESRI satellite is free
+        
+        // Create viewer with satellite imagery (ESRI tiles via direct URL)
+        viewer = new Cesium.Viewer('cesiumContainer', {
+          imageryProvider: new Cesium.UrlTemplateImageryProvider({
+            url: 'https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+            credit: 'Esri, Maxar, Earthstar Geographics',
+            maximumLevel: 16,
+          }),
+          baseLayerPicker: false,
+          geocoder: false,
+          homeButton: false,
+          sceneModePicker: false,
+          navigationHelpButton: false,
+          animation: false,
+          timeline: false,
+          fullscreenButton: false,
+          vrButton: false,
+          infoBox: false,
+          selectionIndicator: false,
+          skyBox: false,
+          skyAtmosphere: false,
+        });
+        
+        // Set dark atmosphere feel — works great with satellite
+        viewer.scene.backgroundColor = Cesium.Color.fromCssColorString('#000011');
+        viewer.scene.globe.baseColor = Cesium.Color.fromCssColorString('#000022');
+        viewer.scene.globe.enableLighting = false;
+        viewer.scene.globe.showGroundAtmosphere = false;
+        
+        // Faster zoom (pinch + scroll) — feels sluggish by default on mobile
+        const camCtrl = viewer.scene.screenSpaceCameraController;
+        camCtrl.zoomFactor = 3.0;        // default 1.5 — double zoom speed
+        camCtrl.minimumZoomDistance = 50; // allow zooming closer to buildings
+        
+        // Use satellite imagery
+        viewer.imageryLayers.removeAll();
+        viewer.imageryLayers.addImageryProvider(new Cesium.UrlTemplateImageryProvider({
+          url: 'https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+          credit: 'Esri, Maxar, Earthstar Geographics',
+          maximumLevel: 16,
+        }));
+        
+        // Load data
+        await loadData();
+        
+        // Start loading labels; the empty collection was inserted before markers.
+        loadCityLabels(Cesium, viewer);
+        
+        // Render year pills
+        renderYearPills();
+        
+        // Render type pills
+        renderTypePills();
+        
+        // Add dots
+        addPriceDots(Cesium, viewer);
+        
+        // Indlæs avg-byer i baggrunden (til by-søgning: Paris osv. har ingen listings)
+        loadAvgData();
+        
+        // Rebuild pills when camera stops moving (viewport-based lazy loading)
+        viewer.camera.moveEnd.addEventListener(function() {
+          // Pills only when close; prikker (PointPrimitiveCollection) vises via
+          // distanceDisplayCondition når man er langt væk
+          rebuildPills(viewer);
+          updateClusters();
+          scheduleCityLabelUpdate();
+        });
+
+        // Re-run decluttering while panning/zooming and after orientation changes.
+        viewer.camera.changed.addEventListener(scheduleCityLabelUpdate);
+        window.addEventListener('resize', scheduleCityLabelUpdate, { passive: true });
+        
+        // Google Earth-stil mobil-zoom (indbygget i Cesium):
+        //  - pinch = zoom (standard)
+        //  - hurtigt dobbelttryk = zoom ind på punktet
+        //  - dobbelttryk + hold + træk = kontinuerlig zoom
+        camCtrl.enableTapZoom = true;
+        camCtrl.tapDragZoomEventTypes = [Cesium.CameraEventType.LEFT_DOUBLE_CLICK];
+        
+        // Zoom-kontroller (Google Earth/Maps-stil) — kun zoom + nulstil (ingen 3D/lokation)
+        // Robust: flyver til samme længde/bredde med halveret/fordoblet højde.
+        window.mapZoom = function(dir) {
+          if (!viewer) return;
+          const c = viewer.camera.positionCartographic;
+          if (!c) return;
+          if (dir > 0) {
+            viewer.camera.flyTo({
+              destination: Cesium.Cartesian3.fromDegrees(
+                Cesium.Math.toDegrees(c.longitude), Cesium.Math.toDegrees(c.latitude),
+                Math.max(1500, c.height * 0.5)),
+              duration: 0.35,
+            });
+          } else {
+            viewer.camera.flyTo({
+              destination: Cesium.Cartesian3.fromDegrees(
+                Cesium.Math.toDegrees(c.longitude), Cesium.Math.toDegrees(c.latitude),
+                Math.min(35000000, Math.max(c.height * 2, 2000))),
+              duration: 0.35,
+            });
+          }
+        };
+        window.mapHome = function() {
+          if (!viewer) return;
+          viewer.camera.flyHome(0.8);
+        };
+        
+        // Click handler
+        const handler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
+        handler.setInputAction(function(click) {
+          // F1: Hide tooltip on click (prevents it sticking after panel opens)
+          const tooltip = document.getElementById('tooltip');
+          tooltip.classList.remove('visible');
+          
+          const picked = viewer.scene.pick(click.position);
+          
+          // Helper: find the nearest cluster billboard at a screen position.
+          // Cluster entities have billboard+label but NO priceId property.
+          // (scene.pick sometimes fails to return cluster entities, so we
+          // fall back to a manual screen-space search.)
+          function findClusterAt(screenPos) {
+            // PointPrimitiveCollection har ingen clusters — returner null
+            return null;
+            let best = null;
+            let bestDist = 35; // px threshold
+            for (let i = 0; i < entities.length; i++) {
+              const ent = entities[i];
+              if (!ent.billboard || !ent.position) continue;
+              if (ent.properties && ent.properties.priceId) continue; // real dot, not a cluster
+              let pos = null;
+              try { pos = ent.position.getValue(viewer.clock.currentTime); } catch(e) {}
+              if (!pos) continue;
+              const winPos = Cesium.SceneTransforms.worldToWindowCoordinates(viewer.scene, pos);
+              if (!winPos) continue;
+              const dx = winPos.x - screenPos.x;
+              const dy = winPos.y - screenPos.y;
+              const dist = Math.sqrt(dx * dx + dy * dy);
+              if (dist < bestDist) {
+                bestDist = dist;
+                best = ent;
+              }
+            }
+            return best;
+          }
+          
+          // Resolve what was clicked: picked point OR (ingen clusters længere)
+          let clickedId = null;
+          if (Cesium.defined(picked) && picked.id) {
+            clickedId = picked.id;
+          }
+          
+          if (clickedId) {
+            // clickedId er rå data fra pp.id (PointPrimitive) — ingen PropertyBag
+            const props = clickedId.properties || clickedId;
+            // Lilla klynge klikket: zoom ind på klyngen (jo flere prikker, jo mere spredt)
+            if (props.isCluster) {
+              const ch = Math.min(1500000, Math.max(40000, props.count * 25000));
+              viewer.camera.flyTo({
+                destination: Cesium.Cartesian3.fromDegrees(props.lng, props.lat, ch),
+                duration: 0.8,
+              });
+              return;
+            }
+            const hasPrice = props && props.priceId;
+            if (hasPrice) {
+              // Skip — HTML pills handle their own clicks
+              if (props.isGroup) {
+                // Zoom in on the group first, then show the panel (never out)
+                const glat = props.lat, glng = props.lng;
+                if (glat !== undefined && glng !== undefined) {
+                  zoomInOnly(glng, glat, 0.3, 20000);
+                }
+                openGroupPanel(props.group);
+              } else {
+                const price = {
+                  priceId: props.priceId,
+                  lat: props.lat, lng: props.lng,
+                  priceTotal: props.priceTotal, pricePerM2: props.pricePerM2,
+                  currency: props.currency, city: props.city,
+                  country: props.country, sqm: props.sqm,
+                  rooms: props.rooms, type: props.type,
+                  sourceUrl: props.sourceUrl, sourceSite: props.sourceSite,
+                  listingDate: props.listingDate,
+                };
+                // Zoom in toward the listing first, then show the panel (never out)
+                if (price.lat !== undefined && price.lng !== undefined) {
+                  zoomInOnly(price.lng, price.lat, 0.5, 30000);
+                }
+                openPanel(price);
+              }
+            }
+          } else {
+            // Nothing picked — could be a cluster (clusters aren't pickable in Cesium).
+            // Zoom in on the click position instead of closing panel.
+            const pos = viewer.camera.pickEllipsoid(click.position, viewer.scene.globe.ellipsoid);
+            if (pos) {
+              const carto = Cesium.Cartographic.fromCartesian(pos);
+              const lat = Cesium.Math.toDegrees(carto.latitude);
+              const lng = Cesium.Math.toDegrees(carto.longitude);
+              zoomInOnly(lng, lat, 0.4, 20000);
+            } else {
+              closePanel();
+            }
+          }
+        }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
+        
+        // Hover tooltip
+        const tooltip = document.getElementById('tooltip');
+        handler.setInputAction(function(movement) {
+          const picked = viewer.scene.pick(movement.endPosition);
+          if (Cesium.defined(picked) && picked.id) {
+            // Rå data fra pp.id (PointPrimitive) — eller entity-properties (avg)
+            const raw = picked.id;
+            const props = raw.properties || raw;
+            // Avg rent overlay: vis gennemsnitlig månedsleje i valgt valuta
+            if (props.isAvg) {
+              const avg = props.avg;
+              const r1 = props.rent1;
+              const r2 = props.rent2;
+              const r3 = props.rent3;
+              const sym = ({DKK:'kr',EUR:'€',USD:'$',GBP:'£',SEK:'kr',NOK:'kr',INR:'₹',CNY:'¥',VND:'₫',THB:'฿',PHP:'₱',MYR:'RM',CAD:'CA$',ZAR:'R',COP:'$',ARS:'$',KZT:'₸',NGN:'₦',IDR:'Rp',BRL:'R$',TRY:'₺',PLN:'zł',PGK:'K',KRW:'₩',JPY:'¥',MXN:'$'})[displayCurrency] || displayCurrency;
+              const f = (usd) => usd ? convertPrice(usd, 'USD', displayCurrency).toLocaleString('en-US') : '—';
+              tooltip.innerHTML = `<b>${props.city || ''}</b> · avg <b>${sym}${f(avg)}/mo</b><br><span style="font-size:11px;opacity:0.85;">1-bed ${sym}${f(r1)} · 2-bed ${sym}${f(r2)} · 3-bed ${sym}${f(r3)}</span>`;
+            } else if (props.isCluster) {
+              tooltip.textContent = `${props.count} listings — klik for at zoome ind`;
+              tooltip.style.left = (movement.endPosition.x + 16) + 'px';
+              tooltip.style.top = (movement.endPosition.y - 30) + 'px';
+              tooltip.classList.add('visible');
+              return;
+            } else if (props.isGroup) {
+              tooltip.textContent = `${props.city || ''} · ${props.group.length} listings`;
+            } else if (props.priceId) {
+              tooltip.textContent = `${props.city || ''} · ${formatPrice(props.priceTotal, props.currency)}`;
+            } else {
+              tooltip.classList.remove('visible');
+              return;
+            }
+            tooltip.style.left = (movement.endPosition.x + 16) + 'px';
+            tooltip.style.top = (movement.endPosition.y - 30) + 'px';
+            tooltip.classList.add('visible');
+          } else {
+            tooltip.classList.remove('visible');
+          }
+        }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
+        
+        // Update HTML pill positions on each frame (optimized: viewport culling + throttling)
+        let frameTick = 0;
+        viewer.scene.preRender.addEventListener(function() {
+          frameTick++;
+          if (frameTick % 2 !== 0) return; // only every 2nd frame
+          
+          // Hold prikker/klynger/pills synkroniseret med kamera-højden (ingen overlap)
+          updateVisibility();
+          
+          const src = rentDataSource;
+          const entities = src && src.length
+            ? Array.from({ length: src.length }, (_, i) => src.get(i))
+            : [];
+          const cameraHeight = viewer.camera.positionCartographic.height;
+          const container = document.getElementById('pillContainer');
+          
+          if (cameraHeight > 80000) {
+            // Fast path: hide everything at once, no per-pill loop
+            container.style.opacity = '0';
+            container.style.pointerEvents = 'none';
+            return;
+          }
+          container.style.opacity = '1';
+          
+          // Viewport rectangle for culling (pills outside view are skipped)
+          const rect = viewer.camera.computeViewRectangle();
+          
+          entities.forEach(function(entity) {
+            if (!entity.position) return;
+            const pill = pillMap.get(entity);
+            if (!pill) return;
+            
+            // Fast cull: skip pills outside the visible rectangle (rect is in RADIANS)
+            if (rect && pill._lat !== undefined) {
+              const lngR = pill._lng * Math.PI / 180;
+              const latR = pill._lat * Math.PI / 180;
+              if (lngR < rect.west || lngR > rect.east || latR < rect.south || latR > rect.north) {
+                pill.style.opacity = '0';
+                return;
+              }
+            }
+            
+            const pos = entity.position.getValue
+              ? entity.position.getValue(viewer.clock.currentTime)
+              : entity.position;
+            if (!pos) return;
+            
+            const canvasPos = viewer.scene.cartesianToCanvasCoordinates(pos);
+            if (canvasPos) {
+              pill.style.left = canvasPos.x + 'px';
+              pill.style.top = canvasPos.y + 'px';
+              const fade = Math.max(0, Math.min(1, (80000 - cameraHeight) / 30000));
+              pill.style.opacity = fade;
+              pill.style.pointerEvents = fade > 0.5 ? 'auto' : 'none';
+            } else {
+              pill.style.opacity = '0';
+            }
+          });
+        });
+        
+        // Initial camera: zoomed out view of Europe
+        viewer.camera.setView({
+          destination: Cesium.Cartesian3.fromDegrees(15, 48, 8000000),
+        });
+        scheduleCityLabelUpdate();
+        
+        // Hide loading
+        document.getElementById('loadingOverlay').classList.add('hidden');
+        
+        // Make functions globally accessible
+        window.closePanel = closePanel;
+        window.changeCurrency = changeCurrency;
+        
+        // --- Popup functions ---
+        let popupMap, popupMarker;
+        
+        window.openAddPopup = function() {
+          document.getElementById('popupOverlay').classList.remove('hidden');
+          // Init mini map after popup is visible
+          setTimeout(initPopupMap, 100);
+        };
+        
+        function initPopupMap() {
+          if (popupMap) { popupMap.invalidateSize(); return; }
+          popupMap = L.map('popupMap', { center: [55.6761, 12.5683], zoom: 5, zoomControl: false, attributionControl: false });
+          L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(popupMap);
+          popupMarker = L.marker([55.6761, 12.5683], { draggable: true }).addTo(popupMap);
+          
+          popupMap.on('click', function(e) {
+            popupMarker.setLatLng(e.latlng);
+            updatePopupCoords(e.latlng.lat, e.latlng.lng);
+            reversePopupGeo(e.latlng.lat, e.latlng.lng);
+          });
+          popupMarker.on('dragend', function() {
+            var p = popupMarker.getLatLng();
+            updatePopupCoords(p.lat, p.lng);
+            reversePopupGeo(p.lat, p.lng);
+          });
+        }
+        
+        function updatePopupCoords(lat, lng) {
+          document.getElementById('popLat').value = lat.toFixed(6);
+          document.getElementById('popLng').value = lng.toFixed(6);
+          document.getElementById('popCoordLabel').textContent = lat.toFixed(4) + ', ' + lng.toFixed(4);
+        }
+        
+        async function reversePopupGeo(lat, lng) {
+          try {
+            var r = await fetch('https://nominatim.openstreetmap.org/reverse?lat=' + lat + '&lon=' + lng + '&format=json&zoom=10');
+            var d = await r.json();
+            if (d && d.address) {
+              var city = d.address.city || d.address.town || d.address.village || '';
+              if (city) document.getElementById('popCityHidden').value = city;
+              // F5: Extract country from reverse geocode
+              var countryCode = (d.address.country_code || 'dk').toUpperCase();
+              document.getElementById('popCountryHidden').value = countryCode;
+              document.getElementById('popCoordLabel').textContent = (city || 'Unknown') + ' · ' + lat.toFixed(4) + ', ' + lng.toFixed(4);
+            }
+          } catch(e) {}
+        }
+        
+        window.popupSearchCity = async function() {
+          var q = document.getElementById('popGeoSearch').value.trim();
+          if (!q || !popupMap) return;
+          try {
+            var r = await fetch('https://nominatim.openstreetmap.org/search?q=' + encodeURIComponent(q) + '&format=json&limit=1');
+            var d = await r.json();
+            if (d.length > 0) {
+              var lat = parseFloat(d[0].lat), lng = parseFloat(d[0].lon);
+              popupMap.setView([lat, lng], 12);
+              popupMarker.setLatLng([lat, lng]);
+              updatePopupCoords(lat, lng);
+              document.getElementById('popCityHidden').value = d[0].display_name.split(',')[0].trim();
+              document.getElementById('popCoordLabel').textContent = d[0].display_name.split(',')[0].trim() + ' · ' + lat.toFixed(4) + ', ' + lng.toFixed(4);
+            }
+          } catch(e) {}
+        };
+        
+        window.closeAddPopup = function() {
+          document.getElementById('popupOverlay').classList.add('hidden');
+        };
+        
+        window.submitPopupPrice = async function(e) {
+          e.preventDefault();
+          var lat = parseFloat(document.getElementById('popLat').value);
+          var lng = parseFloat(document.getElementById('popLng').value);
+          var city = document.getElementById('popCityHidden').value;
+          // F5: Use country from hidden field (set by reverse geocode)
+          var country = document.getElementById('popCountryHidden').value || 'DK';
+          // Email is REQUIRED — used for moderation, never shown publicly
+          var email = document.getElementById('popEmail').value.trim();
+          if (!email) { alert('Email is required'); return; }
+
+          if (!city) { alert('Please pick a location on the map'); return; }
+
+          var data = {
+            source_url: document.getElementById('popUrl').value,
+            price_total: parseFloat(document.getElementById('popPrice').value),
+            currency: document.getElementById('popCurrency').value,
+            city: city,
+            country: country,
+            lat: lat,
+            lng: lng,
+            // F4: Added sqm, rooms, type from popup form
+            sqm: parseFloat(document.getElementById('popSqm').value) || null,
+            rooms: parseInt(document.getElementById('popRooms').value) || null,
+            type: document.getElementById('popType').value || 'apartment',
+            submitter_email: email,
+          };
+          
+          try {
+            var resp = await fetch('https://rentgarden-api.lejnel.workers.dev', {
+              method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(data),
+            });
+            var result = await resp.json();
+            var s = document.getElementById('popStatus');
+            s.style.display = 'block';
+            if (resp.ok) {
+              s.style.color = '#22c55e'; s.textContent = '✓ Added! Refresh to see it.';
+              document.getElementById('popupForm').reset();
+              setTimeout(function(){ closeAddPopup(); s.style.display = 'none'; }, 1500);
+            } else {
+              s.style.color = '#ef4444'; s.textContent = 'Error: ' + (result.error || 'Unknown');
+            }
+          } catch(err) {
+            var s = document.getElementById('popStatus');
+            s.style.display = 'block'; s.style.color = '#ef4444'; s.textContent = 'Error: ' + err.message;
+          }
+        };
+        
+        // Refresh data periodically (every 5 min)
+        setInterval(loadData, 300000);
+        
+      } catch (err) {
+        console.error('Failed to initialize:', err);
+        document.getElementById('loadingOverlay').innerHTML = 
+          '<div class="loading-text" style="color:#ef4444">The globe could not be loaded. <a href="/" style="color:white">Return to RentMap</a> or <a href="/rent-budget/" style="color:white">use the rental budget calculator</a>.</div>';
+      }
+    }
+
+    init();
+  </script>
+</Layout>

@@ -1,0 +1,39 @@
+{
+  "snapshot_records": 207,
+  "distinct_city_country_pairs": 196,
+  "conflicting_records_requiring_source_review": [
+    {
+      "country": "Egypt",
+      "city": "Cairo",
+      "records": 2
+    },
+    {
+      "country": "Germany",
+      "city": "Munich",
+      "records": 2
+    },
+    {
+      "country": "Philippines",
+      "city": "Metro Manila",
+      "records": 3
+    },
+    {
+      "country": "Spain",
+      "city": "Barcelona",
+      "records": 2
+    },
+    {
+      "country": "United Arab Emirates",
+      "city": "Dubai",
+      "records": 6
+    },
+    {
+      "country": "United Arab Emirates",
+      "city": "Abu Dhabi",
+      "records": 2
+    }
+  ],
+  "html_pages": 278,
+  "noindex_snapshot_and_utility_pages": 272,
+  "errors": []
+}

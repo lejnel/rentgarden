@@ -1,0 +1,19 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Nav from './EditorialNav.astro';
+import '../styles/editorial.css';
+import data from '../../public/avg-rent.json';
+const { descending = false } = Astro.props;
+const all = data.flatMap(entry => entry.cities.map(city => ({...city, country:entry.country})));
+const rows = [...all].sort((a,b) => descending ? b.avg-a.avg : a.avg-b.avg).slice(0,10);
+const usd = value => '$'+value.toLocaleString('en-US');
+const slug = value => value.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
+const heading = descending ? 'Higher-rent city records in our stored snapshot' : 'Lower-rent city records in our stored snapshot';
+const path = descending ? 'most-expensive-cities' : 'cheapest-cities-to-rent';
+---
+<Layout title={`${heading} | RentMap`} description="Compare ten stored city reference figures by home size, with clear coverage and freshness limitations." canonical={`https://rentmap.net/${path}/`} noindex={true}>
+<main class="editorial"><Nav /><header><p class="eyebrow">Compare the same kind of home</p><h1>{heading}</h1><p class="intro">These ten records are sorted from {all.length} records in our dataset. This is not a current worldwide ranking.</p></header>
+<section class="panel tint"><h2>Read this before using the order</h2><p>The stored USD figures are attributed to GlobalPropertyGuide, but the import lacks source observation dates, sample sizes and exchange-rate dates. The combined column gives equal weight to one-, two- and three-bedroom figures. It is not the average of the listings on our map. Some city names appear in several conflicting records without dates or district labels; those records are shown separately, not treated as distinct cities.</p><p>A city can change position if you compare only one bedroom category. Use the bedroom columns that match your needs and verify current advertisements before planning a move. <a href="/about/">Full methodology and limitations →</a></p></section>
+<section class="panel"><h2>The ten snapshot records</h2><div class="table-wrap"><table><caption>Stored monthly reference figures in USD; observation dates unknown.</caption><thead><tr><th scope="col">City</th><th scope="col">1 bedroom</th><th scope="col">2 bedrooms</th><th scope="col">3 bedrooms</th><th scope="col">Combined</th></tr></thead><tbody>{rows.map(c => <tr><th scope="row"><a href={`/rent-prices/${slug(c.city)}-${slug(c.country)}/`}>{c.city}, {c.country}</a></th><td>{usd(c.rent1)}</td><td>{usd(c.rent2)}</td><td>{usd(c.rent3)}</td><td>{usd(c.avg)}</td></tr>)}</tbody></table></div></section>
+<section><h2>What the comparison leaves out</h2><p>Housing quality, neighbourhood, local earnings, taxes, transport and utilities are not measured here. The list cannot establish which city is affordable for your household. It also excludes cities absent from the dataset; a missing city has no implied rank.</p><p>Make a like-for-like shortlist using original listings, then calculate the recurring cost and the cash needed to move. <a href="/rent-budget/">Use the rental budget calculator</a> or read the <a href="/best-cities-for-remote-workers/">shortlist guide</a>.</p></section>
+</main></Layout>

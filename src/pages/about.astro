@@ -1,45 +1,16 @@
 ---
 import Layout from '../layouts/Layout.astro';
-
-const title = 'About RentMap — Global Rental Price Data & Methodology';
-const description = 'Learn how RentMap collects, compares and presents real rental listings and average rent data across cities worldwide.';
+import Nav from '../components/EditorialNav.astro';
+import '../styles/editorial.css';
+import data from '../../public/avg-rent.json';
+const cities = data.flatMap(entry => entry.cities);
+const pairs = new Set(data.flatMap(entry => entry.cities.map(city => entry.country + '/' + city.city)));
+const anomalies = cities.filter(c => c.rent2 < c.rent1 || c.rent3 < c.rent2).length;
 ---
-
-<Layout title={title} description={description} canonical="https://rentmap.net/about/">
-  <style>
-    :global(body) { background:#0b1020; color:#e2e8f0; overflow:auto; height:auto; min-height:100vh; }
-    .page { max-width:760px; margin:0 auto; padding:48px 20px 48px; }
-    h1 { color:#fff; font-size:clamp(28px,5vw,42px); line-height:1.1; margin-bottom:14px; }
-    h2 { color:#fff; font-size:22px; margin:34px 0 10px; }
-    p, li { color:#cbd5e1; font-size:16px; line-height:1.7; }
-    p { margin:0 0 16px; }
-    ul { padding-left:22px; margin:0 0 16px; }
-    li + li { margin-top:8px; }
-    .eyebrow { color:#a78bfa; font-size:13px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; margin-bottom:12px; }
-    .intro { font-size:19px; color:#e2e8f0; }
-    .card { margin-top:26px; padding:22px; border:1px solid rgba(255,255,255,.12); border-radius:16px; background:rgba(255,255,255,.04); }
-    a { color:#c4b5fd; }
-  </style>
-  <main class="page">
-    <p class="eyebrow">About RentMap</p>
-    <h1>Rental prices, made easier to compare.</h1>
-    <p class="intro">RentMap is an independent interactive map for exploring rental prices across cities worldwide. It brings together real rental listings and comparable average-rent data in one place.</p>
-
-    <h2>How the data works</h2>
-    <p>RentMap collects publicly available rental listings from local housing portals and converts the results into a common format. City pages show averages drawn from the listings available in our dataset, while the globe helps you compare individual listings geographically.</p>
-    <ul>
-      <li>Prices are shown in the original listing currency and can be converted for comparison.</li>
-      <li>Listings and averages are refreshed periodically; the precise timing varies by source and market.</li>
-      <li>We link back to original listings whenever a source URL is available, so you can verify the details before making any decision.</li>
-    </ul>
-
-    <h2>What RentMap is—and is not</h2>
-    <p>RentMap is a research and comparison tool, not a rental agency. Prices are indicators based on available listings, not a guarantee of availability, final rent, property condition or legal suitability. Always confirm terms directly with the listing provider or landlord.</p>
-
-    <div class="card">
-      <h2 style="margin-top:0">Help improve the map</h2>
-      <p>If you know of a listing that should be included, you can submit it from the globe. Submitted information is reviewed before it may be used in the dataset.</p>
-      <p style="margin-bottom:0">Questions or corrections? <a href="mailto:kontakt@lejel.dk">Contact RentMap</a>.</p>
-    </div>
-  </main>
-</Layout>
+<Layout title="About RentMap — data sources, calculations and limitations" description="Understand the difference between RentMap's stored rent snapshot, listing map and official rent index, including missing dates and calculation methods." canonical="https://rentmap.net/about/">
+<main class="editorial"><Nav /><header><p class="eyebrow">Our data, explained</p><h1>Useful comparisons start with honest limitations.</h1><p class="intro">RentMap is an independent rental research tool. We help you compare figures and ask better questions before choosing a home. We do not act as a landlord, broker or rental agency.</p><p class="small">Methodology reviewed: 27 September 2026. This is a documentation review date, not a refresh date for the rent figures.</p></header>
+<section class="panel"><h2>Three different kinds of information</h2><h3>1. The stored city snapshot</h3><p>The country and city pages read a stored dataset containing {cities.length} city records in {data.length} countries, representing {pairs.size} distinct city-country pairs. It contains one-, two- and three-bedroom reference figures, a combined figure and coordinates. The existing import attributes the figures to GlobalPropertyGuide.</p><p>The import does not preserve the exact source page, observation date, sample count, exchange-rate date or reuse permission for each record. We therefore cannot verify that a value matches today's source or represents today's rental market. We label these pages as snapshots and keep them out of our search sitemap while their provenance is reviewed. They remain available for exploratory comparisons.</p><p><a href="https://www.globalpropertyguide.com/rental-yields">GlobalPropertyGuide's published methodology</a> describes median asking rents from local advertisements for its rental-yield research. That source methodology is not proof that our older imported values are current. Nor does it make our combined value a median.</p><h3>2. Individual listings on the map</h3><p>The map uses a separate listing feed with property details and original source links where supplied. These listings are not the input to the country and city snapshot figures. A map marker is a lead to investigate, not confirmation that a home is available. Locations may be approximate, and coverage differs between markets.</p><h3>3. Official Danish rent indices</h3><p>Danish pages also show a separately stored <a href="https://www.statbank.dk/HUS1">Statistics Denmark HUS1 rent index</a>. Its period and stored update date are displayed alongside it. An index measures change relative to a base period; an index of 110 does not mean a rent of 110 dollars. Regional indices are not city-specific asking-rent estimates.</p></section>
+<section class="panel"><h2>What our calculations mean</h2><ul><li><strong>Combined city reference:</strong> the stored combined figure. In this snapshot it follows the rounded arithmetic mean of the one-, two- and three-bedroom figures. It gives each home size equal weight; it is not weighted by the number of available homes.</li><li><strong>Country reference:</strong> the arithmetic mean of the stored city combined figures. Each included record receives equal weight. Six city names have multiple conflicting records without district labels or dates, so those cities have extra weight in this calculation. Missing cities are not assigned zero, and the result is not a representative national rent estimate.</li><li><strong>Weekly equivalent:</strong> monthly figure × 12 ÷ 52, rounded to a whole dollar. Dividing by four would overstate the weekly equivalent because a year has more than 48 weeks.</li><li><strong>Rankings:</strong> ordering the available snapshot records by their combined figure. Our lists do not cover every city, measure local purchasing power or establish a good place to live.</li><li><strong>Budget tool:</strong> calculations use only the numbers you enter. No city snapshot or listing price is silently substituted into your budget.</li></ul><p>The source dataset contains {anomalies} records where a larger bedroom category has a lower price than the preceding category. Different samples can produce that pattern, but we cannot determine the cause without the original observations. We flag these cases rather than silently replacing the values. For duplicate city names, the city page explicitly shows every conflicting record; its headline uses the first imported record, not a reconciled estimate.</p></section>
+<section><h2>How to use the information responsibly</h2><p>Begin with the bedroom category that matches your search. Check several original advertisements in the same neighbourhood, for the same rental period, furnishing and included costs. A snapshot can suggest what to investigate, but an actual budget needs a current price and a confirmed list of charges.</p><p>Do not infer a city's safety, legal requirements, internet reliability or job market from its rent. Use relevant official sources for those questions. If a market is missing from our map or dataset, we do not know its rent from this data.</p></section>
+<section class="panel tint"><h2>Editorial responsibility and corrections</h2><p>RentMap publishes the explanations, calculation tools and comparisons on this site. Our editorial standard is to distinguish stored reference figures, live listing records and hypothetical examples; avoid unsupported freshness claims; and expose the assumptions behind calculations.</p><p>Send corrections to <a href="mailto:kontakt@lejel.dk">kontakt@lejel.dk</a> with the RentMap page, the value or statement in question, a public source URL and its date. Do not send identity documents or private tenancy records. We can review a reported discrepancy against its source before changing a stored value.</p><p>Advertising scripts are currently disabled. Ownership verification does not mean that ads are being served or that Google has approved the site.</p></section>
+</main></Layout>

@@ -1,6 +1,6 @@
 ---
 // src/layouts/Layout.astro
-const { title = 'RentMap — Real Rent Prices Across 25 Countries on a 3D Globe', description = 'Like Google Earth, but for rent. 2,600+ real listings from 25 countries. Zoom in, compare cities, open the original ad. Prices refreshed daily.', canonical = 'https://rentmap.net/', pageType = 'content' } = Astro.props;
+const { title = 'RentMap — Compare rental costs and plan your move', description = 'Compare rental cost snapshots, explore listing locations, and calculate a budget that includes bills and moving costs.', canonical = 'https://rentmap.net/', pageType = 'content', noindex = false } = Astro.props;
 ---
 <!DOCTYPE html>
 <html lang="en">
@@ -10,7 +10,7 @@ const { title = 'RentMap — Real Rent Prices Across 25 Countries on a 3D Globe'
   <title>{title}</title>
   <meta name="description" content={description}>
   <link rel="canonical" href={canonical}>
-  <meta name="robots" content="index, follow">
+  <meta name="robots" content={noindex ? "noindex, follow" : "index, follow"}>
   
   <!-- Open Graph -->
   <meta property="og:type" content="website">
@@ -31,7 +31,7 @@ const { title = 'RentMap — Real Rent Prices Across 25 Countries on a 3D Globe'
   
   <link rel="icon" type="image/svg+xml" href="/favicon.svg">
   <meta name="google-adsense-account" content="ca-pub-3304804122762203">
-  <script is:inline async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3304804122762203" crossorigin="anonymous"></script>
+  <!-- Ownership verification only. Ad execution stays disabled pending content and consent review. -->
   
   <!-- Structured data -->
   <script type="application/ld+json" set:html={JSON.stringify({
@@ -74,10 +74,13 @@ const { title = 'RentMap — Real Rent Prices Across 25 Countries on a 3D Globe'
   </style>
   <slot name="head" />
 </head>
-<body class={pageType === 'globe' ? 'globe-page' : ['city', 'country'].includes(pageType) ? 'city-layout' : undefined}>
+<body class={pageType === 'globe' ? 'globe-page' : 'city-layout'}>
   <slot />
   <footer class="site-footer">
     <a href="/">RentMap</a>
+    <a href="/rent-budget/">Budget calculator</a>
+    <a href="/best-cities-for-remote-workers/">Rental guide</a>
+    <a href="/map/">Listing map</a>
     <a href="/about/">About & methodology</a>
     <a href="/privacy/">Privacy</a>
     <a href="/terms/">Terms</a>

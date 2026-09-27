@@ -25,86 +25,33 @@ const { country, cities } = Astro.props;
 const sorted = [...cities].sort((a, b) => (a.avg || 0) - (b.avg || 0));
 const cheap = sorted[0], expensive = sorted[sorted.length - 1];
 const avgAll = Math.round(sorted.reduce((s, c) => s + (c.avg || 0), 0) / sorted.length);
-// Globalt gennemsnit på tværs af alle tracked byer (ekspat-sammenligning)
-const _allCities = avgData.flatMap(e => (e.cities || []).map(c => c.avg || 0)).filter(Boolean);
-const _globalAvg = Math.round(_allCities.reduce((s, v) => s + v, 0) / _allCities.length);
-const _pct = Math.round(((avgAll - _globalAvg) / _globalAvg) * 100);
-
-const title = `Average Rent in ${country} 2026: $${Math.round(avgAll)}/mo | RentMap`;
-const description = `Average rent in ${country} 2026: from $${cheap.avg.toLocaleString('en-US')}/mo in ${cheap.city} to $${expensive.avg.toLocaleString('en-US')}/mo in ${expensive.city}. Updated daily from real rental listings on RentMap.`;
+const questions = [
+ { question: `What does the ${country} reference figure measure?`, answer: `The ${usd(avgAll)} monthly figure is the arithmetic mean of ${cities.length} stored city records (repeated city names can occur). Each record has equal weight; this is not a population-weighted national rent estimate. The underlying observation dates are unavailable.` },
+ { question: `Which included city has the lowest combined figure?`, answer: `${cheap.city} has the lowest combined figure among the included records at ${usd(cheap.avg)} per month. This does not establish the cheapest city in the country today.` },
+ { question: 'How should I compare the figures?', answer: 'Choose the same bedroom category, then verify current listings in comparable neighbourhoods. The map listing feed is separate from this snapshot. Include utilities, transport and upfront costs in your own budget.' }
+];
+const title = `Rent snapshot for ${country}: $${Math.round(avgAll)}/mo | RentMap`;
+const description = `Stored rent reference for ${country}: from $${cheap.avg.toLocaleString('en-US')}/mo in ${cheap.city} to $${expensive.avg.toLocaleString('en-US')}/mo in ${expensive.city}. Stored USD snapshot; observation dates are unavailable.`;
 const pageUrl = `https://rentmap.net/countries/${Astro.params.slug}/`;
 ---
 
-<Layout title={title} description={description} canonical={pageUrl} pageType="country">
-  <script type="application/ld+json" set:html={JSON.stringify({
-    '@context': 'https://schema.org',
-    '@type': 'FAQPage',
-    mainEntity: [
-      {
-        '@type': 'Question',
-        name: `What is the average rent in ${country}?`,
-        acceptedAnswer: {
-          '@type': 'Answer',
-          text: `The average monthly rent in ${country} is $${avgAll.toLocaleString('en-US')}/month (≈${usd(week(avgAll))}/week), based on real listings across ${cities.length} cities.`
-        }
-      },
-      {
-        '@type': 'Question',
-        name: `Which city in ${country} has the cheapest rent?`,
-        acceptedAnswer: {
-          '@type': 'Answer',
-          text: `${cheap.city} has the most affordable average rent in ${country} at $${cheap.avg.toLocaleString('en-US')}/month.`
-        }
-      },
-      {
-        '@type': 'Question',
-        name: `Is ${country} expensive to rent?`,
-        acceptedAnswer: {
-          '@type': 'Answer',
-          text: `${country} has an average rent of $${avgAll.toLocaleString('en-US')}/month, which is ${avgAll > 2000 ? 'above' : avgAll > 1000 ? 'around' : 'below'} the global average. Rents vary significantly by city — from $${cheap.avg.toLocaleString('en-US')} in ${cheap.city} to $${expensive.avg.toLocaleString('en-US')} in ${expensive.city}.`
-        }
-      },
-      {
-        '@type': 'Question',
-        name: `How much is rent in ${country} for expats?`,
-        acceptedAnswer: {
-          '@type': 'Answer',
-          text: `In our data, the average rent in ${country} is $${avgAll.toLocaleString('en-US')}/month — from $${cheap.avg.toLocaleString('en-US')}/month in ${cheap.city} to $${expensive.avg.toLocaleString('en-US')}/month in ${expensive.city}.`
-        }
-      },
-      {
-        '@type': 'Question',
-        name: `How does ${country} compare to other countries when it comes to rent?`,
-        acceptedAnswer: {
-          '@type': 'Answer',
-          text: `Across our tracked cities worldwide the average rent is $${_globalAvg.toLocaleString('en-US')}/month — ${country} is ${Math.abs(_pct)}% ${_pct > 0 ? 'above' : _pct < 0 ? 'below' : 'at'} that level.`
-        }
-      },
-      {
-        '@type': 'Question',
-        name: `What do I need to rent an apartment in ${country}?`,
-        acceptedAnswer: {
-          '@type': 'Answer',
-          text: `Landlords typically require a passport or ID, proof of income (payslips or employment contract) and a deposit. Some ask for references or a guarantor — confirm the required documents before you view a place.`
-        }
-      }
-    ]
-  })}></script>
+<Layout title={title} description={description} canonical={pageUrl} noindex={true} pageType="country">
+  <script type="application/ld+json" set:html={JSON.stringify({ '@context':'https://schema.org', '@type':'FAQPage', mainEntity:questions.map(q => ({'@type':'Question',name:q.question,acceptedAnswer:{'@type':'Answer',text:q.answer}})) })}></script>
   <main class="layout">
-    <header class="topbar"><a class="brand" href="/">⌂ RentMap</a><a href="/">Explore the globe ↗</a></header>
+    <header class="topbar"><a class="brand" href="/">⌂ RentMap</a><a href="/map/">Explore the globe ↗</a></header>
     <nav class="breadcrumbs" aria-label="Breadcrumb"><a href="/">Home</a><span aria-hidden="true">/</span><span aria-current="page">{country}</span></nav>
     <p class="eyebrow">Find a place that feels like home</p>
     <h1>Rent prices in <span>{country}</span></h1>
-    <div class="meta">Compare {cities.length} {cities.length === 1 ? 'city' : 'cities'} at a glance and find a starting point for your budget.</div>
+    <div class="meta">Compare {cities.length} {cities.length === 1 ? 'city record' : 'city records'} at a glance and find a starting point for your budget.</div>
 
-    <p class="currency-note">All prices in US dollars · Monthly averages across tracked cities</p>
+    <p class="currency-note">Stored monthly figures in US dollars · Observation dates unavailable</p>
     <section class="hero" aria-label="Rent overview">
-      <div><p class="lab">Average monthly rent</p><p class="big">{usd(avgAll)}<small> / month</small></p><p class="week">Approximately {usd(week(avgAll))} per week</p></div>
-      <a class="affordable" href={`/rent-prices/${bySlug(cheap.city, country)}/`}><p class="lab">Lowest city average in our data</p><p class="affordable-price">{usd(cheap.avg)}<small> / month</small></p><p>{cheap.city} <span aria-hidden="true">→</span></p></a>
+      <div><p class="lab">Combined monthly reference</p><p class="big">{usd(avgAll)}<small> / month</small></p><p class="week">Approximately {usd(week(avgAll))} per week</p></div>
+      <a class="affordable" href={`/rent-prices/${bySlug(cheap.city, country)}/`}><p class="lab">Lowest combined record in our data</p><p class="affordable-price">{usd(cheap.avg)}<small> / month</small></p><p>{cheap.city} <span aria-hidden="true">→</span></p></a>
     </section>
     <section class="city-section" aria-labelledby="cities-title">
       <p class="eyebrow">A closer look</p><h2 id="cities-title">Compare cities in {country}</h2>
-      <p class="section-copy">From lowest to highest average rent. Choose a city to explore the details.</p>
+      <p class="section-copy">Stored records, from lowest to highest combined figure. Repeated city names indicate unresolved source records; open the city page to compare them.</p>
       <div class="city-grid">{sorted.filter(c => c.avg).map(c => (
         <a href={`/rent-prices/${bySlug(c.city, country)}/`} class="city-card">
           <h3>{c.city}<span aria-hidden="true">↗</span></h3>
@@ -112,7 +59,7 @@ const pageUrl = `https://rentmap.net/countries/${Astro.params.slug}/`;
           <div class="room-prices"><span>1 bedroom <strong>{usd(c.rent1)}</strong></span><span>2 bedrooms <strong>{usd(c.rent2)}</strong></span></div>
         </a>
       ))}</div>
-      <p class="source-note">Average rent data: GlobalPropertyGuide. Prices vary by neighbourhood and property. <a href="/about/">About the data →</a></p>
+      <p class="source-note">Stored snapshot attributed to GlobalPropertyGuide; source observation and exchange-rate dates were not recorded. Prices vary by neighbourhood and property. <a href="/about/">About the data →</a></p>
     </section>
 
     {country === 'Denmark' && dstData.all && (
@@ -137,23 +84,14 @@ const pageUrl = `https://rentmap.net/countries/${Astro.params.slug}/`;
       </div>
     )}
 
-    <section class="faq-panel">
-      <h2>Frequently Asked Questions</h2>
-      <details><summary>What is the average rent in {country}?</summary><p>The average monthly rent in {country} is {usd(avgAll)}/month (≈{usd(week(avgAll))}/week), based on real listings across {cities.length} cities.</p></details>
-      <details><summary>Which city in {country} has the cheapest rent?</summary><p>{cheap.city} has the most affordable average rent in {country} at {usd(cheap.avg)}/month.</p></details>
-      <details><summary>Is {country} expensive to rent?</summary><p>{country} has an average rent of {usd(avgAll)}/month, which is {avgAll > 2000 ? 'above' : avgAll > 1000 ? 'around' : 'below'} the global average. Rents vary significantly by city — from {usd(cheap.avg)} in {cheap.city} to {usd(expensive.avg)} in {expensive.city}.</p></details>
+    <section class="faq-panel"><h2>What this snapshot tells you</h2>
+      {sorted.length > 1 ? <p>The included city figures range from {usd(cheap.avg)} in {cheap.city} to {usd(expensive.avg)} in {expensive.city}: a difference of {usd(expensive.avg-cheap.avg)} per month, or {usd((expensive.avg-cheap.avg)*12)} over twelve months. That is a comparison of the stored combined figures, before bills and moving costs.</p> : <p>Only {cheap.city} is included for {country}. One city cannot establish a national range or show how other locations compare.</p>}
+      <p>Coverage: {cities.length} records, with equal weight per record. Repeated city names have distinct values but missing dates or district labels; their city page lists the conflicts. Observation dates, original sample sizes and exchange-rate dates are not recorded. Use the figures to frame questions, not as current offers.</p>
+      <a href="/rent-budget/">Compare your actual monthly and upfront costs →</a>
     </section>
+    <section class="faq-panel"><h2>Understanding the figures</h2>{questions.map(q => <details><summary>{q.question}</summary><p>{q.answer}</p></details>)}</section>
 
-    <section class="faq-panel">
-      <h2>Renting in {country} as an expat</h2>
-      <details><summary>How much is rent in {country} for expats?</summary><p>In our data, the average rent in {country} is {usd(avgAll)}/month (≈{usd(week(avgAll))}/week) — from {usd(cheap.avg)}/month in {cheap.city} to {usd(expensive.avg)}/month in {expensive.city}. You can compare real listings on the globe and jump to any city's pricing page.</p></details>
-      <details><summary>How does {country} compare to other countries?</summary><p>Across our tracked cities worldwide the average rent is {usd(_globalAvg)}/month — {country} is <b>{Math.abs(_pct)}% {_pct > 0 ? 'above' : _pct < 0 ? 'below' : 'at'}</b> that level. Useful context when negotiating or budgeting.</p></details>
-      <details><summary>What do I need to rent an apartment in {country}?</summary><p>Landlords typically require a passport or ID, proof of income (payslips or employment contract) and a deposit. Some ask for references or a guarantor — confirm the required documents before you view a place.</p></details>
-      <details><summary>Are utilities included in the rent?</summary><p>Often not — water, heating, electricity and internet are frequently billed separately after move-in. Always confirm with the landlord exactly what is included and what utilities typically cost per month.</p></details>
-      <details><summary>How much deposit do I need?</summary><p>A deposit of one to three months' rent is common in most countries, and the first month is usually paid upfront. Budget for this before you move so the paperwork is not a surprise.</p></details>
-    </section>
-
-    <div class="cta"><a href="/">Explore rental listings ↗</a></div>
+    <div class="cta"><a href="/map/">Explore rental listings ↗</a></div>
 
     <div class="others">
       <h2>Other countries</h2>
@@ -208,6 +146,7 @@ const pageUrl = `https://rentmap.net/countries/${Astro.params.slug}/`;
   .dst-pct { font-size:24px; font-weight:700; }
   .dst-src { margin-top:18px; }
   .dst-src a { text-decoration:underline; }
+  .faq-panel > p { margin:14px 0; color:#5f706b; font-size:14px; }
   .faq-panel h2 { margin-bottom:20px; }
   details { border-top:1px solid #e4eae4; padding:18px 0; }
   details:last-child { padding-bottom:0; }
