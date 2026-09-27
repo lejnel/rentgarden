@@ -1,6 +1,6 @@
 # Content readiness progress
 Target decision: 4 October 2026. Plan: ../ADSENSE_WEEK_PLAN.md.
-Completed: seven-day plan prepared; existing globe homepage, full sitemap and ad-disable safeguards retained.
-Next: Day 1 morning — inventory public routes and content/source status; inspect existing source pipeline before research.
+Completed: seven-day plan prepared; existing globe homepage, full sitemap and ad-disable safeguards retained. Day 1 morning route/content inventory recorded in audits/route-inventory.md.
+Next: Day 1 evening — review the original data pipeline, source links and reuse terms; create a source ledger without inventing dates, rights or freshness.
 Blockers: provenance gaps and six conflicting city identities remain unresolved; no claim of AdSense readiness.
-Evidence: ADSENSE_READINESS.md records the current baseline.
+Evidence: audits/route-inventory.md; audits/site-quality.json; ADSENSE_READINESS.md records the current baseline.
