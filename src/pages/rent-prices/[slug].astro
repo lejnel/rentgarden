@@ -44,7 +44,7 @@ const dstEntry = country === 'Denmark'
   : null;
 ---
 
-<Layout title={title} description={description} canonical={pageUrl} noindex={true} pageType="city">
+<Layout title={title} description={description} canonical={pageUrl} pageType="city">
   <script type="application/ld+json" set:html={JSON.stringify({
       '@context': 'https://schema.org',
       '@type': 'WebPage',
@@ -94,7 +94,7 @@ const dstEntry = country === 'Denmark'
   <main id="main-content" class="city-page">
     <header class="topbar">
       <a class="brand" href="/" aria-label="RentMap home"><span class="brand-mark" aria-hidden="true">⌂</span> RentMap</a>
-      <a class="back-link" href="/map/">Explore the globe <span aria-hidden="true">↗</span></a>
+      <a class="back-link" href="/">Explore the globe <span aria-hidden="true">↗</span></a>
     </header>
     <div class="page-content">
       <nav class="breadcrumbs" aria-label="Breadcrumb">
@@ -151,7 +151,7 @@ const dstEntry = country === 'Denmark'
 
       <section class="explore-panel" aria-labelledby="explore-title">
         <div><p class="eyebrow">From averages to actual homes</p><h2 id="explore-title">See what’s out there</h2><p>Explore rental listings on the globe, compare prices, and open the original ads for more details.</p></div>
-        <a class="button" href="/map/">Explore rental listings <span aria-hidden="true">↗</span></a>
+        <a class="button" href="/">Explore rental listings <span aria-hidden="true">↗</span></a>
       </section>
 
       <section class="panel faq" aria-labelledby="faq-title">

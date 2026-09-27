@@ -30,12 +30,12 @@ for file in root.rglob('*.html'):
     if page.ads:errors.append(f'{route}: advertising script present')
     if len(page.canonical)!=1 or page.canonical[0]!='https://rentmap.net'+route:errors.append(f'{route}: incorrect canonical {page.canonical}')
     if len(page.robots)!=1:errors.append(f'{route}: duplicate/missing robots')
-    restricted=route.startswith(('/rent-prices/','/countries/')) or route in ['/map/','/admin/','/404/','/cheapest-cities-to-rent/','/most-expensive-cities/']
+    restricted=route in ['/admin/','/404/','/cheapest-cities-to-rent/','/most-expensive-cities/']
     if restricted:
         snapshot_count+=1
         if not any('noindex' in r for r in page.robots):errors.append(f'{route}: must be noindex')
     elif any('noindex' in r for r in page.robots):errors.append(f'{route}: editorial page unexpectedly noindex')
-    if route not in ['/map/','/admin/'] and page.h1!=1:errors.append(f'{route}: expected one H1')
+    if route not in ['/admin/'] and page.h1!=1:errors.append(f'{route}: expected one H1')
     if re.search(r'updated daily|refreshed daily|66 cities per country',html,re.I):errors.append(f'{route}: unsupported freshness/coverage claim')
 for route,page in pages.items():
     for href in page.links:
@@ -48,6 +48,10 @@ sitemap=ET.parse(root/'sitemap.xml')
 for loc in sitemap.findall('.//s:loc',ns):
     route=urlsplit(loc.text).path
     if route not in pages or any('noindex' in r for r in pages[route].robots):errors.append(f'sitemap: non-indexable {route}')
+sitemap_routes=[urlsplit(loc.text).path for loc in sitemap.findall('.//s:loc',ns)]
+if len(sitemap_routes)!=len(set(sitemap_routes)):errors.append('sitemap: duplicate routes')
+for route,page in pages.items():
+    if not any('noindex' in r for r in page.robots) and route not in sitemap_routes:errors.append(f'sitemap: missing indexable route {route}')
 data=json.loads(Path('public/avg-rent.json').read_text())
 records=[(entry['country'],city) for entry in data for city in entry['cities']]
 from collections import Counter
@@ -55,7 +59,7 @@ counts=Counter((country,city['city']) for country,city in records)
 conflicts=[{'country':key[0],'city':key[1],'records':n} for key,n in counts.items() if n>1]
 for country,city in records:
     if any(not isinstance(city.get(key),(int,float)) or city[key]<=0 for key in ['rent1','rent2','rent3','avg']):errors.append(f'data: invalid rent in {country}/{city["city"]}')
-report={'snapshot_records':len(records),'distinct_city_country_pairs':len(counts),'conflicting_records_requiring_source_review':conflicts,'html_pages':len(pages),'noindex_snapshot_and_utility_pages':snapshot_count,'errors':errors}
+report={'snapshot_records':len(records),'distinct_city_country_pairs':len(counts),'conflicting_records_requiring_source_review':conflicts,'html_pages':len(pages),'noindex_utility_and_ranking_pages':snapshot_count,'errors':errors}
 Path('audits').mkdir(exist_ok=True)
 Path('audits/site-quality.json').write_text(json.dumps(report,indent=2)+'\n')
 print(json.dumps(report,indent=2));raise SystemExit(bool(errors))

@@ -35,10 +35,10 @@ const description = `Stored rent reference for ${country}: from $${cheap.avg.toL
 const pageUrl = `https://rentmap.net/countries/${Astro.params.slug}/`;
 ---
 
-<Layout title={title} description={description} canonical={pageUrl} noindex={true} pageType="country">
+<Layout title={title} description={description} canonical={pageUrl} pageType="country">
   <script type="application/ld+json" set:html={JSON.stringify({ '@context':'https://schema.org', '@type':'FAQPage', mainEntity:questions.map(q => ({'@type':'Question',name:q.question,acceptedAnswer:{'@type':'Answer',text:q.answer}})) })}></script>
   <main class="layout">
-    <header class="topbar"><a class="brand" href="/">⌂ RentMap</a><a href="/map/">Explore the globe ↗</a></header>
+    <header class="topbar"><a class="brand" href="/">⌂ RentMap</a><a href="/">Explore the globe ↗</a></header>
     <nav class="breadcrumbs" aria-label="Breadcrumb"><a href="/">Home</a><span aria-hidden="true">/</span><span aria-current="page">{country}</span></nav>
     <p class="eyebrow">Find a place that feels like home</p>
     <h1>Rent prices in <span>{country}</span></h1>
@@ -91,7 +91,7 @@ const pageUrl = `https://rentmap.net/countries/${Astro.params.slug}/`;
     </section>
     <section class="faq-panel"><h2>Understanding the figures</h2>{questions.map(q => <details><summary>{q.question}</summary><p>{q.answer}</p></details>)}</section>
 
-    <div class="cta"><a href="/map/">Explore rental listings ↗</a></div>
+    <div class="cta"><a href="/">Explore rental listings ↗</a></div>
 
     <div class="others">
       <h2>Other countries</h2>
