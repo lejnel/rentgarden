@@ -5,6 +5,11 @@ Prepare a defensible go/no-go decision on 4 October, one week after this plan. A
 
 The site has 196 city and 71 country pages. Fourteen small runs cannot responsibly rewrite them all. Prioritize shared defects and traceable source recovery, then improve a small reference group. Sample checks do not establish site-wide quality: unresolved widespread thin or unsupported content blocks reapplication even if the schedule is complete.
 
+## Phone-first development
+Design and implement for phones first, then enhance for tablet and desktop. Use a narrow single-column base layout with larger-screen enhancements. Validate changed user flows at 360px and 390px widths before desktop, and check 320px for overflow. Prioritize readable text, touch targets around 44px, visible focus, and controls that work without hover. Test long content, open menus, forms with the keyboard, and portrait/landscape layouts. Keep map controls, listing panels and navigation reachable without overlap; account for mobile browser bars and safe areas. Prefer lightweight assets and defer expensive work so the globe remains usable on phones. Browser viewport checks are not proof of real-device performance; record that limitation when physical-device testing is unavailable.
+
+Apply these checks to each changed UI batch rather than redesigning the whole site during a content-only run. Phone usability is a release requirement, not a final desktop adaptation.
+
 ## Seven days / fourteen runs
 Runs are at 08:00 and 20:00 Europe/Copenhagen. Start with the next incomplete dependency, not simply the calendar date.
 
