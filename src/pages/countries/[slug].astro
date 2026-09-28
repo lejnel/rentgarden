@@ -59,7 +59,7 @@ const pageUrl = `https://rentmap.net/countries/${Astro.params.slug}/`;
           <div class="room-prices"><span>1 bedroom <strong>{usd(c.rent1)}</strong></span><span>2 bedrooms <strong>{usd(c.rent2)}</strong></span></div>
         </a>
       ))}</div>
-      <p class="source-note">Stored snapshot attributed to GlobalPropertyGuide; source observation and exchange-rate dates were not recorded. Prices vary by neighbourhood and property. <a href="/about/">About the data →</a></p>
+      <p class="source-note">Stored snapshot attributed to <a href="https://www.globalpropertyguide.com/rental-yields" rel="nofollow">GlobalPropertyGuide’s rental-yield methodology</a>; the imported records’ source observation and exchange-rate dates were not recorded. Prices vary by neighbourhood and property. <a href="/about/">About the data →</a></p>
     </section>
 
     {country === 'Denmark' && dstData.all && (
