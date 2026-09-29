@@ -1,39 +1,11 @@
 {
-  "snapshot_records": 207,
-  "distinct_city_country_pairs": 196,
-  "conflicting_records_requiring_source_review": [
-    {
-      "country": "Egypt",
-      "city": "Cairo",
-      "records": 2
-    },
-    {
-      "country": "Germany",
-      "city": "Munich",
-      "records": 2
-    },
-    {
-      "country": "Philippines",
-      "city": "Metro Manila",
-      "records": 3
-    },
-    {
-      "country": "Spain",
-      "city": "Barcelona",
-      "records": 2
-    },
-    {
-      "country": "United Arab Emirates",
-      "city": "Dubai",
-      "records": 6
-    },
-    {
-      "country": "United Arab Emirates",
-      "city": "Abu Dhabi",
-      "records": 2
-    }
-  ],
-  "html_pages": 278,
+  "source_records": 192,
+  "verified_against_source_capture": 192,
+  "retired_records": 2,
+  "captured_source_rows": 402,
+  "distinct_city_country_pairs": 192,
+  "conflicting_records_requiring_source_review": [],
+  "html_pages": 276,
   "noindex_utility_and_ranking_pages": 4,
   "errors": []
 }

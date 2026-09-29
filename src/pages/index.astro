@@ -373,6 +373,27 @@ import Layout from '../layouts/Layout.astro';
       @keyframes dots {
         0% { content:''; } 25% { content:'.'; } 50% { content:'..'; } 75% { content:'...'; }
       }
+
+      /* ---- Visible purpose and source attribution ---- */
+      .globe-purpose {
+        position:fixed; left:20px; top:158px; z-index:1100;
+        width:min(300px, calc(100vw - 40px));
+        padding:12px 14px; border:1px solid rgba(255,255,255,0.14);
+        border-radius:12px; background:rgba(10,14,23,0.88);
+        backdrop-filter:blur(12px); color:#cbd5e1;
+        font:12px/1.45 -apple-system,BlinkMacSystemFont,sans-serif;
+      }
+      .globe-purpose strong { display:block; color:#f8fafc; font-size:13px; margin-bottom:3px; }
+      .globe-purpose p { margin:0; }
+      .globe-purpose a { color:#a5b4fc; text-decoration:underline; }
+      .globe-purpose .source-note { margin-top:7px; color:#94a3b8; font-size:11px; }
+      @media (max-width:768px) {
+        .globe-purpose {
+          top:164px; left:12px; width:min(270px, calc(100vw - 24px));
+          padding:9px 11px; font-size:11px;
+        }
+        .globe-purpose .source-note { margin-top:5px; font-size:10px; }
+      }
     </style>
   </slot>
 
@@ -387,6 +408,12 @@ import Layout from '../layouts/Layout.astro';
 
   <!-- Visuelt skjult H1 for SEO (globussen er ren) -->
   <h1 style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;margin:-1px;padding:0;border:0;">RentMap — Global Rent Prices on an Interactive Globe</h1>
+
+  <aside class="globe-purpose" aria-label="About this map">
+    <strong>Explore observed rental listings</strong>
+    <p>Each point represents a submitted or imported listing observation. Prices are not official city averages; coverage and freshness vary by source.</p>
+    <p class="source-note">Listings: <a href="/about/">RentMap methodology</a> · Basemap: <a href="https://www.esri.com/en-us/legal/terms/full-master-agreement" target="_blank" rel="noopener noreferrer">Esri</a></p>
+  </aside>
 
   <div id="data-status" role="status" style="display:none;position:fixed;top:90px;left:16px;right:16px;z-index:2000;background:#fff;color:#223d37;padding:12px;border-radius:10px;font-size:14px"></div>
   <!-- Loading -->
@@ -767,7 +794,7 @@ import Layout from '../layouts/Layout.astro';
       avgDataSource = viewer.scene.primitives.add(new Cesium.PointPrimitiveCollection());
       const cities = [];
       avgDataCache.forEach(entry => {
-        (entry.cities || []).forEach(c => cities.push(c));
+        (entry.cities || []).filter(c => !c.retired && !c.unavailable && typeof c.avg === 'number').forEach(c => cities.push(c));
       });
       // Radius/pixelstørrelse — skaleret efter pris så dyre byer er tydeligere
       cities.forEach(c => {
@@ -787,6 +814,9 @@ import Layout from '../layouts/Layout.astro';
           rent1: c.rent1,
           rent2: c.rent2,
           rent3: c.rent3,
+          currency: c.currency || 'USD',
+          sourceUrl: c.sourceUrl || c.source,
+          sourceUpdatedAt: c.sourceUpdatedAt || c.sourceUpdateDate,
         };
       });
       avgOverlayActive = true;

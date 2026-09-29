@@ -1,5 +1,11 @@
 # Source ledger
 
+## September 2026 reconciliation
+
+On 2026-09-28, the user supplied the expanded Global Property Guide rent table text and saved page HTML after opening the source page. The capture contains 402 unique country/city rows. The project’s 194 prior records were compared against that capture: 192 exact country/city identities were refreshed from the captured 1-, 2-, and 3-bedroom values and displayed currency; Wellington, New Zealand and Chon Buri, Thailand were not present and were retired with their rent values cleared. The reproducible capture is stored in `audits/gpg-rent-source-2026-09.json`; import logic is in `scripts/import-gpg-rent-capture.mjs`. The site audit now checks all 192 active records against this source capture.
+
+This reconciliation verifies the values against the user-provided page capture, not reuse rights. The source page labels its dataset last updated September 2026 but does not provide individual city observation dates in the capture. Permission to republish the source data remains unverified; do not represent the site as fully cleared for AdSense until reuse rights and the remaining site-wide policy/content review are addressed.
+
 Reviewed: 27 September 2026 (repository and public-source review)
 
 This ledger records what the current repository can prove. Missing metadata remains unknown; the review date is not an observation or refresh date.

@@ -18,20 +18,28 @@ function landSlug(c) { return c.toLowerCase().replace(/[^a-z0-9]+/g, '-').replac
 function bySlug(city, country) {
   return `${city.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')}-${country.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`;
 }
-const usd = n => '$' + Math.round(n).toLocaleString('en-US');
 const week = n => Math.round(n * 12 / 52); // måned → uge
 
 const { country, cities } = Astro.props;
-const sorted = [...cities].sort((a, b) => (a.avg || 0) - (b.avg || 0));
+const availableCities = cities.filter(c => !c.retired && !c.unavailable && [c.rent1, c.rent2, c.rent3].some(value => typeof value === 'number'));
+const retiredCities = cities.filter(c => c.retired || c.unavailable || ![c.rent1, c.rent2, c.rent3].some(value => typeof value === 'number'));
+const sorted = [...availableCities].sort((a, b) => (a.avg || 0) - (b.avg || 0));
 const cheap = sorted[0], expensive = sorted[sorted.length - 1];
-const avgAll = Math.round(sorted.reduce((s, c) => s + (c.avg || 0), 0) / sorted.length);
+const avgAll = sorted.length ? Math.round(sorted.reduce((s, c) => s + (c.avg || 0), 0) / sorted.length) : null;
+const distinctCityCount = new Set(availableCities.map(c => c.city)).size;
+const snapshotSource = 'https://www.globalpropertyguide.com/property-rent-prices-by-country';
+const snapshotSourceDate = 'Sep 2026';
+const currencies = [...new Set(availableCities.map(c => c.currency || 'USD'))];
+const displayCurrency = currencies.length === 1 ? currencies[0] : 'mixed currencies';
+const money = (n, currency = displayCurrency) => n == null ? 'Unavailable' : `${currency === 'EUR' ? '€' : currency === 'USD' ? '$' : `${currency} `}${Math.round(n).toLocaleString('en-US')}`;
+const usd = money;
 const questions = [
- { question: `What does the ${country} reference figure measure?`, answer: `The ${usd(avgAll)} monthly figure is the arithmetic mean of ${cities.length} stored city records (repeated city names can occur). Each record has equal weight; this is not a population-weighted national rent estimate. The underlying observation dates are unavailable.` },
+ { question: `What does the ${country} reference figure measure?`, answer: `The ${usd(avgAll)} monthly figure is the arithmetic mean of ${availableCities.length} active city records. Each record has equal weight; this is not a population-weighted national rent estimate. The source table was last updated ${snapshotSourceDate}.` },
  { question: `Which included city has the lowest combined figure?`, answer: `${cheap.city} has the lowest combined figure among the included records at ${usd(cheap.avg)} per month. This does not establish the cheapest city in the country today.` },
  { question: 'How should I compare the figures?', answer: 'Choose the same bedroom category, then verify current listings in comparable neighbourhoods. The map listing feed is separate from this snapshot. Include utilities, transport and upfront costs in your own budget.' }
 ];
-const title = `Rent snapshot for ${country}: $${Math.round(avgAll)}/mo | RentMap`;
-const description = `Stored rent reference for ${country}: from $${cheap.avg.toLocaleString('en-US')}/mo in ${cheap.city} to $${expensive.avg.toLocaleString('en-US')}/mo in ${expensive.city}. Stored USD snapshot; observation dates are unavailable.`;
+const title = avgAll == null ? `Rent data unavailable for ${country} | RentMap` : `Rent snapshot for ${country}: ${money(avgAll)}/mo | RentMap`;
+const description = avgAll == null ? `Rent data for ${country} is currently unavailable.` : `Stored rent reference for ${country}: from ${money(cheap.avg, cheap.currency || 'USD')}/mo in ${cheap.city} to ${money(expensive.avg, expensive.currency || 'USD')}/mo in ${expensive.city}. Source currencies are preserved.`;
 const pageUrl = `https://rentmap.net/countries/${Astro.params.slug}/`;
 ---
 
@@ -42,24 +50,24 @@ const pageUrl = `https://rentmap.net/countries/${Astro.params.slug}/`;
     <nav class="breadcrumbs" aria-label="Breadcrumb"><a href="/">Home</a><span aria-hidden="true">/</span><span aria-current="page">{country}</span></nav>
     <p class="eyebrow">Find a place that feels like home</p>
     <h1>Rent prices in <span>{country}</span></h1>
-    <div class="meta">Compare {cities.length} {cities.length === 1 ? 'city record' : 'city records'} at a glance and find a starting point for your budget.</div>
+    <div class="meta">Compare {availableCities.length} {availableCities.length === 1 ? 'city record' : 'city records'} at a glance and find a starting point for your budget.</div>
 
-    <p class="currency-note">Stored monthly figures in US dollars · Observation dates unavailable</p>
+    <p class="currency-note">Source currencies: {displayCurrency} · {availableCities.length} active records from {distinctCityCount} named {distinctCityCount === 1 ? 'city' : 'cities'}{retiredCities.length ? ` · ${retiredCities.length} retired or unavailable rows excluded` : ''}</p>
     <section class="hero" aria-label="Rent overview">
-      <div><p class="lab">Combined monthly reference</p><p class="big">{usd(avgAll)}<small> / month</small></p><p class="week">Approximately {usd(week(avgAll))} per week</p></div>
-      <a class="affordable" href={`/rent-prices/${bySlug(cheap.city, country)}/`}><p class="lab">Lowest combined record in our data</p><p class="affordable-price">{usd(cheap.avg)}<small> / month</small></p><p>{cheap.city} <span aria-hidden="true">→</span></p></a>
+      <div><p class="lab">Combined monthly reference</p><p class="big">{money(avgAll)}<small> / month</small></p><p class="week">{avgAll == null ? 'No active values available' : `Approximately ${money(week(avgAll))} per week`}</p></div>
+      {cheap && <a class="affordable" href={`/rent-prices/${bySlug(cheap.city, country)}/`}><p class="lab">Lowest combined record in our data</p><p class="affordable-price">{money(cheap.avg, cheap.currency || 'USD')}<small> / month</small></p><p>{cheap.city} <span aria-hidden="true">→</span></p></a>}
     </section>
     <section class="city-section" aria-labelledby="cities-title">
       <p class="eyebrow">A closer look</p><h2 id="cities-title">Compare cities in {country}</h2>
-      <p class="section-copy">Stored records, from lowest to highest combined figure. Repeated city names indicate unresolved source records; open the city page to compare them.</p>
-      <div class="city-grid">{sorted.filter(c => c.avg).map(c => (
+      <p class="section-copy">Active records, from lowest to highest combined figure. Source currency, source URL and update metadata are shown on each city page.</p>
+      <div class="city-grid">{sorted.filter(c => c.avg != null).map(c => (
         <a href={`/rent-prices/${bySlug(c.city, country)}/`} class="city-card">
           <h3>{c.city}<span aria-hidden="true">↗</span></h3>
-          <p class="city-price">{usd(c.avg)}<small> / month</small></p><p class="weekly">≈ {usd(week(c.avg))} per week</p>
-          <div class="room-prices"><span>1 bedroom <strong>{usd(c.rent1)}</strong></span><span>2 bedrooms <strong>{usd(c.rent2)}</strong></span></div>
+          <p class="city-price">{money(c.avg, c.currency || 'USD')}<small> / month</small></p><p class="weekly">≈ {money(week(c.avg), c.currency || 'USD')} per week</p>
+          <div class="room-prices"><span>1 bedroom <strong>{money(c.rent1, c.currency || 'USD')}</strong></span><span>2 bedrooms <strong>{money(c.rent2, c.currency || 'USD')}</strong></span></div>
         </a>
       ))}</div>
-      <p class="source-note">Stored snapshot attributed to <a href="https://www.globalpropertyguide.com/rental-yields" rel="nofollow">GlobalPropertyGuide’s rental-yield methodology</a>; the imported records’ source observation and exchange-rate dates were not recorded. Prices vary by neighbourhood and property. <a href="/about/">About the data →</a></p>
+      <p class="source-note">Source values retain their published currencies and are attributed to <a href={snapshotSource} rel="nofollow">Global Property Guide</a>. Country figures are arithmetic means of the active records in each displayed currency and are not national estimates. Prices vary by neighbourhood and property. <a href="/about/">About the data →</a></p>
     </section>
 
     {country === 'Denmark' && dstData.all && (
@@ -86,7 +94,7 @@ const pageUrl = `https://rentmap.net/countries/${Astro.params.slug}/`;
 
     <section class="faq-panel"><h2>What this snapshot tells you</h2>
       {sorted.length > 1 ? <p>The included city figures range from {usd(cheap.avg)} in {cheap.city} to {usd(expensive.avg)} in {expensive.city}: a difference of {usd(expensive.avg-cheap.avg)} per month, or {usd((expensive.avg-cheap.avg)*12)} over twelve months. That is a comparison of the stored combined figures, before bills and moving costs.</p> : <p>Only {cheap.city} is included for {country}. One city cannot establish a national range or show how other locations compare.</p>}
-      <p>Coverage: {cities.length} records, with equal weight per record. Repeated city names have distinct values but missing dates or district labels; their city page lists the conflicts. Observation dates, original sample sizes and exchange-rate dates are not recorded. Use the figures to frame questions, not as current offers.</p>
+      <p>Coverage: {availableCities.length} active records from {distinctCityCount} named {distinctCityCount === 1 ? 'city' : 'cities'}, with equal weight per record. The {usd(avgAll)} headline is the arithmetic mean of those stored combined figures; it is not population-weighted and does not establish a national rent level. Source table last updated {snapshotSourceDate}; per-city sample sizes are not provided in this capture. Use the figures to frame questions, not as current offers.</p>
       <a href="/rent-budget/">Compare your actual monthly and upfront costs →</a>
     </section>
     <section class="faq-panel"><h2>Understanding the figures</h2>{questions.map(q => <details><summary>{q.question}</summary><p>{q.answer}</p></details>)}</section>
@@ -95,9 +103,10 @@ const pageUrl = `https://rentmap.net/countries/${Astro.params.slug}/`;
 
     <div class="others">
       <h2>Other countries</h2>
-      {avgData.filter(e => e.country !== country).slice(0, 30).map(e => (
-        <a href={`/countries/${landSlug(e.country)}/`}>{e.country} · {usd(Math.round(e.cities.reduce((s, c) => s + (c.avg || 0), 0) / e.cities.length))}</a>
-      ))}
+      {avgData.filter(e => e.country !== country).slice(0, 30).map(e => {
+        const active = e.cities.filter(c => !c.retired && !c.unavailable && typeof c.avg === 'number');
+        return active.length ? <a href={`/countries/${landSlug(e.country)}/`}>{e.country} · {usd(Math.round(active.reduce((s, c) => s + c.avg, 0) / active.length), active[0].currency || 'USD')}</a> : null;
+      })}
     </div>
   </main>
 </Layout>

@@ -18,8 +18,10 @@ Before requesting review, verify source URLs/observation dates/reuse rights for 
 - https://support.google.com/adsense/answer/10015918
 - https://support.google.com/adsense/answer/12169212
 
-## Additional data-quality finding
-The snapshot contains 207 records but only 196 distinct city-country pairs. Six city names recur with different values (Cairo, Munich, Metro Manila, Barcelona, Dubai and Abu Dhabi). No date or district label explains the difference. City routes are now deduplicated explicitly; affected pages display all conflicting records and identify the headline as the first imported record. Country calculations are described as record-weighted, not city-weighted. Do not claim these records are reconciled.
+## Additional data-quality finding and current status (28 September 2026)
+The expanded user-provided GPG capture contains 402 rows. The project now has 192 active rent records, each matched by exact country/city identity to a source row and verified for all three bedroom values and displayed currency. The capture is retained at `audits/gpg-rent-source-2026-09.json`; an automated audit compares every active project row against it. Source `n.a.` values are stored as null. Wellington and Chon Buri are absent from the capture; those two records are retired, their city pages are noindex, and neither appears in the sitemap. There are no duplicate active city/country identities.
+
+The capture establishes the table's September 2026 update label and retrieval date, but not per-city observation dates or sample sizes. Permission/terms to reproduce GPG values remain unverified; attribution alone does not establish reuse rights.
 
 ## Implemented and checked
 - Ad script removed globally; ownership meta and ads.txt retained. Admin, error and ranking routes explicitly noindex. City and country pages remain indexable and are included in the sitemap.
@@ -31,7 +33,7 @@ The snapshot contains 207 records but only 196 distinct city-country pairs. Six 
 - Relocated map initializes with markers and hides loading overlay. Third-party Cesium console errors observed despite working imagery; no claim of a clean third-party console.
 
 ## Remaining before a confident resubmission
-1. Reconcile six conflicting city identities and recover source observations, dates and permission/terms for reused data. Disclosures are mitigations, not a substitute for this work.
+1. Verify reuse permission/terms for the reproduced Global Property Guide data. The current table rows and currencies have been reconciled, but attribution alone does not establish permission.
 2. Review any genuine audience evidence in Search Console/analytics; no evidence was supplied or invented in this remediation.
 3. Before enabling personalized advertising for EEA/UK/Switzerland visitors, configure and test an appropriate certified CMP: https://support.google.com/adsense/answer/13554116 . Ads remain disabled in this release.
 4. Request review manually only when satisfied the remaining data issues are resolved. No AdSense review was submitted by this task.

@@ -1,0 +1,4030 @@
+{
+  "sourceName": "Global Property Guide",
+  "sourceUrl": "https://www.globalpropertyguide.com/property-rent-prices-by-country",
+  "sourceUpdatedAt": "Sep 2026",
+  "retrievedAt": "2026-09-28",
+  "method": "Expanded public table captured from the user-provided page text. Values retain the displayed EUR/USD symbol; n.a. is null.",
+  "sourceRecordCount": 402,
+  "records": [
+    {
+      "country": "Andorra",
+      "city": "Andorra",
+      "rents": [
+        1250,
+        1750,
+        2600
+      ],
+      "currency": "EUR"
+    },
+    {
+      "country": "Australia",
+      "city": "Sydney",
+      "rents": [
+        1990,
+        2805,
+        4325
+      ],
+      "currency": "USD"
+    },
+    {
+      "country": "Australia",
+      "city": "Sydney (CBD)",
+      "rents": [
+        2550,
+        4100,
+        6230
+      ],
+      "currency": "USD"
+    },
+    {
+      "country": "Australia",
+      "city": "Perth",
+      "rents": [
+        1840,
+        2120,
+        2690
+      ],
+      "currency": "USD"
+    },
+    {
+      "country": "Australia",
+      "city": "Gold Coast",
+      "rents": [
+        1840,
+        2460,
+        3750
+      ],
+      "currency": "USD"
+    },
+    {
+      "country": "Australia",
+      "city": "Melbourne",
+      "rents": [
+        1690,
+        2180,
+        3400
+      ],
+      "currency": "USD"
+    },
+    {
+      "country": "Australia",
+      "city": "Darwin",
+      "rents": [
+        1470,
+        1910,
+        2270
+      ],
+      "currency": "USD"
+    },
+    {
+      "country": "Australia",
+      "city": "Canberra",
+      "rents": [
+        1470,
+        1840,
+        2270
+      ],
+      "currency": "USD"
+    },
+    {
+      "country": "Australia",
+      "city": "Brisbane",
+      "rents": [
+        1420,
+        2170,
+        2970
+      ],
+      "currency": "USD"
+    },
+    {
+      "country": "Australia",
+      "city": "Adelaide",
+      "rents": [
+        1370,
+        1560,
+        2040
+      ],
+      "currency": "USD"
+    },
+    {
+      "country": "Austria",
+      "city": "Vienna",
+      "rents": [
+        1130,
+        1760,
+        2690
+      ],
+      "currency": "EUR"
+    },
+    {
+      "country": "Austria",
+      "city": "Salzburg",
+      "rents": [
+        1150,
+        1450,
+        null
+      ],
+      "currency": "EUR"
+    },
+    {
+      "country": "Austria",
+      "city": "Vienna (District 21)",
+      "rents": [
+        960,
+        1400,
+        1950
+      ],
+      "currency": "EUR"
+    },
+    {
+      "country": "Austria",
+      "city": "Graz",
+      "rents": [
+        615,
+        845,
+        1165
+      ],
+      "currency": "EUR"
+    },
+    {
+      "country": "Belgium",
+      "city": "Brussels",
+      "rents": [
+        950,
+        1150,
+        1620
+      ],
+      "currency": "EUR"
+    },
+    {
+      "country": "Belgium",
+      "city": "Antwerp",
+      "rents": [
+        950,
+        1150,
+        1620
+      ],
+      "currency": "EUR"
+    },
+    {
+      "country": "Belgium",
+      "city": "Mechelen",
+      "rents": [
+        910,
+        1000,
+        1100
+      ],
+      "currency": "EUR"
+    },
+    {
+      "country": "Belgium",
+      "city": "Leuven",
+      "rents": [
+        850,
+        1100,
+        1420
+      ],
+      "currency": "EUR"
+    },
+    {
+      "country": "Belgium",
+      "city": "Brugge",
+      "rents": [
+        810,
+        1100,
+        1400
+      ],
+      "currency": "EUR"
+    },
+    {
+      "country": "Belgium",
+      "city": "Ostend",
+      "rents": [
+        780,
+        850,
+        null
+      ],
+      "currency": "EUR"
+    },
+    {
+      "country": "Belgium",
+      "city": "Kortrijk",
+      "rents": [
+        700,
+        850,
+        null
+      ],
+      "currency": "EUR"
+    },
+    {
+      "country": "Belgium",
+      "city": "Liege",
+      "rents": [
+        680,
+        900,
+        1140
+      ],
+      "currency": "EUR"
+    },
+    {
+      "country": "Bosnia and Herzegovina",
+      "city": "Sarajevo",
+      "rents": [
+        310,
+        410,
+        590
+      ],
+      "currency": "EUR"
+    },
+    {
+      "country": "Bosnia and Herzegovina",
+      "city": "Sarajevo (Center)",
+      "rents": [
+        320,
+        410,
+        730
+      ],
+      "currency": "EUR"
+    },
+    {
+      "country": "Bosnia and Herzegovina",
+      "city": "Banja Luka",
+      "rents": [
+        260,
+        360,
+        410
+      ],
+      "currency": "EUR"
+    },
+    {
+      "country": "Brazil",
+      "city": "Sao Paulo",
+      "rents": [
+        790,
+        1630,
+        2730
+      ],
+      "currency": "USD"
+    },
+    {
+      "country": "Brazil",
+      "city": "Sao Paulo (Vila Olimpia)",
+      "rents": [
+        950,
+        1470,
+        2720
+      ],
+      "currency": "USD"
+    },
+    {
+      "country": "Brazil",
+      "city": "Recife",
+      "rents": [
+        630,
+        780,
+        1120
+      ],
+      "currency": "USD"
+    },
+    {
+      "country": "Brazil",
+      "city": "Guarapari",
+      "rents": [
+        390,
+        590,
+        780
+      ],
+      "currency": "USD"
+    },
+    {
+      "country": "Brazil",
+      "city": "Rio de Janeiro",
+      "rents": [
+        375,
+        395,
+        1160
+      ],
+      "currency": "USD"
+    },
+    {
+      "country": "Brazil",
+      "city": "Fortaleza",
+      "rents": [
+        null,
+        260,
+        530
+      ],
+      "currency": "USD"
+    },
+    {
+      "country": "Bulgaria",
+      "city": "Sofia",
+      "rents": [
+        630,
+        700,
+        1400
+      ],
+      "currency": "EUR"
+    },
+    {
+      "country": "Bulgaria",
+      "city": "Sofia (Center)",
+      "rents": [
+        700,
+        950,
+        1250
+      ],
+      "currency": "EUR"
+    },
+    {
+      "country": "Bulgaria",
+      "city": "Burgas",
+      "rents": [
+        500,
+        680,
+        null
+      ],
+      "currency": "EUR"
+    },
+    {
+      "country": "Bulgaria",
+      "city": "Plovdiv",
+      "rents": [
+        440,
+        630,
+        700
+      ],
+      "currency": "EUR"
+    },
+    {
+      "country": "Bulgaria",
+      "city": "Varna",
+      "rents": [
+        400,
+        560,
+        750
+      ],
+      "currency": "EUR"
+    },
+    {
+      "country": "Bulgaria",
+      "city": "Stara Zagora",
+      "rents": [
+        350,
+        450,
+        null
+      ],
+      "currency": "EUR"
+    },
+    {
+      "country": "Bulgaria",
+      "city": "Shumen",
+      "rents": [
+        350,
+        450,
+        null
+      ],
+      "currency": "EUR"
+    },
+    {
+      "country": "Cambodia",
+      "city": "Phnom Penh",
+      "rents": [
+        550,
+        1000,
+        2000
+      ],
+      "currency": "USD"
+    },
+    {
+      "country": "Cambodia",
+      "city": "Chroy Changvar",
+      "rents": [
+        500,
+        800,
+        null
+      ],
+      "currency": "USD"
+    },
+    {
+      "country": "Cambodia",
+      "city": "Koh Rong and Koh Rong Samloem",
+      "rents": [
+        500,
+        1000,
+        null
+      ],
+      "currency": "USD"
+    },
+    {
+      "country": "Cambodia",
+      "city": "Cambodia (combined)",
+      "rents": [
+        500,
+        900,
+        1700
+      ],
+      "currency": "USD"
+    },
+    {
+      "country": "Canada",
+      "city": "Toronto",
+      "rents": [
+        1535,
+        1900,
+        2360
+      ],
+      "currency": "USD"
+    },
+    {
+      "country": "Canada",
+      "city": "Vancouver",
+      "rents": [
+        1830,
+        2630,
+        3800
+      ],
+      "currency": "USD"
+    },
+    {
+      "country": "Canada",
+      "city": "Toronto (Downtown)",
+      "rents": [
+        1725,
+        2195,
+        2985
+      ],
+      "currency": "USD"
+    },
+    {
+      "country": "Canada",
+      "city": "Calgary",
+      "rents": [
+        1360,
+        1520,
+        1740
+      ],
+      "currency": "USD"
+    },
+    {
+      "country": "Canada",
+      "city": "Ottawa",
+      "rents": [
+        1265,
+        1425,
+        1755
+      ],
+      "currency": "USD"
+    },
+    {
+      "country": "Canada",
+      "city": "Montreal",
+      "rents": [
+        1245,
+        1515,
+        1670
+      ],
+      "currency": "USD"
+    },
+    {
+      "country": "Canada",
+      "city": "Hamilton",
+      "rents": [
+        1170,
+        1390,
+        1830
+      ],
+      "currency": "USD"
+    },
+    {
+      "country": "Chile",
+      "city": "Santiago",
+      "rents": [
+        360,
+        480,
+        600
+      ],
+      "currency": "USD"
+    },
+    {
+      "country": "Chile",
+      "city": "Antofagasta",
+      "rents": [
+        700,
+        870,
+        1060
+      ],
+      "currency": "USD"
+    },
+    {
+      "country": "Chile",
+      "city": "Concon",
+      "rents": [
+        550,
+        750,
+        1030
+      ],
+      "currency": "USD"
+    },
+    {
+      "country": "Chile",
+      "city": "Valparaiso",
+      "rents": [
+        540,
+        650,
+        700
+      ],
+      "currency": "USD"
+    },
+    {
+      "country": "Chile",
+      "city": "Vina del Mar",
+      "rents": [
+        530,
+        680,
+        720
+      ],
+      "currency": "USD"
+    },
+    {
+      "country": "Chile",
+      "city": "Concepcion",
+      "rents": [
+        470,
+        600,
+        700
+      ],
+      "currency": "USD"
+    },
+    {
+      "country": "Chile",
+      "city": "Temuco",
+      "rents": [
+        430,
+        560,
+        615
+      ],
+      "currency": "USD"
+    },
+    {
+      "country": "Chile",
+      "city": "Santiago (Santa Isabel)",
+      "rents": [
+        360,
+        490,
+        640
+      ],
+      "currency": "USD"
+    },
+    {
+      "country": "Colombia",
+      "city": "Medellin",
+      "rents": [
+        1250,
+        1220,
+        1420
+      ],
+      "currency": "USD"
+    },
+    {
+      "country": "Colombia",
+      "city": "Medellin (El Poblado)",
+      "rents": [
+        1440,
+        1780,
+        2030
+      ],
+      "currency": "USD"
+    },
+    {
+      "country": "Colombia",
+      "city": "Cartagena",
+      "rents": [
+        930,
+        990,
+        1350
+      ],
+      "currency": "USD"
+    },
+    {
+      "country": "Colombia",
+      "city": "Santa Marta",
+      "rents": [
+        830,
+        1120,
+        null
+      ],
+      "currency": "USD"
+    },
+    {
+      "country": "Colombia",
+      "city": "Bogota",
+      "rents": [
+        800,
+        830,
+        2120
+      ],
+      "currency": "USD"
+    },
+    {
+      "country": "Colombia",
+      "city": "Barranquilla",
+      "rents": [
+        740,
+        710,
+        1010
+      ],
+      "currency": "USD"
+    },
+    {
+      "country": "Colombia",
+      "city": "Pereira",
+      "rents": [
+        610,
+        830,
+        960
+      ],
+      "currency": "USD"
+    },
+    {
+      "country": "Colombia",
+      "city": "Cali",
+      "rents": [
+        590,
+        450,
+        900
+      ],
+      "currency": "USD"
+    },
+    {
+      "country": "Colombia",
+      "city": "Bello",
+      "rents": [
+        550,
+        580,
+        640
+      ],
+      "currency": "USD"
+    },
+    {
+      "country": "Costa Rica",
+      "city": "San Jose",
+      "rents": [
+        1100,
+        1400,
+        2600
+      ],
+      "currency": "USD"
+    },
+    {
+      "country": "Costa Rica",
+      "city": "Escazu",
+      "rents": [
+        1200,
+        1800,
+        2500
+      ],
+      "currency": "USD"
+    },
+    {
+      "country": "Costa Rica",
+      "city": "Santa Ana",
+      "rents": [
+        1100,
+        1400,
+        1975
+      ],
+      "currency": "USD"
+    },
+    {
+      "country": "Costa Rica",
+      "city": "San Jose (Rohrmoser)",
+      "rents": [
+        1100,
+        1500,
+        2900
+      ],
+      "currency": "USD"
+    },
+    {
+      "country": "Costa Rica",
+      "city": "Heredia",
+      "rents": [
+        990,
+        1100,
+        null
+      ],
+      "currency": "USD"
+    },
+    {
+      "country": "Costa Rica",
+      "city": "Curridabat",
+      "rents": [
+        950,
+        1200,
+        1300
+      ],
+      "currency": "USD"
+    },
+    {
+      "country": "Croatia",
+      "city": "Zagreb",
+      "rents": [
+        600,
+        770,
+        1000
+      ],
+      "currency": "EUR"
+    },
+    {
+      "country": "Croatia",
+      "city": "Split",
+      "rents": [
+        800,
+        1100,
+        1400
+      ],
+      "currency": "EUR"
+    },
+    {
+      "country": "Croatia",
+      "city": "Zagreb (Donji Grad)",
+      "rents": [
+        700,
+        900,
+        1300
+      ],
+      "currency": "EUR"
+    },
+    {
+      "country": "Croatia",
+      "city": "Rijeka",
+      "rents": [
+        600,
+        700,
+        900
+      ],
+      "currency": "EUR"
+    },
+    {
+      "country": "Croatia",
+      "city": "Osijek",
+      "rents": [
+        450,
+        550,
+        800
+      ],
+      "currency": "EUR"
+    },
+    {
+      "country": "Cyprus",
+      "city": "Nicosia",
+      "rents": [
+        650,
+        900,
+        1250
+      ],
+      "currency": "EUR"
+    },
+    {
+      "country": "Cyprus",
+      "city": "Limassol",
+      "rents": [
+        1450,
+        2100,
+        2600
+      ],
+      "currency": "EUR"
+    },
+    {
+      "country": "Cyprus",
+      "city": "Paphos",
+      "rents": [
+        1100,
+        1400,
+        1900
+      ],
+      "currency": "EUR"
+    },
+    {
+      "country": "Czech Republic",
+      "city": "Prague",
+      "rents": [
+        985,
+        1315,
+        1645
+      ],
+      "currency": "EUR"
+    },
+    {
+      "country": "Czech Republic",
+      "city": "Brno",
+      "rents": [
+        760,
+        935,
+        985
+      ],
+      "currency": "EUR"
+    },
+    {
+      "country": "Czech Republic",
+      "city": "Olomouc",
+      "rents": [
+        640,
+        680,
+        700
+      ],
+      "currency": "EUR"
+    },
+    {
+      "country": "Czech Republic",
+      "city": "Plzen",
+      "rents": [
+        595,
+        740,
+        800
+      ],
+      "currency": "EUR"
+    },
+    {
+      "country": "Czech Republic",
+      "city": "Ostrava",
+      "rents": [
+        470,
+        540,
+        660
+      ],
+      "currency": "EUR"
+    },
+    {
+      "country": "Denmark",
+      "city": "Copenhagen",
+      "rents": [
+        1865,
+        2140,
+        2435
+      ],
+      "currency": "EUR"
+    },
+    {
+      "country": "Denmark",
+      "city": "Aarhus",
+      "rents": [
+        1070,
+        1425,
+        1860
+      ],
+      "currency": "EUR"
+    },
+    {
+      "country": "Denmark",
+      "city": "Aalborg",
+      "rents": [
+        775,
+        1005,
+        1230
+      ],
+      "currency": "EUR"
+    },
+    {
+      "country": "Dominican Republic",
+      "city": "Santo Domingo",
+      "rents": [
+        1250,
+        1850,
+        2800
+      ],
+      "currency": "USD"
+    },
+    {
+      "country": "Dominican Republic",
+      "city": "Punta Cana/Bavaro",
+      "rents": [
+        1000,
+        1400,
+        1800
+      ],
+      "currency": "USD"
+    },
+    {
+      "country": "Egypt",
+      "city": "Cairo",
+      "rents": [
+        750,
+        965,
+        965
+      ],
+      "currency": "USD"
+    },
+    {
+      "country": "Egypt",
+      "city": "Cairo (New Cairo)",
+      "rents": [
+        740,
+        1020,
+        1020
+      ],
+      "currency": "USD"
+    },
+    {
+      "country": "Egypt",
+      "city": "Cairo (6th of October)",
+      "rents": [
+        680,
+        830,
+        1110
+      ],
+      "currency": "USD"
+    },
+    {
+      "country": "Egypt",
+      "city": "Alexandria",
+      "rents": [
+        null,
+        370,
+        460
+      ],
+      "currency": "USD"
+    },
+    {
+      "country": "Estonia",
+      "city": "Tallinn",
+      "rents": [
+        620,
+        890,
+        null
+      ],
+      "currency": "EUR"
+    },
+    {
+      "country": "Estonia",
+      "city": "Tallinn (Centre)",
+      "rents": [
+        675,
+        1000,
+        null
+      ],
+      "currency": "EUR"
+    },
+    {
+      "country": "Estonia",
+      "city": "Tartu",
+      "rents": [
+        490,
+        700,
+        null
+      ],
+      "currency": "EUR"
+    },
+    {
+      "country": "Estonia",
+      "city": "Parnu",
+      "rents": [
+        400,
+        570,
+        null
+      ],
+      "currency": "EUR"
+    },
+    {
+      "country": "Finland",
+      "city": "Helsinki",
+      "rents": [
+        950,
+        1225,
+        1410
+      ],
+      "currency": "EUR"
+    },
+    {
+      "country": "Finland",
+      "city": "Helsinki (Centre)",
+      "rents": [
+        1700,
+        2500,
+        null
+      ],
+      "currency": "EUR"
+    },
+    {
+      "country": "Finland",
+      "city": "Tampere",
+      "rents": [
+        790,
+        975,
+        1225
+      ],
+      "currency": "EUR"
+    },
+    {
+      "country": "Finland",
+      "city": "Turku",
+      "rents": [
+        750,
+        970,
+        1130
+      ],
+      "currency": "EUR"
+    },
+    {
+      "country": "Finland",
+      "city": "Oulu",
+      "rents": [
+        690,
+        870,
+        1000
+      ],
+      "currency": "EUR"
+    },
+    {
+      "country": "Finland",
+      "city": "Jyvaskyla",
+      "rents": [
+        680,
+        880,
+        null
+      ],
+      "currency": "EUR"
+    },
+    {
+      "country": "France",
+      "city": "Paris",
+      "rents": [
+        1800,
+        2700,
+        3750
+      ],
+      "currency": "EUR"
+    },
+    {
+      "country": "France",
+      "city": "Paris (16eme)",
+      "rents": [
+        2000,
+        3800,
+        5240
+      ],
+      "currency": "EUR"
+    },
+    {
+      "country": "France",
+      "city": "Nice",
+      "rents": [
+        1000,
+        1460,
+        2050
+      ],
+      "currency": "EUR"
+    },
+    {
+      "country": "France",
+      "city": "Lyon",
+      "rents": [
+        920,
+        1240,
+        1410
+      ],
+      "currency": "EUR"
+    },
+    {
+      "country": "France",
+      "city": "Bordeaux",
+      "rents": [
+        840,
+        1100,
+        1250
+      ],
+      "currency": "EUR"
+    },
+    {
+      "country": "France",
+      "city": "Marseille",
+      "rents": [
+        830,
+        1090,
+        1320
+      ],
+      "currency": "EUR"
+    },
+    {
+      "country": "France",
+      "city": "Montpellier",
+      "rents": [
+        750,
+        950,
+        1200
+      ],
+      "currency": "EUR"
+    },
+    {
+      "country": "France",
+      "city": "Toulouse",
+      "rents": [
+        740,
+        890,
+        990
+      ],
+      "currency": "EUR"
+    },
+    {
+      "country": "France",
+      "city": "Nantes",
+      "rents": [
+        730,
+        950,
+        1460
+      ],
+      "currency": "EUR"
+    },
+    {
+      "country": "Georgia",
+      "city": "Tbilisi",
+      "rents": [
+        450,
+        590,
+        860
+      ],
+      "currency": "USD"
+    },
+    {
+      "country": "Georgia",
+      "city": "Tbilisi (Vake)",
+      "rents": [
+        710,
+        1000,
+        1330
+      ],
+      "currency": "USD"
+    },
+    {
+      "country": "Georgia",
+      "city": "Tbilisi (Saburtalo)",
+      "rents": [
+        510,
+        670,
+        840
+      ],
+      "currency": "USD"
+    },
+    {
+      "country": "Georgia",
+      "city": "Batumi",
+      "rents": [
+        470,
+        600,
+        730
+      ],
+      "currency": "USD"
+    },
+    {
+      "country": "Germany",
+      "city": "Berlin",
+      "rents": [
+        1300,
+        1750,
+        2280
+      ],
+      "currency": "EUR"
+    },
+    {
+      "country": "Germany",
+      "city": "Munich",
+      "rents": [
+        1450,
+        1970,
+        2490
+      ],
+      "currency": "EUR"
+    },
+    {
+      "country": "Germany",
+      "city": "Berlin (Mitte)",
+      "rents": [
+        1260,
+        1950,
+        2620
+      ],
+      "currency": "EUR"
+    },
+    {
+      "country": "Germany",
+      "city": "Munich (District Munich)",
+      "rents": [
+        1160,
+        1670,
+        2100
+      ],
+      "currency": "EUR"
+    },
+    {
+      "country": "Germany",
+      "city": "Frankfurt",
+      "rents": [
+        1100,
+        1420,
+        2000
+      ],
+      "currency": "EUR"
+    },
+    {
+      "country": "Germany",
+      "city": "Stuttgart",
+      "rents": [
+        1030,
+        1330,
+        1720
+      ],
+      "currency": "EUR"
+    },
+    {
+      "country": "Germany",
+      "city": "Dusseldorf",
+      "rents": [
+        930,
+        1250,
+        1950
+      ],
+      "currency": "EUR"
+    },
+    {
+      "country": "Germany",
+      "city": "Cologne",
+      "rents": [
+        860,
+        1000,
+        1480
+      ],
+      "currency": "EUR"
+    },
+    {
+      "country": "Germany",
+      "city": "Hamburg",
+      "rents": [
+        730,
+        930,
+        1330
+      ],
+      "currency": "EUR"
+    },
+    {
+      "country": "Germany",
+      "city": "Leipzig",
+      "rents": [
+        660,
+        840,
+        1320
+      ],
+      "currency": "EUR"
+    },
+    {
+      "country": "Greece",
+      "city": "Athens",
+      "rents": [
+        650,
+        880,
+        1200
+      ],
+      "currency": "EUR"
+    },
+    {
+      "country": "Greece",
+      "city": "Athens (Kolonaki-Lykavittos)",
+      "rents": [
+        1100,
+        1750,
+        2750
+      ],
+      "currency": "EUR"
+    },
+    {
+      "country": "Greece",
+      "city": "Athens (Center)",
+      "rents": [
+        650,
+        880,
+        1200
+      ],
+      "currency": "EUR"
+    },
+    {
+      "country": "Greece",
+      "city": "Thessaloniki",
+      "rents": [
+        520,
+        650,
+        850
+      ],
+      "currency": "EUR"
+    },
+    {
+      "country": "Greece",
+      "city": "Heraklion",
+      "rents": [
+        500,
+        800,
+        950
+      ],
+      "currency": "EUR"
+    },
+    {
+      "country": "Greece",
+      "city": "Patra",
+      "rents": [
+        450,
+        550,
+        650
+      ],
+      "currency": "EUR"
+    },
+    {
+      "country": "Greece",
+      "city": "Volos",
+      "rents": [
+        430,
+        550,
+        650
+      ],
+      "currency": "EUR"
+    },
+    {
+      "country": "Greece",
+      "city": "Kavala",
+      "rents": [
+        400,
+        500,
+        600
+      ],
+      "currency": "EUR"
+    },
+    {
+      "country": "Hong Kong",
+      "city": "Hong Kong",
+      "rents": [
+        2145,
+        2935,
+        5205
+      ],
+      "currency": "USD"
+    },
+    {
+      "country": "Hong Kong",
+      "city": "Hong Kong Island",
+      "rents": [
+        2680,
+        2935,
+        4975
+      ],
+      "currency": "USD"
+    },
+    {
+      "country": "Hong Kong",
+      "city": "Kowloon",
+      "rents": [
+        2145,
+        2935,
+        5205
+      ],
+      "currency": "USD"
+    },
+    {
+      "country": "Hong Kong",
+      "city": "Kowloon (Hung Hom)",
+      "rents": [
+        2105,
+        2870,
+        3700
+      ],
+      "currency": "USD"
+    },
+    {
+      "country": "Hong Kong",
+      "city": "Outlying Islands",
+      "rents": [
+        1915,
+        2230,
+        3060
+      ],
+      "currency": "USD"
+    },
+    {
+      "country": "Hong Kong",
+      "city": "New Territories",
+      "rents": [
+        1915,
+        2295,
+        3445
+      ],
+      "currency": "USD"
+    },
+    {
+      "country": "Hong Kong",
+      "city": "New Territories (Shatin)",
+      "rents": [
+        1790,
+        1860,
+        3160
+      ],
+      "currency": "USD"
+    },
+    {
+      "country": "Hungary",
+      "city": "Budapest",
+      "rents": [
+        770,
+        1190,
+        2000
+      ],
+      "currency": "EUR"
+    },
+    {
+      "country": "Hungary",
+      "city": "Budapest (District VI)",
+      "rents": [
+        830,
+        1490,
+        2180
+      ],
+      "currency": "EUR"
+    },
+    {
+      "country": "Hungary",
+      "city": "Budapest (District VII)",
+      "rents": [
+        720,
+        1020,
+        1380
+      ],
+      "currency": "EUR"
+    },
+    {
+      "country": "Hungary",
+      "city": "Debrecen",
+      "rents": [
+        630,
+        970,
+        1230
+      ],
+      "currency": "EUR"
+    },
+    {
+      "country": "Hungary",
+      "city": "Pecs",
+      "rents": [
+        520,
+        690,
+        970
+      ],
+      "currency": "EUR"
+    },
+    {
+      "country": "Hungary",
+      "city": "Nyiregyhaza",
+      "rents": [
+        470,
+        610,
+        null
+      ],
+      "currency": "EUR"
+    },
+    {
+      "country": "Iceland",
+      "city": "Reykjavik",
+      "rents": [
+        2150,
+        2570,
+        2780
+      ],
+      "currency": "EUR"
+    },
+    {
+      "country": "Indonesia",
+      "city": "Jakarta",
+      "rents": [
+        390,
+        550,
+        1270
+      ],
+      "currency": "USD"
+    },
+    {
+      "country": "Indonesia",
+      "city": "Jakarta (South Jakarta)",
+      "rents": [
+        450,
+        920,
+        1570
+      ],
+      "currency": "USD"
+    },
+    {
+      "country": "Indonesia",
+      "city": "Bali",
+      "rents": [
+        440,
+        840,
+        1050
+      ],
+      "currency": "USD"
+    },
+    {
+      "country": "Indonesia",
+      "city": "Tangerang",
+      "rents": [
+        250,
+        390,
+        570
+      ],
+      "currency": "USD"
+    },
+    {
+      "country": "Indonesia",
+      "city": "South Tangerang",
+      "rents": [
+        170,
+        420,
+        870
+      ],
+      "currency": "USD"
+    },
+    {
+      "country": "Indonesia",
+      "city": "Surabaya",
+      "rents": [
+        140,
+        195,
+        840
+      ],
+      "currency": "USD"
+    },
+    {
+      "country": "Ireland",
+      "city": "Dublin",
+      "rents": [
+        2000,
+        2500,
+        3000
+      ],
+      "currency": "EUR"
+    },
+    {
+      "country": "Ireland",
+      "city": "Cork",
+      "rents": [
+        1700,
+        2200,
+        2600
+      ],
+      "currency": "EUR"
+    },
+    {
+      "country": "Israel",
+      "city": "Tel Aviv",
+      "rents": [
+        2580,
+        2980,
+        4130
+      ],
+      "currency": "USD"
+    },
+    {
+      "country": "Israel",
+      "city": "Tel Aviv-Yafo",
+      "rents": [
+        2580,
+        2980,
+        4130
+      ],
+      "currency": "USD"
+    },
+    {
+      "country": "Israel",
+      "city": "Jerusalem",
+      "rents": [
+        1790,
+        2280,
+        2810
+      ],
+      "currency": "USD"
+    },
+    {
+      "country": "Israel",
+      "city": "Haifa",
+      "rents": [
+        860,
+        1090,
+        1590
+      ],
+      "currency": "USD"
+    },
+    {
+      "country": "Italy",
+      "city": "Milan",
+      "rents": [
+        1450,
+        1840,
+        2700
+      ],
+      "currency": "EUR"
+    },
+    {
+      "country": "Italy",
+      "city": "Milan (Garibaldi-Porto Venezia)",
+      "rents": [
+        1500,
+        2200,
+        3000
+      ],
+      "currency": "EUR"
+    },
+    {
+      "country": "Italy",
+      "city": "Rome",
+      "rents": [
+        1400,
+        1600,
+        2100
+      ],
+      "currency": "EUR"
+    },
+    {
+      "country": "Italy",
+      "city": "Florence",
+      "rents": [
+        1250,
+        1400,
+        1660
+      ],
+      "currency": "EUR"
+    },
+    {
+      "country": "Italy",
+      "city": "Naples",
+      "rents": [
+        900,
+        1000,
+        1390
+      ],
+      "currency": "EUR"
+    },
+    {
+      "country": "Italy",
+      "city": "Turin",
+      "rents": [
+        750,
+        950,
+        1250
+      ],
+      "currency": "EUR"
+    },
+    {
+      "country": "Italy",
+      "city": "Palermo",
+      "rents": [
+        700,
+        800,
+        900
+      ],
+      "currency": "EUR"
+    },
+    {
+      "country": "Italy",
+      "city": "Catania",
+      "rents": [
+        600,
+        750,
+        900
+      ],
+      "currency": "EUR"
+    },
+    {
+      "country": "Japan",
+      "city": "Tokyo",
+      "rents": [
+        860,
+        1220,
+        1480
+      ],
+      "currency": "USD"
+    },
+    {
+      "country": "Japan",
+      "city": "Tokyo (Central City)",
+      "rents": [
+        1340,
+        2040,
+        2860
+      ],
+      "currency": "USD"
+    },
+    {
+      "country": "Japan",
+      "city": "Kawasaki",
+      "rents": [
+        610,
+        840,
+        1050
+      ],
+      "currency": "USD"
+    },
+    {
+      "country": "Japan",
+      "city": "Yokohama",
+      "rents": [
+        540,
+        690,
+        930
+      ],
+      "currency": "USD"
+    },
+    {
+      "country": "Japan",
+      "city": "Fukuoka",
+      "rents": [
+        510,
+        730,
+        850
+      ],
+      "currency": "USD"
+    },
+    {
+      "country": "Japan",
+      "city": "Kobe",
+      "rents": [
+        440,
+        470,
+        540
+      ],
+      "currency": "USD"
+    },
+    {
+      "country": "Japan",
+      "city": "Sapporo",
+      "rents": [
+        null,
+        390,
+        640
+      ],
+      "currency": "USD"
+    },
+    {
+      "country": "Kazakhstan",
+      "city": "Astana",
+      "rents": [
+        630,
+        840,
+        1680
+      ],
+      "currency": "USD"
+    },
+    {
+      "country": "Kazakhstan",
+      "city": "Almaty",
+      "rents": [
+        630,
+        840,
+        1680
+      ],
+      "currency": "USD"
+    },
+    {
+      "country": "Kazakhstan",
+      "city": "Kostanay",
+      "rents": [
+        420,
+        590,
+        null
+      ],
+      "currency": "USD"
+    },
+    {
+      "country": "Kazakhstan",
+      "city": "Pavlodar",
+      "rents": [
+        420,
+        550,
+        null
+      ],
+      "currency": "USD"
+    },
+    {
+      "country": "Kazakhstan",
+      "city": "Ust-Kamenogorsk",
+      "rents": [
+        420,
+        530,
+        null
+      ],
+      "currency": "USD"
+    },
+    {
+      "country": "Kazakhstan",
+      "city": "Karaganda",
+      "rents": [
+        400,
+        480,
+        570
+      ],
+      "currency": "USD"
+    },
+    {
+      "country": "Kazakhstan",
+      "city": "Aktau",
+      "rents": [
+        380,
+        420,
+        740
+      ],
+      "currency": "USD"
+    },
+    {
+      "country": "Latvia",
+      "city": "Riga",
+      "rents": [
+        750,
+        1300,
+        1700
+      ],
+      "currency": "EUR"
+    },
+    {
+      "country": "Latvia",
+      "city": "Riga (Centre)",
+      "rents": [
+        800,
+        1400,
+        1700
+      ],
+      "currency": "EUR"
+    },
+    {
+      "country": "Lithuania",
+      "city": "Vilnius",
+      "rents": [
+        750,
+        1000,
+        1700
+      ],
+      "currency": "EUR"
+    },
+    {
+      "country": "Lithuania",
+      "city": "Kaunas",
+      "rents": [
+        600,
+        850,
+        1100
+      ],
+      "currency": "EUR"
+    },
+    {
+      "country": "Lithuania",
+      "city": "Klaipeda",
+      "rents": [
+        550,
+        900,
+        null
+      ],
+      "currency": "EUR"
+    },
+    {
+      "country": "Luxembourg",
+      "city": "Luxembourg City",
+      "rents": [
+        1800,
+        2680,
+        3200
+      ],
+      "currency": "EUR"
+    },
+    {
+      "country": "Luxembourg",
+      "city": "Belair",
+      "rents": [
+        1800,
+        2680,
+        3200
+      ],
+      "currency": "EUR"
+    },
+    {
+      "country": "Luxembourg",
+      "city": "Luxembourg (all)",
+      "rents": [
+        1600,
+        2900,
+        3700
+      ],
+      "currency": "EUR"
+    },
+    {
+      "country": "Macau",
+      "city": "Macau",
+      "rents": [
+        985,
+        1670,
+        2440
+      ],
+      "currency": "USD"
+    },
+    {
+      "country": "Malaysia",
+      "city": "Kuala Lumpur",
+      "rents": [
+        730,
+        740,
+        660
+      ],
+      "currency": "USD"
+    },
+    {
+      "country": "Malaysia",
+      "city": "Subang Jaya",
+      "rents": [
+        520,
+        660,
+        660
+      ],
+      "currency": "USD"
+    },
+    {
+      "country": "Malaysia",
+      "city": "Johor Bahru",
+      "rents": [
+        490,
+        590,
+        640
+      ],
+      "currency": "USD"
+    },
+    {
+      "country": "Malaysia",
+      "city": "Iskander Puteri",
+      "rents": [
+        490,
+        640,
+        810
+      ],
+      "currency": "USD"
+    },
+    {
+      "country": "Malaysia",
+      "city": "Petaling Jaya",
+      "rents": [
+        490,
+        640,
+        690
+      ],
+      "currency": "USD"
+    },
+    {
+      "country": "Malaysia",
+      "city": "Shah Alam",
+      "rents": [
+        340,
+        440,
+        null
+      ],
+      "currency": "USD"
+    },
+    {
+      "country": "Malaysia",
+      "city": "Ipoh",
+      "rents": [
+        null,
+        440,
+        470
+      ],
+      "currency": "USD"
+    },
+    {
+      "country": "Mauritius",
+      "city": "Mauritius",
+      "rents": [
+        640,
+        1065,
+        1810
+      ],
+      "currency": "USD"
+    },
+    {
+      "country": "Mauritius",
+      "city": "Grand Baie",
+      "rents": [
+        640,
+        1065,
+        1810
+      ],
+      "currency": "USD"
+    },
+    {
+      "country": "Mauritius",
+      "city": "Flic en Flac",
+      "rents": [
+        null,
+        850,
+        1065
+      ],
+      "currency": "USD"
+    },
+    {
+      "country": "Mexico",
+      "city": "Mexico City",
+      "rents": [
+        1370,
+        1850,
+        3470
+      ],
+      "currency": "USD"
+    },
+    {
+      "country": "Mexico",
+      "city": "Mexico City (Miguel Hidalgo)",
+      "rents": [
+        1730,
+        2770,
+        5080
+      ],
+      "currency": "USD"
+    },
+    {
+      "country": "Mexico",
+      "city": "Monterrey",
+      "rents": [
+        1130,
+        1730,
+        2240
+      ],
+      "currency": "USD"
+    },
+    {
+      "country": "Mexico",
+      "city": "Guadalajara",
+      "rents": [
+        1100,
+        1450,
+        1970
+      ],
+      "currency": "USD"
+    },
+    {
+      "country": "Mexico",
+      "city": "Naucalpan de Juárez",
+      "rents": [
+        820,
+        1280,
+        2185
+      ],
+      "currency": "USD"
+    },
+    {
+      "country": "Mexico",
+      "city": "Cancun",
+      "rents": [
+        770,
+        1270,
+        2170
+      ],
+      "currency": "USD"
+    },
+    {
+      "country": "Mexico",
+      "city": "Merida",
+      "rents": [
+        740,
+        975,
+        2010
+      ],
+      "currency": "USD"
+    },
+    {
+      "country": "Mexico",
+      "city": "Acapulco",
+      "rents": [
+        null,
+        610,
+        1440
+      ],
+      "currency": "USD"
+    },
+    {
+      "country": "Mexico",
+      "city": "Puebla",
+      "rents": [
+        null,
+        800,
+        1130
+      ],
+      "currency": "USD"
+    },
+    {
+      "country": "Moldova",
+      "city": "Chisinau",
+      "rents": [
+        600,
+        850,
+        1200
+      ],
+      "currency": "EUR"
+    },
+    {
+      "country": "Moldova",
+      "city": "Chișinău (Centre)",
+      "rents": [
+        650,
+        1000,
+        1400
+      ],
+      "currency": "EUR"
+    },
+    {
+      "country": "Mongolia",
+      "city": "Ulaanbaatar",
+      "rents": [
+        450,
+        780,
+        1400
+      ],
+      "currency": "USD"
+    },
+    {
+      "country": "Montenegro",
+      "city": "Podgorica",
+      "rents": [
+        550,
+        700,
+        1000
+      ],
+      "currency": "EUR"
+    },
+    {
+      "country": "Montenegro",
+      "city": "Tivat",
+      "rents": [
+        800,
+        1000,
+        null
+      ],
+      "currency": "EUR"
+    },
+    {
+      "country": "Montenegro",
+      "city": "Budva",
+      "rents": [
+        650,
+        950,
+        1400
+      ],
+      "currency": "EUR"
+    },
+    {
+      "country": "Morocco",
+      "city": "Casablanca",
+      "rents": [
+        965,
+        1395,
+        1985
+      ],
+      "currency": "USD"
+    },
+    {
+      "country": "Morocco",
+      "city": "Rabat",
+      "rents": [
+        1290,
+        1935,
+        2470
+      ],
+      "currency": "USD"
+    },
+    {
+      "country": "Morocco",
+      "city": "Marrakesh",
+      "rents": [
+        965,
+        1395,
+        1985
+      ],
+      "currency": "USD"
+    },
+    {
+      "country": "Morocco",
+      "city": "Tangier",
+      "rents": [
+        760,
+        1395,
+        2150
+      ],
+      "currency": "USD"
+    },
+    {
+      "country": "Morocco",
+      "city": "Agadir",
+      "rents": [
+        320,
+        570,
+        null
+      ],
+      "currency": "USD"
+    },
+    {
+      "country": "Netherlands",
+      "city": "Amsterdam",
+      "rents": [
+        2275,
+        2600,
+        3110
+      ],
+      "currency": "EUR"
+    },
+    {
+      "country": "Netherlands",
+      "city": "The Hague",
+      "rents": [
+        2150,
+        2240,
+        2700
+      ],
+      "currency": "EUR"
+    },
+    {
+      "country": "Netherlands",
+      "city": "Rotterdam",
+      "rents": [
+        1845,
+        2350,
+        2595
+      ],
+      "currency": "EUR"
+    },
+    {
+      "country": "New Zealand",
+      "city": "Auckland",
+      "rents": [
+        1165,
+        1460,
+        1790
+      ],
+      "currency": "USD"
+    },
+    {
+      "country": "New Zealand",
+      "city": "Auckland (apartments)",
+      "rents": [
+        1165,
+        1460,
+        1790
+      ],
+      "currency": "USD"
+    },
+    {
+      "country": "New Zealand",
+      "city": "Wellington (apartments)",
+      "rents": [
+        1130,
+        1400,
+        1635
+      ],
+      "currency": "USD"
+    },
+    {
+      "country": "New Zealand",
+      "city": "Christchurch (townhouses)",
+      "rents": [
+        null,
+        1320,
+        1620
+      ],
+      "currency": "USD"
+    },
+    {
+      "country": "North Macedonia",
+      "city": "Skopje",
+      "rents": [
+        280,
+        370,
+        550
+      ],
+      "currency": "EUR"
+    },
+    {
+      "country": "North Macedonia",
+      "city": "Skopje (Centre)",
+      "rents": [
+        280,
+        370,
+        550
+      ],
+      "currency": "EUR"
+    },
+    {
+      "country": "North Macedonia",
+      "city": "Skopje (Aerodrom)",
+      "rents": [
+        250,
+        300,
+        350
+      ],
+      "currency": "EUR"
+    },
+    {
+      "country": "North Macedonia",
+      "city": "Bitola",
+      "rents": [
+        150,
+        170,
+        250
+      ],
+      "currency": "EUR"
+    },
+    {
+      "country": "Norway",
+      "city": "Oslo",
+      "rents": [
+        1685,
+        2185,
+        2595
+      ],
+      "currency": "EUR"
+    },
+    {
+      "country": "Norway",
+      "city": "Bergen",
+      "rents": [
+        1505,
+        1820,
+        2280
+      ],
+      "currency": "EUR"
+    },
+    {
+      "country": "Norway",
+      "city": "Trondheim",
+      "rents": [
+        1185,
+        1530,
+        1815
+      ],
+      "currency": "EUR"
+    },
+    {
+      "country": "Pakistan",
+      "city": "Islamabad",
+      "rents": [
+        160,
+        220,
+        470
+      ],
+      "currency": "USD"
+    },
+    {
+      "country": "Pakistan",
+      "city": "Rawalpindi",
+      "rents": [
+        200,
+        250,
+        320
+      ],
+      "currency": "USD"
+    },
+    {
+      "country": "Pakistan",
+      "city": "Karachi",
+      "rents": [
+        160,
+        220,
+        470
+      ],
+      "currency": "USD"
+    },
+    {
+      "country": "Pakistan",
+      "city": "Lahore",
+      "rents": [
+        160,
+        300,
+        480
+      ],
+      "currency": "USD"
+    },
+    {
+      "country": "Panama",
+      "city": "Panama City",
+      "rents": [
+        1650,
+        1650,
+        2500
+      ],
+      "currency": "USD"
+    },
+    {
+      "country": "Panama",
+      "city": "Panama City (San Francisco)",
+      "rents": [
+        1300,
+        1350,
+        1870
+      ],
+      "currency": "USD"
+    },
+    {
+      "country": "Panama",
+      "city": "Panama Oeste",
+      "rents": [
+        1100,
+        1300,
+        1700
+      ],
+      "currency": "USD"
+    },
+    {
+      "country": "Panama",
+      "city": "Panama Coclé",
+      "rents": [
+        null,
+        1500,
+        2000
+      ],
+      "currency": "USD"
+    },
+    {
+      "country": "Peru",
+      "city": "Lima",
+      "rents": [
+        620,
+        800,
+        950
+      ],
+      "currency": "USD"
+    },
+    {
+      "country": "Peru",
+      "city": "Lima (Miraflores)",
+      "rents": [
+        780,
+        1050,
+        1700
+      ],
+      "currency": "USD"
+    },
+    {
+      "country": "Philippines",
+      "city": "Manila",
+      "rents": [
+        660,
+        1470,
+        2790
+      ],
+      "currency": "USD"
+    },
+    {
+      "country": "Philippines",
+      "city": "Metro Manila (Taguig City)",
+      "rents": [
+        840,
+        1680,
+        3570
+      ],
+      "currency": "USD"
+    },
+    {
+      "country": "Philippines",
+      "city": "Metro Manila",
+      "rents": [
+        660,
+        1470,
+        2790
+      ],
+      "currency": "USD"
+    },
+    {
+      "country": "Philippines",
+      "city": "Cebu City",
+      "rents": [
+        500,
+        1010,
+        1510
+      ],
+      "currency": "USD"
+    },
+    {
+      "country": "Philippines",
+      "city": "Metro Manila (Manila City)",
+      "rents": [
+        420,
+        840,
+        1600
+      ],
+      "currency": "USD"
+    },
+    {
+      "country": "Poland",
+      "city": "Warsaw",
+      "rents": [
+        810,
+        1240,
+        2300
+      ],
+      "currency": "EUR"
+    },
+    {
+      "country": "Poland",
+      "city": "Warsaw (Downtown)",
+      "rents": [
+        1040,
+        1960,
+        3340
+      ],
+      "currency": "EUR"
+    },
+    {
+      "country": "Poland",
+      "city": "Gdansk",
+      "rents": [
+        690,
+        880,
+        1450
+      ],
+      "currency": "EUR"
+    },
+    {
+      "country": "Poland",
+      "city": "Krakow",
+      "rents": [
+        680,
+        900,
+        1270
+      ],
+      "currency": "EUR"
+    },
+    {
+      "country": "Poland",
+      "city": "Wroclaw",
+      "rents": [
+        680,
+        760,
+        1110
+      ],
+      "currency": "EUR"
+    },
+    {
+      "country": "Poland",
+      "city": "Poznan",
+      "rents": [
+        610,
+        750,
+        940
+      ],
+      "currency": "EUR"
+    },
+    {
+      "country": "Poland",
+      "city": "Lublin",
+      "rents": [
+        580,
+        660,
+        730
+      ],
+      "currency": "EUR"
+    },
+    {
+      "country": "Poland",
+      "city": "Lodz",
+      "rents": [
+        530,
+        680,
+        895
+      ],
+      "currency": "EUR"
+    },
+    {
+      "country": "Poland",
+      "city": "Bydgoszcz",
+      "rents": [
+        510,
+        690,
+        null
+      ],
+      "currency": "EUR"
+    },
+    {
+      "country": "Portugal",
+      "city": "Lisbon",
+      "rents": [
+        1500,
+        1850,
+        2300
+      ],
+      "currency": "EUR"
+    },
+    {
+      "country": "Portugal",
+      "city": "Faro",
+      "rents": [
+        1100,
+        1500,
+        1800
+      ],
+      "currency": "EUR"
+    },
+    {
+      "country": "Portugal",
+      "city": "Porto",
+      "rents": [
+        1050,
+        1350,
+        1750
+      ],
+      "currency": "EUR"
+    },
+    {
+      "country": "Portugal",
+      "city": "Aveiro",
+      "rents": [
+        880,
+        950,
+        1150
+      ],
+      "currency": "EUR"
+    },
+    {
+      "country": "Portugal",
+      "city": "Braga",
+      "rents": [
+        850,
+        1000,
+        1200
+      ],
+      "currency": "EUR"
+    },
+    {
+      "country": "Portugal",
+      "city": "Setubal",
+      "rents": [
+        null,
+        1250,
+        1380
+      ],
+      "currency": "EUR"
+    },
+    {
+      "country": "Puerto Rico",
+      "city": "San Juan",
+      "rents": [
+        1800,
+        3500,
+        3800
+      ],
+      "currency": "USD"
+    },
+    {
+      "country": "Puerto Rico",
+      "city": "Isla Verde",
+      "rents": [
+        1800,
+        3500,
+        3800
+      ],
+      "currency": "USD"
+    },
+    {
+      "country": "Qatar",
+      "city": "Doha",
+      "rents": [
+        1920,
+        1920,
+        2740
+      ],
+      "currency": "USD"
+    },
+    {
+      "country": "Qatar",
+      "city": "Lusail (Centre)",
+      "rents": [
+        2250,
+        2605,
+        5210
+      ],
+      "currency": "USD"
+    },
+    {
+      "country": "Qatar",
+      "city": "Doha (Pearl)",
+      "rents": [
+        2195,
+        3015,
+        4170
+      ],
+      "currency": "USD"
+    },
+    {
+      "country": "Qatar",
+      "city": "Lusail",
+      "rents": [
+        1990,
+        2470,
+        3290
+      ],
+      "currency": "USD"
+    },
+    {
+      "country": "Romania",
+      "city": "Bucharest",
+      "rents": [
+        650,
+        1000,
+        null
+      ],
+      "currency": "EUR"
+    },
+    {
+      "country": "Romania",
+      "city": "Bucharest (Unirii)",
+      "rents": [
+        700,
+        930,
+        null
+      ],
+      "currency": "EUR"
+    },
+    {
+      "country": "Romania",
+      "city": "Cluj-Napoca",
+      "rents": [
+        600,
+        720,
+        null
+      ],
+      "currency": "EUR"
+    },
+    {
+      "country": "Romania",
+      "city": "Constanta",
+      "rents": [
+        550,
+        750,
+        null
+      ],
+      "currency": "EUR"
+    },
+    {
+      "country": "Romania",
+      "city": "Brasov",
+      "rents": [
+        520,
+        690,
+        null
+      ],
+      "currency": "EUR"
+    },
+    {
+      "country": "Romania",
+      "city": "Timisoara",
+      "rents": [
+        450,
+        550,
+        null
+      ],
+      "currency": "EUR"
+    },
+    {
+      "country": "Romania",
+      "city": "Iași",
+      "rents": [
+        450,
+        550,
+        null
+      ],
+      "currency": "EUR"
+    },
+    {
+      "country": "Romania",
+      "city": "Craiova",
+      "rents": [
+        440,
+        550,
+        null
+      ],
+      "currency": "EUR"
+    },
+    {
+      "country": "Romania",
+      "city": "Galati",
+      "rents": [
+        400,
+        500,
+        null
+      ],
+      "currency": "EUR"
+    },
+    {
+      "country": "Russia",
+      "city": "Moscow",
+      "rents": [
+        895,
+        1345,
+        2520
+      ],
+      "currency": "USD"
+    },
+    {
+      "country": "Russia",
+      "city": "Saint Petersburg",
+      "rents": [
+        545,
+        980,
+        1540
+      ],
+      "currency": "USD"
+    },
+    {
+      "country": "Russia",
+      "city": "Nizhny Novgorod",
+      "rents": [
+        450,
+        490,
+        600
+      ],
+      "currency": "USD"
+    },
+    {
+      "country": "Russia",
+      "city": "Novosibirsk",
+      "rents": [
+        445,
+        560,
+        700
+      ],
+      "currency": "USD"
+    },
+    {
+      "country": "Russia",
+      "city": "Yekaterinburg",
+      "rents": [
+        405,
+        490,
+        660
+      ],
+      "currency": "USD"
+    },
+    {
+      "country": "Russia",
+      "city": "Ufa",
+      "rents": [
+        320,
+        420,
+        545
+      ],
+      "currency": "USD"
+    },
+    {
+      "country": "Saudi Arabia",
+      "city": "Riyadh",
+      "rents": [
+        620,
+        1065,
+        1445
+      ],
+      "currency": "USD"
+    },
+    {
+      "country": "Saudi Arabia",
+      "city": "Jeddah",
+      "rents": [
+        720,
+        985,
+        890
+      ],
+      "currency": "USD"
+    },
+    {
+      "country": "Serbia",
+      "city": "Belgrade",
+      "rents": [
+        650,
+        1000,
+        1600
+      ],
+      "currency": "EUR"
+    },
+    {
+      "country": "Serbia",
+      "city": "Novi Sad",
+      "rents": [
+        350,
+        450,
+        650
+      ],
+      "currency": "EUR"
+    },
+    {
+      "country": "Slovakia",
+      "city": "Bratislava",
+      "rents": [
+        800,
+        1100,
+        2000
+      ],
+      "currency": "EUR"
+    },
+    {
+      "country": "Slovakia",
+      "city": "Bratislava (Old Town)",
+      "rents": [
+        950,
+        1600,
+        2200
+      ],
+      "currency": "EUR"
+    },
+    {
+      "country": "Slovakia",
+      "city": "Kosice",
+      "rents": [
+        800,
+        980,
+        1250
+      ],
+      "currency": "EUR"
+    },
+    {
+      "country": "Slovakia",
+      "city": "Banska Bystrica",
+      "rents": [
+        700,
+        800,
+        1300
+      ],
+      "currency": "EUR"
+    },
+    {
+      "country": "Slovakia",
+      "city": "Nitra",
+      "rents": [
+        700,
+        850,
+        1150
+      ],
+      "currency": "EUR"
+    },
+    {
+      "country": "Slovakia",
+      "city": "Zilina",
+      "rents": [
+        690,
+        850,
+        null
+      ],
+      "currency": "EUR"
+    },
+    {
+      "country": "Slovenia",
+      "city": "Ljubljana",
+      "rents": [
+        1000,
+        1600,
+        2700
+      ],
+      "currency": "EUR"
+    },
+    {
+      "country": "Slovenia",
+      "city": "Gorenjska",
+      "rents": [
+        790,
+        1200,
+        null
+      ],
+      "currency": "EUR"
+    },
+    {
+      "country": "South Africa",
+      "city": "Cape Town",
+      "rents": [
+        670,
+        1080,
+        1520
+      ],
+      "currency": "USD"
+    },
+    {
+      "country": "South Africa",
+      "city": "Dolphin Coast",
+      "rents": [
+        460,
+        730,
+        1220
+      ],
+      "currency": "USD"
+    },
+    {
+      "country": "South Africa",
+      "city": "Johannesburg",
+      "rents": [
+        430,
+        730,
+        1100
+      ],
+      "currency": "USD"
+    },
+    {
+      "country": "South Africa",
+      "city": "Centurion",
+      "rents": [
+        410,
+        520,
+        1030
+      ],
+      "currency": "USD"
+    },
+    {
+      "country": "South Africa",
+      "city": "Durban",
+      "rents": [
+        370,
+        630,
+        null
+      ],
+      "currency": "USD"
+    },
+    {
+      "country": "Spain",
+      "city": "Madrid",
+      "rents": [
+        1650,
+        2500,
+        3000
+      ],
+      "currency": "EUR"
+    },
+    {
+      "country": "Spain",
+      "city": "Barcelona (Eixample)",
+      "rents": [
+        2230,
+        2940,
+        3370
+      ],
+      "currency": "EUR"
+    },
+    {
+      "country": "Spain",
+      "city": "Barcelona",
+      "rents": [
+        1650,
+        2500,
+        3000
+      ],
+      "currency": "EUR"
+    },
+    {
+      "country": "Spain",
+      "city": "Madrid (Centro)",
+      "rents": [
+        1600,
+        2300,
+        2900
+      ],
+      "currency": "EUR"
+    },
+    {
+      "country": "Spain",
+      "city": "Marbella",
+      "rents": [
+        1500,
+        2300,
+        3500
+      ],
+      "currency": "EUR"
+    },
+    {
+      "country": "Spain",
+      "city": "Palma de Mallorca",
+      "rents": [
+        1500,
+        1900,
+        2500
+      ],
+      "currency": "EUR"
+    },
+    {
+      "country": "Spain",
+      "city": "Valencia",
+      "rents": [
+        1300,
+        1500,
+        1600
+      ],
+      "currency": "EUR"
+    },
+    {
+      "country": "Spain",
+      "city": "Malaga",
+      "rents": [
+        1150,
+        1400,
+        1500
+      ],
+      "currency": "EUR"
+    },
+    {
+      "country": "Spain",
+      "city": "Tenerife",
+      "rents": [
+        1100,
+        1250,
+        1300
+      ],
+      "currency": "EUR"
+    },
+    {
+      "country": "Spain",
+      "city": "Alicante",
+      "rents": [
+        1000,
+        1220,
+        1400
+      ],
+      "currency": "EUR"
+    },
+    {
+      "country": "Spain",
+      "city": "Seville",
+      "rents": [
+        900,
+        1100,
+        1100
+      ],
+      "currency": "EUR"
+    },
+    {
+      "country": "Spain",
+      "city": "Murcia",
+      "rents": [
+        700,
+        850,
+        900
+      ],
+      "currency": "EUR"
+    },
+    {
+      "country": "Spain",
+      "city": "Cordoba",
+      "rents": [
+        650,
+        750,
+        800
+      ],
+      "currency": "EUR"
+    },
+    {
+      "country": "Sweden",
+      "city": "Stockholm",
+      "rents": [
+        1200,
+        1380,
+        1700
+      ],
+      "currency": "EUR"
+    },
+    {
+      "country": "Sweden",
+      "city": "Stockholm (Centre)",
+      "rents": [
+        1950,
+        3030,
+        null
+      ],
+      "currency": "EUR"
+    },
+    {
+      "country": "Sweden",
+      "city": "Gothenburg",
+      "rents": [
+        960,
+        1150,
+        1330
+      ],
+      "currency": "EUR"
+    },
+    {
+      "country": "Sweden",
+      "city": "Malmö",
+      "rents": [
+        920,
+        1190,
+        1410
+      ],
+      "currency": "EUR"
+    },
+    {
+      "country": "Sweden",
+      "city": "Uppsala",
+      "rents": [
+        920,
+        1180,
+        null
+      ],
+      "currency": "EUR"
+    },
+    {
+      "country": "Switzerland",
+      "city": "Zurich",
+      "rents": [
+        2605,
+        2910,
+        3250
+      ],
+      "currency": "EUR"
+    },
+    {
+      "country": "Switzerland",
+      "city": "Geneva",
+      "rents": [
+        2150,
+        2655,
+        3400
+      ],
+      "currency": "EUR"
+    },
+    {
+      "country": "Switzerland",
+      "city": "Vaud",
+      "rents": [
+        1795,
+        2300,
+        2890
+      ],
+      "currency": "EUR"
+    },
+    {
+      "country": "Switzerland",
+      "city": "Aargau",
+      "rents": [
+        1755,
+        2040,
+        2465
+      ],
+      "currency": "EUR"
+    },
+    {
+      "country": "Switzerland",
+      "city": "Valais",
+      "rents": [
+        1560,
+        1965,
+        2485
+      ],
+      "currency": "EUR"
+    },
+    {
+      "country": "Switzerland",
+      "city": "Fribourg",
+      "rents": [
+        1560,
+        1950,
+        2370
+      ],
+      "currency": "EUR"
+    },
+    {
+      "country": "Switzerland",
+      "city": "Bern",
+      "rents": [
+        1490,
+        1725,
+        2010
+      ],
+      "currency": "EUR"
+    },
+    {
+      "country": "Switzerland",
+      "city": "Ticino",
+      "rents": [
+        1390,
+        1650,
+        1910
+      ],
+      "currency": "EUR"
+    },
+    {
+      "country": "Taiwan",
+      "city": "Taipei City",
+      "rents": [
+        960,
+        1530,
+        1850
+      ],
+      "currency": "USD"
+    },
+    {
+      "country": "Taiwan",
+      "city": "Taipei",
+      "rents": [
+        960,
+        1530,
+        1850
+      ],
+      "currency": "USD"
+    },
+    {
+      "country": "Taiwan",
+      "city": "New Taipei",
+      "rents": [
+        670,
+        830,
+        960
+      ],
+      "currency": "USD"
+    },
+    {
+      "country": "Taiwan",
+      "city": "Tainan",
+      "rents": [
+        null,
+        540,
+        730
+      ],
+      "currency": "USD"
+    },
+    {
+      "country": "Taiwan",
+      "city": "Taoyuan",
+      "rents": [
+        null,
+        830,
+        960
+      ],
+      "currency": "USD"
+    },
+    {
+      "country": "Thailand",
+      "city": "Bangkok",
+      "rents": [
+        760,
+        1590,
+        3110
+      ],
+      "currency": "USD"
+    },
+    {
+      "country": "Thailand",
+      "city": "Bangkok (Pathum Wan)",
+      "rents": [
+        1220,
+        2740,
+        4880
+      ],
+      "currency": "USD"
+    },
+    {
+      "country": "Thailand",
+      "city": "Chon Buri (Pattaya)",
+      "rents": [
+        670,
+        1220,
+        1975
+      ],
+      "currency": "USD"
+    },
+    {
+      "country": "Thailand",
+      "city": "Phuket",
+      "rents": [
+        610,
+        1670,
+        2380
+      ],
+      "currency": "USD"
+    },
+    {
+      "country": "Thailand",
+      "city": "Samut Prakan",
+      "rents": [
+        370,
+        630,
+        null
+      ],
+      "currency": "USD"
+    },
+    {
+      "country": "Thailand",
+      "city": "Nonthaburi",
+      "rents": [
+        310,
+        550,
+        null
+      ],
+      "currency": "USD"
+    },
+    {
+      "country": "Turkey",
+      "city": "Istanbul",
+      "rents": [
+        730,
+        790,
+        1190
+      ],
+      "currency": "USD"
+    },
+    {
+      "country": "Turkey",
+      "city": "Istanbul (Kadıköy)",
+      "rents": [
+        890,
+        1510,
+        1870
+      ],
+      "currency": "USD"
+    },
+    {
+      "country": "Turkey",
+      "city": "Istanbul (all)",
+      "rents": [
+        730,
+        790,
+        1190
+      ],
+      "currency": "USD"
+    },
+    {
+      "country": "Turkey",
+      "city": "Ankara",
+      "rents": [
+        590,
+        610,
+        600
+      ],
+      "currency": "USD"
+    },
+    {
+      "country": "Turkey",
+      "city": "Antalya",
+      "rents": [
+        500,
+        560,
+        730
+      ],
+      "currency": "USD"
+    },
+    {
+      "country": "Turkey",
+      "city": "Izmir",
+      "rents": [
+        490,
+        600,
+        710
+      ],
+      "currency": "USD"
+    },
+    {
+      "country": "Turkey",
+      "city": "Konya",
+      "rents": [
+        420,
+        430,
+        500
+      ],
+      "currency": "USD"
+    },
+    {
+      "country": "Turkey",
+      "city": "Bursa",
+      "rents": [
+        350,
+        420,
+        560
+      ],
+      "currency": "USD"
+    },
+    {
+      "country": "Turkey",
+      "city": "Adana",
+      "rents": [
+        330,
+        420,
+        560
+      ],
+      "currency": "USD"
+    },
+    {
+      "country": "Turkey",
+      "city": "Kayseri",
+      "rents": [
+        null,
+        340,
+        420
+      ],
+      "currency": "USD"
+    },
+    {
+      "country": "Ukraine",
+      "city": "Kyiv",
+      "rents": [
+        550,
+        850,
+        1690
+      ],
+      "currency": "EUR"
+    },
+    {
+      "country": "Ukraine",
+      "city": "Lviv",
+      "rents": [
+        490,
+        610,
+        865
+      ],
+      "currency": "EUR"
+    },
+    {
+      "country": "Ukraine",
+      "city": "Ivano-Frankivsk",
+      "rents": [
+        420,
+        470,
+        null
+      ],
+      "currency": "EUR"
+    },
+    {
+      "country": "Ukraine",
+      "city": "Dnipro",
+      "rents": [
+        340,
+        390,
+        555
+      ],
+      "currency": "EUR"
+    },
+    {
+      "country": "Ukraine",
+      "city": "Odesa",
+      "rents": [
+        250,
+        340,
+        null
+      ],
+      "currency": "EUR"
+    },
+    {
+      "country": "Ukraine",
+      "city": "Kharkiv",
+      "rents": [
+        200,
+        300,
+        null
+      ],
+      "currency": "EUR"
+    },
+    {
+      "country": "United Arab Emirates",
+      "city": "Dubai",
+      "rents": [
+        2200,
+        3510,
+        5790
+      ],
+      "currency": "USD"
+    },
+    {
+      "country": "United Arab Emirates",
+      "city": "Dubai (Downtown)",
+      "rents": [
+        3060,
+        5220,
+        7260
+      ],
+      "currency": "USD"
+    },
+    {
+      "country": "United Arab Emirates",
+      "city": "Dubai (Marina)",
+      "rents": [
+        2500,
+        3520,
+        5560
+      ],
+      "currency": "USD"
+    },
+    {
+      "country": "United Arab Emirates",
+      "city": "Dubai (Business Bay)",
+      "rents": [
+        2280,
+        3400,
+        4770
+      ],
+      "currency": "USD"
+    },
+    {
+      "country": "United Arab Emirates",
+      "city": "Dubai (all)",
+      "rents": [
+        2200,
+        3510,
+        5790
+      ],
+      "currency": "USD"
+    },
+    {
+      "country": "United Arab Emirates",
+      "city": "Abu Dhabi (all)",
+      "rents": [
+        2160,
+        3180,
+        3900
+      ],
+      "currency": "USD"
+    },
+    {
+      "country": "United Arab Emirates",
+      "city": "Dubai (JLT)",
+      "rents": [
+        2130,
+        3400,
+        4310
+      ],
+      "currency": "USD"
+    },
+    {
+      "country": "United Arab Emirates",
+      "city": "Abu Dhabi (Al Reem Is.)",
+      "rents": [
+        2040,
+        2930,
+        3860
+      ],
+      "currency": "USD"
+    },
+    {
+      "country": "United Arab Emirates",
+      "city": "Dubai (JVC)",
+      "rents": [
+        1700,
+        2610,
+        3400
+      ],
+      "currency": "USD"
+    },
+    {
+      "country": "United Arab Emirates",
+      "city": "Ras Al Khaimah",
+      "rents": [
+        1270,
+        1700,
+        2500
+      ],
+      "currency": "USD"
+    },
+    {
+      "country": "United Arab Emirates",
+      "city": "Sharjah",
+      "rents": [
+        680,
+        880,
+        1230
+      ],
+      "currency": "USD"
+    },
+    {
+      "country": "United Arab Emirates",
+      "city": "Ajman",
+      "rents": [
+        680,
+        800,
+        1380
+      ],
+      "currency": "USD"
+    },
+    {
+      "country": "United Kingdom",
+      "city": "London",
+      "rents": [
+        3460,
+        4525,
+        6240
+      ],
+      "currency": "EUR"
+    },
+    {
+      "country": "United Kingdom",
+      "city": "London (Westminster)",
+      "rents": [
+        3885,
+        5800,
+        8595
+      ],
+      "currency": "EUR"
+    },
+    {
+      "country": "United Kingdom",
+      "city": "Bristol",
+      "rents": [
+        1370,
+        1915,
+        2610
+      ],
+      "currency": "EUR"
+    },
+    {
+      "country": "United Kingdom",
+      "city": "Manchester",
+      "rents": [
+        1335,
+        1680,
+        2320
+      ],
+      "currency": "EUR"
+    },
+    {
+      "country": "United Kingdom",
+      "city": "Edinburgh",
+      "rents": [
+        1335,
+        1720,
+        2610
+      ],
+      "currency": "EUR"
+    },
+    {
+      "country": "United Kingdom",
+      "city": "Birmingham",
+      "rents": [
+        1100,
+        1450,
+        2205
+      ],
+      "currency": "EUR"
+    },
+    {
+      "country": "United Kingdom",
+      "city": "Glasgow",
+      "rents": [
+        1045,
+        1390,
+        2090
+      ],
+      "currency": "EUR"
+    },
+    {
+      "country": "United Kingdom",
+      "city": "Leeds",
+      "rents": [
+        1020,
+        1405,
+        1800
+      ],
+      "currency": "EUR"
+    },
+    {
+      "country": "United Kingdom",
+      "city": "Liverpool",
+      "rents": [
+        965,
+        1275,
+        1390
+      ],
+      "currency": "EUR"
+    },
+    {
+      "country": "United States",
+      "city": "New York",
+      "rents": [
+        4745,
+        5995,
+        6950
+      ],
+      "currency": "USD"
+    },
+    {
+      "country": "United States",
+      "city": "New York (Manhattan)",
+      "rents": [
+        5695,
+        8180,
+        13000
+      ],
+      "currency": "USD"
+    },
+    {
+      "country": "United States",
+      "city": "San Francisco",
+      "rents": [
+        4200,
+        6200,
+        8480
+      ],
+      "currency": "USD"
+    },
+    {
+      "country": "United States",
+      "city": "Boston",
+      "rents": [
+        2950,
+        3500,
+        4000
+      ],
+      "currency": "USD"
+    },
+    {
+      "country": "United States",
+      "city": "Miami",
+      "rents": [
+        2900,
+        3450,
+        3600
+      ],
+      "currency": "USD"
+    },
+    {
+      "country": "United States",
+      "city": "San Diego",
+      "rents": [
+        2500,
+        3310,
+        4200
+      ],
+      "currency": "USD"
+    },
+    {
+      "country": "United States",
+      "city": "Chicago",
+      "rents": [
+        2400,
+        3200,
+        3595
+      ],
+      "currency": "USD"
+    },
+    {
+      "country": "United States",
+      "city": "Los Angeles",
+      "rents": [
+        2290,
+        3070,
+        3960
+      ],
+      "currency": "USD"
+    },
+    {
+      "country": "United States",
+      "city": "Washington",
+      "rents": [
+        2070,
+        2990,
+        3870
+      ],
+      "currency": "USD"
+    },
+    {
+      "country": "United States",
+      "city": "Seattle",
+      "rents": [
+        1800,
+        2600,
+        3400
+      ],
+      "currency": "USD"
+    },
+    {
+      "country": "United States",
+      "city": "Atlanta",
+      "rents": [
+        1680,
+        1980,
+        2520
+      ],
+      "currency": "USD"
+    },
+    {
+      "country": "United States",
+      "city": "Portland",
+      "rents": [
+        1500,
+        1750,
+        2200
+      ],
+      "currency": "USD"
+    },
+    {
+      "country": "United States",
+      "city": "Orlando",
+      "rents": [
+        1450,
+        1750,
+        2300
+      ],
+      "currency": "USD"
+    },
+    {
+      "country": "United States",
+      "city": "Las Vegas",
+      "rents": [
+        1270,
+        1500,
+        1930
+      ],
+      "currency": "USD"
+    },
+    {
+      "country": "United States",
+      "city": "Houston",
+      "rents": [
+        1210,
+        1510,
+        2000
+      ],
+      "currency": "USD"
+    },
+    {
+      "country": "Uruguay",
+      "city": "Montevideo",
+      "rents": [
+        670,
+        800,
+        790
+      ],
+      "currency": "USD"
+    },
+    {
+      "country": "Uruguay",
+      "city": "Maldonado",
+      "rents": [
+        940,
+        1670,
+        3280
+      ],
+      "currency": "USD"
+    },
+    {
+      "country": "Uruguay",
+      "city": "Montevideo (Pocitos)",
+      "rents": [
+        700,
+        1050,
+        1700
+      ],
+      "currency": "USD"
+    },
+    {
+      "country": "Uruguay",
+      "city": "Montevideo (Centro)",
+      "rents": [
+        670,
+        800,
+        790
+      ],
+      "currency": "USD"
+    },
+    {
+      "country": "Vietnam",
+      "city": "Hanoi",
+      "rents": [
+        380,
+        500,
+        670
+      ],
+      "currency": "USD"
+    },
+    {
+      "country": "Vietnam",
+      "city": "Ho Chi Minh City (District 2)",
+      "rents": [
+        560,
+        765,
+        1415
+      ],
+      "currency": "USD"
+    },
+    {
+      "country": "Vietnam",
+      "city": "Ho Chi Minh City",
+      "rents": [
+        420,
+        535,
+        840
+      ],
+      "currency": "USD"
+    },
+    {
+      "country": "Vietnam",
+      "city": "Ha Noi",
+      "rents": [
+        380,
+        500,
+        670
+      ],
+      "currency": "USD"
+    },
+    {
+      "country": "Vietnam",
+      "city": "Ha Noi (Nam Tu Liem)",
+      "rents": [
+        325,
+        500,
+        590
+      ],
+      "currency": "USD"
+    }
+  ]
+}

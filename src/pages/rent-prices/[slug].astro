@@ -23,18 +23,40 @@ import dstData from '../../data/dst-index.json';
 
 const { city, country } = Astro.props;
 const variants = avgData.find(entry => entry.country === country).cities.filter(c => c.city === city.city);
-const { city: cityName, rent1, rent2, rent3, avg } = city;
+const isRetired = Boolean(city.retired);
+const isUnavailable = Boolean(city.unavailable) || [city.rent1, city.rent2, city.rent3].every(value => value == null);
+const hasUsableValues = [city.rent1, city.rent2, city.rent3].some(value => typeof value === 'number');
+const hasConflicts = variants.filter(v => !v.retired && !v.unavailable).length > 1;
+const selected = hasConflicts ? [...variants].filter(v => !v.retired && !v.unavailable).sort((a, b) => (b.avg || 0) - (a.avg || 0))[0] : city;
+const { city: cityName, rent1, rent2, rent3, avg } = selected;
+const currency = selected.currency || 'USD';
+const sourceUrl = selected.sourceUrl || selected.source || 'https://www.globalpropertyguide.com/property-rent-prices-by-country';
+const sourceUpdated = selected.sourceUpdatedAt || selected.sourceUpdateDate || selected.updatedAt;
+const sourceLabel = selected.sourceName || 'Global Property Guide';
 const slugify = value => value.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
 const countryPath = `/countries/${slugify(country)}/`;
-const usd = value => '$' + value.toLocaleString('en-US');
+const money = value => value == null ? 'Unavailable' : `${currency === 'EUR' ? '€' : currency === 'USD' ? '$' : `${currency} `}${value.toLocaleString('en-US')}`;
+const usd = money;
 const otherCities = avgData.flatMap(entry => entry.cities.map(c => ({ ...c, country: entry.country })))
   .filter(c => c.city !== cityName || c.country !== country)
   .sort((a, b) => Number(b.country === country) - Number(a.country === country))
   .slice(0, 9);
-const week = n => Math.round(n * 12 / 52); // måned → uge
+const week = n => n == null ? null : Math.round(n * 12 / 52); // måned → uge
 
-const title = `Rent snapshot for ${cityName}, ${country}: Average $${avg.toLocaleString('en-US')}/mo | RentMap`;
-const description = `Stored rent reference for ${cityName}, ${country}: average rent is $${avg.toLocaleString('en-US')}/mo (≈$${week(avg).toLocaleString('en-US')}/wk). 1-bed $${rent1.toLocaleString('en-US')} · 2-bed $${rent2.toLocaleString('en-US')} · 3-bed $${rent3.toLocaleString('en-US')}. Stored USD snapshot; observation dates are unavailable.`;
+const title = isRetired
+  ? `Rent data retired for ${cityName}, ${country} | RentMap`
+  : !hasUsableValues || isUnavailable
+  ? `Rent data unavailable for ${cityName}, ${country} | RentMap`
+  : hasConflicts
+  ? `Highest stored rent record for ${cityName}, ${country} | RentMap`
+  : `Rent snapshot for ${cityName}, ${country}: ${money(avg)}/mo | RentMap`;
+const description = isRetired
+  ? `Rent data for ${cityName}, ${country} has been retired and is not used in current comparisons.`
+  : !hasUsableValues || isUnavailable
+  ? `Rent data for ${cityName}, ${country} is currently unavailable and is not used in current comparisons.`
+  : hasConflicts
+  ? `Highest stored imported rent record for ${cityName}, ${country}: ${money(avg)}/mo. ${variants.length} conflicting records require source verification.`
+  : `Stored rent reference for ${cityName}, ${country}: ${money(avg)}/mo. Source currency: ${currency}.`;
 const pageUrl = `https://rentmap.net/rent-prices/${Astro.params.slug}/`;
 
 // DST-huslejeindeks for danske byer (region-niveau, officiel statistik)
@@ -44,7 +66,7 @@ const dstEntry = country === 'Denmark'
   : null;
 ---
 
-<Layout title={title} description={description} canonical={pageUrl} pageType="city">
+<Layout title={title} description={description} canonical={pageUrl} pageType="city" noindex={isRetired}>
   <script type="application/ld+json" set:html={JSON.stringify({
       '@context': 'https://schema.org',
       '@type': 'WebPage',
@@ -66,18 +88,17 @@ const dstEntry = country === 'Denmark'
     mainEntity: [
       {
         '@type': 'Question',
-        name: `What is the average rent in ${cityName}?`,
+        name: hasConflicts ? `What is the highest stored rent record for ${cityName}?` : `What is the average rent in ${cityName}?`,
         acceptedAnswer: {
           '@type': 'Answer',
-          text: `The stored combined monthly reference for ${cityName}, ${country} is $${avg.toLocaleString('en-US')}/month (≈$${week(avg).toLocaleString('en-US')}/week).`
+        text: `${hasConflicts ? 'The highest combined stored record' : 'The stored combined monthly reference'} for ${cityName}, ${country} is ${money(avg)}/month.`
         }
-      },
-      {
+      }, {
         '@type': 'Question',
         name: `How much is a 1-bedroom apartment in ${cityName}?`,
         acceptedAnswer: {
           '@type': 'Answer',
-          text: `A 1-bedroom apartment in ${cityName} has a stored reference of $${rent1.toLocaleString('en-US')}/month ($${week(rent1).toLocaleString('en-US')}/week).`
+          text: `A 1-bedroom apartment in ${cityName} has a stored reference of ${money(rent1)}/month.`
         }
       },
       {
@@ -103,17 +124,19 @@ const dstEntry = country === 'Denmark'
       <section class="intro" aria-labelledby="city-title">
         <p class="eyebrow">A place to call home</p>
         <h1 id="city-title">Rent prices in <span>{cityName}</span></h1>
-        <p class="intro-copy">Get a feel for renting in {cityName}, {country}. Compare home sizes and find a starting point for your budget.</p>
-        <p class="currency-note">Stored prices in US dollars · Observation dates unavailable</p>
+        <p class="intro-copy">Get a feel for renting in {cityName}, {country}. Compare stored records, home sizes and a starting point for your budget.</p>
+        <p class="currency-note">Source currency: {currency}{sourceUpdated ? ` · Source updated ${sourceUpdated}` : ''}</p>
       </section>
 
-      {variants.length > 1 && <section class="panel"><h2>Multiple records need verification</h2><p class="analysis-copy">The import contains {variants.length} different records for {cityName} without dates or district labels. The headline below shows the first imported record, not a resolved city average. Do not treat these conflicting values as a current quote.</p><ul>{variants.map((v,i) => <li>Record {i+1}: 1 bedroom {usd(v.rent1)}, 2 bedrooms {usd(v.rent2)}, 3 bedrooms {usd(v.rent3)} per month.</li>)}</ul></section>}
-      <section class="rent-panel" aria-labelledby="average-title">
+      {(isRetired || isUnavailable || !hasUsableValues) && <section class="panel"><h2>{isRetired ? 'This record has been retired' : 'Rent data is currently unavailable'}</h2><p class="analysis-copy">This row is not used in country summaries, rankings or the globe. No replacement value is being inferred.</p>{sourceUrl && <p class="source-note">Source reference: <a href={sourceUrl} rel="nofollow">{sourceLabel}</a></p>}</section>}
+
+      {hasConflicts && <section class="panel"><h2>Conflicting records need verification</h2><p class="analysis-copy">The import contains {variants.length} different records for {cityName} without dates or district labels. The headline uses the record with the highest combined stored rent, as requested; it is not a verified city average or current quote.</p><div class="record-grid">{variants.map((v,i) => <article class="record-card"><h3>{v === selected ? 'Selected highest record' : `Stored record ${i+1}`}</h3><p>1 bedroom <strong>{usd(v.rent1)}</strong></p><p>2 bedrooms <strong>{usd(v.rent2)}</strong></p><p>3 bedrooms <strong>{usd(v.rent3)}</strong></p></article>)}</div></section>}
+      {!isRetired && !isUnavailable && hasUsableValues && <section class="rent-panel" aria-labelledby="average-title">
         <div class="average">
           <div>
-            <h2 id="average-title">Combined monthly reference</h2>
-            <p class="headline-price">{usd(avg)}<span> / month</span></p>
-            <p class="weekly">Approximately {usd(week(avg))} per week</p>
+            <h2 id="average-title">{hasConflicts ? 'Highest combined stored record' : 'Combined monthly reference'}</h2>
+            <p class="headline-price">{money(avg)}<span> / month</span></p>
+            <p class="weekly">Approximately {money(week(avg))} per week</p>
           </div>
           <span class="location-pill">{cityName}, {country}</span>
         </div>
@@ -121,13 +144,13 @@ const dstEntry = country === 'Denmark'
           {[rent1, rent2, rent3].map((rent, index) => (
             <article class="bedroom-card">
               <h3><span class="room-icon" aria-hidden="true">⌂</span> {index + 1} bedroom{index > 0 ? 's' : ''}</h3>
-              <p class="room-price">{usd(rent)}<span> / month</span></p>
-              <p>≈ {usd(week(rent))} per week</p>
+              <p class="room-price">{money(rent)}<span> / month</span></p>
+              <p>≈ {money(week(rent))} per week</p>
             </article>
           ))}
         </div>
-        <p class="source-note">Stored snapshot attributed to <a href="https://www.globalpropertyguide.com/rental-yields" rel="nofollow">GlobalPropertyGuide’s rental-yield methodology</a>; the imported record’s source observation and exchange-rate dates were not recorded. Actual rents vary by location and property. <a href="/about/">About the data →</a></p>
-      </section>
+        <p class="source-note">Source: <a href={sourceUrl} rel="nofollow">{sourceLabel}</a>{sourceUpdated ? ` · updated ${sourceUpdated}` : ''}. {hasConflicts ? 'For this conflicting city, the displayed row is the highest combined stored record; it is not a verified city average. ' : ''}Values are shown in the source currency and are not current quotes. Actual rents vary by location and property. <a href="/about/">About the data →</a></p>
+      </section>}
 
       {dstEntry && (
         <section class="panel trends" aria-labelledby="trends-title">
@@ -143,10 +166,12 @@ const dstEntry = country === 'Denmark'
       )}
 
       <section class="panel" aria-labelledby="comparison-title"><p class="eyebrow">Compare home sizes</p><h2 id="comparison-title">What changes with an extra bedroom?</h2>
-        <p class="analysis-copy">The two-bedroom reference is {usd(Math.abs(rent2-rent1))} {rent2 >= rent1 ? 'higher' : 'lower'} per month than the one-bedroom figure in {cityName}. Over twelve months, that difference is {usd(Math.abs(rent2-rent1)*12)} before utilities or other charges.</p>
-        <p class="analysis-copy">If two people split the two-bedroom rent equally, the rent-only share would be {usd(Math.round(rent2/2))} per person per month. This is an illustrative split of the stored figure, not an available room offer, and excludes bills.</p>
+        {(isRetired || isUnavailable || !hasUsableValues) ? <p class="analysis-copy">No active source values are available for this location, so no rent comparison is calculated.</p> : <>
+        {!hasConflicts && <p class="analysis-copy">The two-bedroom reference is {usd(Math.abs(rent2-rent1))} {rent2 >= rent1 ? 'higher' : 'lower'} per month than the one-bedroom figure in {cityName}. Over twelve months, that difference is {usd(Math.abs(rent2-rent1)*12)} before utilities or other charges.</p>}
+        {!hasConflicts && <p class="analysis-copy">If two people split the two-bedroom rent equally, the rent-only share would be {usd(Math.round(rent2/2))} per person per month. This is an illustrative split of the stored figure, not an available room offer, and excludes bills.</p>}
         {(rent2 < rent1 || rent3 < rent2) && <p class="analysis-copy">Data caution: a larger bedroom category is cheaper than a smaller one in this record. The source samples are unavailable, so we cannot establish why. Verify the figures against current comparable listings.</p>}
-        <p class="analysis-copy">The combined figure gives the bedroom categories equal weight. It is not a measured average of all homes in {cityName}. The stored import lacks observation dates and sample sizes. <a href="/about/">Read the methodology</a> and <a href="/rent-budget/">calculate a budget using a current listing</a>.</p>
+        <p class="analysis-copy">The combined figure is the arithmetic mean of the available bedroom-category values in the selected record; it is not a measured average of all homes in the city. The source labels this table as last updated {sourceUpdated || 'on an unspecified date'}; it does not provide per-city sample sizes in this capture. <a href="/about/">Read the methodology</a> and <a href="/rent-budget/">calculate a budget using a current listing</a>.</p>
+        </>}
       </section>
 
       <section class="explore-panel" aria-labelledby="explore-title">
@@ -157,8 +182,8 @@ const dstEntry = country === 'Denmark'
       <section class="panel faq" aria-labelledby="faq-title">
         <p class="eyebrow">A little more local knowledge</p>
         <h2 id="faq-title">Your renting questions, answered</h2>
-        <details open><summary>What is the average rent in {cityName}?</summary><p>The stored combined monthly reference for {cityName}, {country} is {usd(avg)} per month (approximately {usd(week(avg))} per week).</p></details>
-        <details><summary>How much is a 1-bedroom apartment in {cityName}?</summary><p>A 1-bedroom apartment in {cityName} has a stored reference of {usd(rent1)} per month (approximately {usd(week(rent1))} per week).</p></details>
+        <details open><summary>{isRetired ? `Is there a current rent record for ${cityName}?` : hasConflicts ? 'What is the highest stored rent record?' : `What is the average rent in ${cityName}?`}</summary><p>{isRetired ? `This location is not present in the captured September 2026 source table and its old values have been retired.` : `${hasConflicts ? 'The highest combined stored record' : 'The stored combined monthly reference'} for ${cityName}, ${country} is ${usd(avg)} per month (approximately ${usd(week(avg))} per week).`}</p></details>
+        <details><summary>How much is a 1-bedroom apartment in {cityName}?</summary><p>The selected record for {cityName} has a 1-bedroom reference of {usd(rent1)} per month (approximately {usd(week(rent1))} per week).</p></details>
         <details><summary>What should I keep in mind when comparing rents?</summary><p>These averages are a starting point for your search. The neighbourhood, property size, condition, and included bills can all affect the price. Check the original listing for the full costs and terms.</p></details>
       </section>
 
@@ -192,6 +217,11 @@ const dstEntry = country === 'Denmark'
   .intro-copy { color:var(--muted); font-size:17px; max-width:620px; }
   .currency-note { margin-top:18px; font-size:12px; color:var(--muted); }
   .rent-panel,.panel { background:#fff; border:1px solid #dde6df; border-radius:22px; padding:30px; margin-bottom:24px; }
+  .record-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:12px; margin-top:20px; }
+  .record-card { background:#f6f8f4; border:1px solid #e7ece3; border-radius:14px; padding:16px; color:var(--muted); font-size:13px; }
+  .record-card h3 { color:var(--ink); font-size:14px; margin-bottom:10px; }
+  .record-card p + p { margin-top:5px; }
+  .record-card strong { color:var(--ink); float:right; }
   .rent-panel { box-shadow:0 8px 32px #28463806; }
   .average { display:flex; align-items:center; justify-content:space-between; gap:20px; padding-bottom:26px; }
   .average h2 { font-size:15px; font-weight:500; color:var(--muted); }

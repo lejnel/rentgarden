@@ -1,0 +1,15 @@
+{
+  "name": "Global Property Guide",
+  "url": "https://www.globalpropertyguide.com/property-rent-prices-by-country",
+  "measure": "median monthly asking rent",
+  "currencies": [
+    "EUR",
+    "USD"
+  ],
+  "retrievedAt": "2026-09-28",
+  "lastUpdate": "Sep 2026",
+  "sourceRecordCount": 402,
+  "verifiedProjectRecords": 192,
+  "retiredProjectRecords": 2,
+  "note": "Project city records are reconciled against exact country/city labels in the expanded September 2026 source table. Source rows marked n.a. are kept as null. Project locations absent from the captured table are retired and excluded from active totals."
+}
