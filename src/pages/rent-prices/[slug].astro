@@ -19,7 +19,6 @@ export async function getStaticPaths() {
 
 import Layout from '../../layouts/Layout.astro';
 import avgData from '../../../public/avg-rent.json';
-import dstData from '../../data/dst-index.json';
 
 const { city, country } = Astro.props;
 const variants = avgData.find(entry => entry.country === country).cities.filter(c => c.city === city.city);
@@ -59,11 +58,7 @@ const description = isRetired
   : `Stored rent reference for ${cityName}, ${country}: ${money(avg)}/mo. Source currency: ${currency}.`;
 const pageUrl = `https://rentmap.net/rent-prices/${Astro.params.slug}/`;
 
-// DST-huslejeindeks for danske byer (region-niveau, officiel statistik)
-const DK_REGION = { aalborg: '081', aarhus: '082' };
-const dstEntry = country === 'Denmark'
-  ? (dstData.regions[DK_REGION[cityName.toLowerCase()]] || dstData.all)
-  : null;
+const isDanishCity = country === 'Denmark';
 ---
 
 <Layout title={title} description={description} canonical={pageUrl} pageType="city" noindex={isRetired}>
@@ -152,18 +147,7 @@ const dstEntry = country === 'Denmark'
         <p class="source-note">Source: <a href={sourceUrl} rel="nofollow">{sourceLabel}</a>{sourceUpdated ? ` · updated ${sourceUpdated}` : ''}. {hasConflicts ? 'For this conflicting city, the displayed row is the highest combined stored record; it is not a verified city average. ' : ''}Values are shown in the source currency and are not current quotes. Actual rents vary by location and property. <a href="/about/">About the data →</a></p>
       </section>}
 
-      {dstEntry && (
-        <section class="panel trends" aria-labelledby="trends-title">
-          <p class="eyebrow">Official statistics · Denmark</p>
-          <h2 id="trends-title">How rents are changing</h2>
-          <div class="trend-grid">
-            <div><span>Rent index · {dstEntry.period}</span><strong>{dstEntry.index}</strong><small>{dstEntry.label} · 2015 = 100</small></div>
-            <div><span>Over the last year</span><strong>{dstEntry.yoy >= 0 ? '+' : ''}{(dstEntry.yoy * 100).toFixed(1)}%</strong></div>
-            <div><span>Over the last quarter</span><strong>{dstEntry.qoq >= 0 ? '+' : ''}{(dstEntry.qoq * 100).toFixed(1)}%</strong></div>
-          </div>
-          <p class="source-note">Source: <a href={dstData.url} rel="nofollow">Statistikbanken · HUS1</a> · Updated {dstData.updated}</p>
-        </section>
-      )}
+      {isDanishCity && <section class="panel trends"><p class="eyebrow">Official statistics · Denmark</p><h2>Rent indices are not rent prices</h2><p>Statistics Denmark publishes HUS1 indices by region and housing type. The table’s base period has changed since our stored extract, so no outdated index value is shown here. <a href="https://m.statbank.dk/TableInfo/HUS1?lang=en">Check the current official table →</a></p></section>}
 
       <section class="panel" aria-labelledby="comparison-title"><p class="eyebrow">Compare home sizes</p><h2 id="comparison-title">What changes with an extra bedroom?</h2>
         {(isRetired || isUnavailable || !hasUsableValues) ? <p class="analysis-copy">No active source values are available for this location, so no rent comparison is calculated.</p> : <>
