@@ -231,7 +231,7 @@ import Layout from '../layouts/Layout.astro';
         .admin-link { display: none; }
         /* Legend becomes a compact horizontal strip at the bottom */
         .legend {
-          bottom: 16px; left: 12px; right: auto;
+          bottom: 140px; left: 12px; right: auto; max-width:calc(100vw - 88px); flex-wrap:wrap;
           padding: 8px 12px; border-radius: 10px;
           display: flex; align-items: center; gap: 10px;
         }
@@ -244,7 +244,7 @@ import Layout from '../layouts/Layout.astro';
         }
         /* FAB slightly smaller and clear of the legend */
         .fab {
-          bottom: 16px; right: 16px; min-width:0; width:auto; height:48px;
+          bottom: 82px; right: 16px; min-width:0; width:auto; height:48px;
           padding:0 15px; border-radius:24px; font-size:13px;
         }
         /* Popup card more compact on mobile */
@@ -307,7 +307,7 @@ import Layout from '../layouts/Layout.astro';
       .map-ctrl-btn:active { transform:scale(0.94); }
       @media (pointer:coarse) {
         /* Mobil: over FAB'en (bottom:16px + 48px højde) */
-        .map-controls { bottom:80px; right:16px; }
+        .map-controls { bottom:150px; right:16px; }
         .map-ctrl-btn { width:46px; height:46px; }
       }
 
@@ -389,7 +389,7 @@ import Layout from '../layouts/Layout.astro';
       .globe-purpose .source-note { margin-top:7px; color:#94a3b8; font-size:11px; }
       @media (max-width:768px) {
         .globe-purpose {
-          top:auto; bottom:145px; right:12px; width:min(270px, calc(100vw - 24px));
+          top:174px; bottom:auto; left:12px; right:auto; width:min(270px, calc(100vw - 88px));
           padding:9px 11px; font-size:11px;
         }
         .globe-purpose .source-note { margin-top:5px; font-size:10px; }
