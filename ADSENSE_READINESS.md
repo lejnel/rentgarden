@@ -1,4 +1,7 @@
-# RentMap AdSense readiness — updated 30 September 2026
+# RentMap AdSense readiness — updated 5 October 2026
+
+## Production correction — 5 October
+Inspected the actual AdSense account: recorded issues are low-value content and ads on screens without publisher content; review is available. The Pages project has no Git integration, so earlier pushes had not updated production. Direct production deployment now publishes the refreshed rents, calculator, guide and methodology. Fixed null-price comparisons, related-card currencies and map source-currency conversion. Verified Sydney prices, calculator recalculation and globe rendering in Safari. See `audits/production-review-2026-10-05.md` for evidence and remaining limits. No review submitted; ads stay disabled. User reports independently researching the prices, which supports accuracy but is not retained evidence of a source-data licence.
 
 ## Findings and implementation plan
 - Global ad loader appears on map, admin and all templated pages: remove ad execution site-wide; retain ownership meta tag and ads.txt. No ads until content and consent readiness are verified.

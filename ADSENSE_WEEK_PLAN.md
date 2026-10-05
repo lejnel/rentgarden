@@ -1,4 +1,6 @@
-# AdSense reapplication plan — status update 30 September 2026
+# AdSense reapplication plan — status update 5 October 2026
+
+Production fixes deployed directly to Cloudflare Pages after discovering this project does not deploy from Git pushes. Actual account rejection: low-value content and ads without publisher content. Sydney prices, calculator and globe verified in Safari; all active rents pass capture verification. Remaining: recheck mobile flows, document source reuse basis and review genuine audience evidence before attesting all issues resolved. See `audits/production-review-2026-10-05.md`. No automatic AdSense request.
 
 ## Outcome and boundaries
 Prepare a defensible go/no-go decision on 4 October. Approval and Google's review time cannot be guaranteed. Keep the globe at `/`, preserve the light city/country pages and complete canonical sitemap. Ads remain disabled during remediation; globe ads remain a future option once content and consent requirements are met. Do not submit review automatically.

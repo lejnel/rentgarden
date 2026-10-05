@@ -376,7 +376,7 @@ import Layout from '../layouts/Layout.astro';
 
       /* ---- Visible purpose and source attribution ---- */
       .globe-purpose {
-        position:fixed; left:20px; top:158px; z-index:1100;
+        position:fixed; right:20px; top:120px; z-index:1100;
         width:min(300px, calc(100vw - 40px));
         padding:12px 14px; border:1px solid rgba(255,255,255,0.14);
         border-radius:12px; background:rgba(10,14,23,0.88);
@@ -389,7 +389,7 @@ import Layout from '../layouts/Layout.astro';
       .globe-purpose .source-note { margin-top:7px; color:#94a3b8; font-size:11px; }
       @media (max-width:768px) {
         .globe-purpose {
-          top:164px; left:12px; width:min(270px, calc(100vw - 24px));
+          top:auto; bottom:145px; right:12px; width:min(270px, calc(100vw - 24px));
           padding:9px 11px; font-size:11px;
         }
         .globe-purpose .source-note { margin-top:5px; font-size:10px; }
