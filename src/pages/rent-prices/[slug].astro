@@ -34,10 +34,10 @@ const sourceUpdated = selected.sourceUpdatedAt || selected.sourceUpdateDate || s
 const sourceLabel = selected.sourceName || 'Global Property Guide';
 const slugify = value => value.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
 const countryPath = `/countries/${slugify(country)}/`;
-const money = value => value == null ? 'Unavailable' : `${currency === 'EUR' ? '€' : currency === 'USD' ? '$' : `${currency} `}${value.toLocaleString('en-US')}`;
+const money = (value, unit = currency) => value == null ? 'Unavailable' : `${unit === 'EUR' ? '€' : unit === 'USD' ? '$' : `${unit} `}${value.toLocaleString('en-US')}`;
 const usd = money;
 const otherCities = avgData.flatMap(entry => entry.cities.map(c => ({ ...c, country: entry.country })))
-  .filter(c => c.city !== cityName || c.country !== country)
+  .filter(c => !c.retired && !c.unavailable && (c.city !== cityName || c.country !== country))
   .sort((a, b) => Number(b.country === country) - Number(a.country === country))
   .slice(0, 9);
 const week = n => n == null ? null : Math.round(n * 12 / 52); // måned → uge
@@ -151,9 +151,9 @@ const isDanishCity = country === 'Denmark';
 
       <section class="panel" aria-labelledby="comparison-title"><p class="eyebrow">Compare home sizes</p><h2 id="comparison-title">What changes with an extra bedroom?</h2>
         {(isRetired || isUnavailable || !hasUsableValues) ? <p class="analysis-copy">No active source values are available for this location, so no rent comparison is calculated.</p> : <>
-        {!hasConflicts && <p class="analysis-copy">The two-bedroom reference is {usd(Math.abs(rent2-rent1))} {rent2 >= rent1 ? 'higher' : 'lower'} per month than the one-bedroom figure in {cityName}. Over twelve months, that difference is {usd(Math.abs(rent2-rent1)*12)} before utilities or other charges.</p>}
-        {!hasConflicts && <p class="analysis-copy">If two people split the two-bedroom rent equally, the rent-only share would be {usd(Math.round(rent2/2))} per person per month. This is an illustrative split of the stored figure, not an available room offer, and excludes bills.</p>}
-        {(rent2 < rent1 || rent3 < rent2) && <p class="analysis-copy">Data caution: a larger bedroom category is cheaper than a smaller one in this record. The source samples are unavailable, so we cannot establish why. Verify the figures against current comparable listings.</p>}
+        {!hasConflicts && rent1 != null && rent2 != null && <p class="analysis-copy">The two-bedroom reference is {usd(Math.abs(rent2-rent1))} {rent2 >= rent1 ? 'higher' : 'lower'} per month than the one-bedroom figure in {cityName}. Over twelve months, that difference is {usd(Math.abs(rent2-rent1)*12)} before utilities or other charges.</p>}
+        {!hasConflicts && rent2 != null && <p class="analysis-copy">If two people split the two-bedroom rent equally, the rent-only share would be {usd(Math.round(rent2/2))} per person per month. This is an illustrative split of the stored figure, not an available room offer, and excludes bills.</p>}
+        {((rent1 != null && rent2 != null && rent2 < rent1) || (rent2 != null && rent3 != null && rent3 < rent2)) && <p class="analysis-copy">Data caution: a larger bedroom category is cheaper than a smaller one in this record. The source samples are unavailable, so we cannot establish why. Verify the figures against current comparable listings.</p>}
         <p class="analysis-copy">The combined figure is the arithmetic mean of the available bedroom-category values in the selected record; it is not a measured average of all homes in the city. The source labels this table as last updated {sourceUpdated || 'on an unspecified date'}; it does not provide per-city sample sizes in this capture. <a href="/about/">Read the methodology</a> and <a href="/rent-budget/">calculate a budget using a current listing</a>.</p>
         </>}
       </section>
@@ -174,7 +174,7 @@ const isDanishCity = country === 'Denmark';
       <section class="other-cities" aria-labelledby="cities-title">
         <div class="section-heading"><div><p class="eyebrow">Keep exploring</p><h2 id="cities-title">Explore more cities</h2></div><a href={countryPath}>More in {country} →</a></div>
         <div class="city-grid">
-          {otherCities.map(c => <a class="city-card" href={`/rent-prices/${slugify(c.city)}-${slugify(c.country)}/`}><div><h3>{c.city}</h3><span>{c.country}</span></div><div class="city-price">{usd(c.avg)}<small>/ month →</small></div></a>)}
+          {otherCities.map(c => <a class="city-card" href={`/rent-prices/${slugify(c.city)}-${slugify(c.country)}/`}><div><h3>{c.city}</h3><span>{c.country}</span></div><div class="city-price">{money(c.avg, c.currency)}<small>/ month →</small></div></a>)}
         </div>
       </section>
     </div>

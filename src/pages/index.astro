@@ -1828,7 +1828,7 @@ import Layout from '../layouts/Layout.astro';
               const r2 = props.rent2;
               const r3 = props.rent3;
               const sym = ({DKK:'kr',EUR:'€',USD:'$',GBP:'£',SEK:'kr',NOK:'kr',INR:'₹',CNY:'¥',VND:'₫',THB:'฿',PHP:'₱',MYR:'RM',CAD:'CA$',ZAR:'R',COP:'$',ARS:'$',KZT:'₸',NGN:'₦',IDR:'Rp',BRL:'R$',TRY:'₺',PLN:'zł',PGK:'K',KRW:'₩',JPY:'¥',MXN:'$'})[displayCurrency] || displayCurrency;
-              const f = (usd) => usd ? convertPrice(usd, 'USD', displayCurrency).toLocaleString('en-US') : '—';
+              const f = (price) => price == null ? '—' : convertPrice(price, props.currency || 'USD', displayCurrency).toLocaleString('en-US');
               tooltip.innerHTML = `<b>${props.city || ''}</b> · avg <b>${sym}${f(avg)}/mo</b><br><span style="font-size:11px;opacity:0.85;">1-bed ${sym}${f(r1)} · 2-bed ${sym}${f(r2)} · 3-bed ${sym}${f(r3)}</span>`;
             } else if (props.isCluster) {
               tooltip.textContent = `${props.count} listings — klik for at zoome ind`;
