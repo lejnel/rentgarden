@@ -15,3 +15,11 @@ Decision: **NOT READY for a confident reapplication**. This review uses the curr
 3. **Ad activation:** configure and test a [Google-certified TCF CMP](https://support.google.com/adsense/answer/13554116) for personalized ads to affected EEA/UK/Swiss users. No certified configuration has been verified. Keep loading, empty, error and admin screens ad-free.
 
 [Google readiness guidance](https://support.google.com/adsense/answer/12176698) requires valuable content, usable navigation and crawler access. Missing per-city sample sizes alone are not an AdSense prohibition. No automatic review or advertising activation occurred.
+
+## Final verified release
+- Commit `39953d0` pushed to `origin/main`; direct Cloudflare Pages production deployment `d8fb17c1` completed. Custom-domain browser confirms the updated listing-coverage wording and visible provider credits.
+- All **270 production sitemap URLs** returned HTTP 200 with no detected ad loader or noindex directive. Evidence: `audits/adsense-live-2026-10-05.json`. This verifies availability, not Google's qualitative approval.
+- Production Sydney page retains the September capture values USD 1,990 / 2,805 / 4,325 and combined USD 3,040, plus explicit source currency/update month.
+- Phone globe verified at 360px and 390px with 320px overflow check; Sydney checked at 390px/320px. Final 390px bounds: controls end at y678, listing action occupies y696–744, credits y752–780, footer y793–837. No overlap between these lanes.
+- Budget calculator at 320px: changing rent to 1,200 yields 2,450 monthly, 550 remaining, 3,700 upfront and 46.7% housing share. Desktop globe was also inspected; browser controls restored afterward. Physical-device performance remains unverified.
+- Pre-existing modified `audits/content-progress.md` and untracked `src/data/place-routes.json` were preserved and excluded from commits. The old progress log is stale against the refreshed upstream dataset; this report supersedes its final assessment.
