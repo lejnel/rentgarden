@@ -15,8 +15,8 @@ import Layout from '../layouts/Layout.astro';
         position: fixed; inset: 0;
       }
 
-      /* Hide Cesium credit/branding — keep attribution but minimal */
-      .cesium-viewer-bottom { display: none !important; }
+      /* Keep provider attribution visible above the site navigation. */
+      :global(.cesium-viewer-bottom) { bottom:calc(48px + env(safe-area-inset-bottom, 0px)) !important; }
       .cesium-viewer-toolbar { display: none !important; }
       .cesium-viewer-fullscreenContainer { display: none !important; }
       .cesium-viewer-geocoderContainer { display: none !important; }
@@ -306,8 +306,10 @@ import Layout from '../layouts/Layout.astro';
       .map-ctrl-btn:hover { background:rgba(30,41,59,0.95); }
       .map-ctrl-btn:active { transform:scale(0.94); }
       @media (max-width:768px) {
+        :global(.cesium-viewer-bottom) { bottom:calc(64px + env(safe-area-inset-bottom, 0px)) !important; }
+        .fab { bottom:calc(100px + env(safe-area-inset-bottom, 0px)); }
         /* Reserve a separate lane above the listing button on narrow screens. */
-        .map-controls { bottom:150px; right:16px; }
+        .map-controls { bottom:calc(166px + env(safe-area-inset-bottom, 0px)); right:16px; }
         .map-ctrl-btn { width:46px; height:46px; }
       }
 
@@ -509,7 +511,7 @@ import Layout from '../layouts/Layout.astro';
       <div class="panel-section-title">Recent listings</div>
     </div>
     <div class="panel-footer">
-      📌 Data updated periodically
+      📌 Listing coverage and dates vary. Check each original ad for current availability.
       <button class="panel-add-link" type="button" onclick="openAddPopup()">Know your rent? Add your listing →</button>
     </div>
   </div>
