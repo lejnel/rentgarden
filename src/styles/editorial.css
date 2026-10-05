@@ -21,6 +21,8 @@ h1,h2,h3,p { margin:0; }
 .editorial input,.editorial select { display:block; width:100%; background:white; color:#223d37; border:1px solid #8ca698; border-radius:8px; padding:12px; font:inherit; margin:6px 0 14px; }
 .editorial a:focus-visible,.editorial input:focus-visible,.editorial select:focus-visible,.editorial button:focus-visible { outline:3px solid #277660; outline-offset:4px; }
 .editorial .table-wrap { overflow-x:auto; }
+.editorial .table-wrap:focus-visible { outline:3px solid #277660; outline-offset:4px; }
+.editorial .shortlist-worksheet { min-width:640px; }
 .editorial table { border-collapse:collapse; width:100%; text-align:left; font-size:14px; }
 .editorial th,.editorial td { padding:13px; border-bottom:1px solid #dfe7e1; }
 .editorial th { background:#edf4eb; }
